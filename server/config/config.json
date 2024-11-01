@@ -1,0 +1,13 @@
+{
+  "development": {
+      "database": "expenses_management",
+      "dialect": "mssql",
+      "dialectOptions": {
+        "connectionString": "Server=(localdb)\\MSSQLLocalDB;Database=expenses_management;Trusted_Connection=True;"
+      }
+  },
+  "test": {
+  },
+  "production": {
+  }
+}
