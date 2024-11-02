@@ -1,8 +1,8 @@
 import { Sequelize } from 'sequelize';
-import config from "../config/config.js";
-import ExpenseModel from "./expense.js";
+import config, { Env } from "../config/config";
+import ExpenseModel from "./expense";
 
-const environment = process.env.NODE_ENV || 'development';
+const environment = (process.env.NODE_ENV || 'development') as Env;
 const dbConfig = config[environment];
 
 export const syncModels = async () => {
@@ -15,12 +15,12 @@ export const syncModels = async () => {
         await sequelize.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
         console.log('Database created or already exists.');
     }
-    catch{
+    catch(error){
         console.error('Error creating database:', error);
         sequelize.close();
     }
 
-    const sequelizeWithDB = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, {
+    const sequelizeWithDB = new Sequelize(dbConfig.database ?? "", dbConfig.username ?? "", dbConfig.password, {
         host: dbConfig.host,
         dialect: 'mysql',
     });

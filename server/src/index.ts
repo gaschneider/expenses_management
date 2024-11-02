@@ -1,7 +1,7 @@
 import express from 'express';
 const app = express();
 import cors from 'cors';
-import { addExpense, getAllExpenses } from './controllers/expenseController.js';
+import { addExpense, getAllExpenses } from './controllers/expenseController';
 
 app.use(cors())
 

@@ -1,6 +1,6 @@
 import request from 'supertest';
-import app, {server} from '../index.js';
-import sequelize from '../database.js';
+import app, {server} from '../src/index';
+import sequelize from '../src/database';
 
 describe('Expenses', () => {
     it('should insert expense', async () => {
@@ -19,7 +19,7 @@ describe('Expenses', () => {
 });
 
 afterAll(async () => {
-  await sequelize.drop();
+//   await sequelize.drop();
   await sequelize.close(); // Close connection after tests
   server.close()
 });

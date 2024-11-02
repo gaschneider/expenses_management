@@ -1,4 +1,4 @@
-import { Expense } from '../database.js';
+import { Expense } from '../database';
 
 export const addExpense = async () => {
   const expense = await Expense.create({
@@ -12,7 +12,7 @@ export const addExpense = async () => {
 export const getAllExpenses = async () => {  
   try {
       const expenses = await Expense.findAll();
-      console.log('All Expenses:', JSON.stringify(expenses, null, 2));
+      // console.log('All Expenses:', JSON.stringify(expenses, null, 2));
       return expenses;
   } catch (error) {
       console.error('Error fetching expenses:', error);

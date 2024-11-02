@@ -1,6 +1,6 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, Sequelize } from 'sequelize';
 
-const ExpenseModel = (sequelize) => {
+const ExpenseModel = (sequelize: Sequelize) => {
     return sequelize.define('Expense', {
         id: {
             type: DataTypes.INTEGER,
