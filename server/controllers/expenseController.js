@@ -1,9 +1,7 @@
-import { db } from "../index.js"
+import { Expense } from '../database.js';
 
 export const addExpense = async () => {
-  if(!db) return;
-
-  const expense = await db.Expense.create({
+  const expense = await Expense.create({
       description: 'Lunch',
       amount: 15.50,
       date: new Date(),
@@ -11,11 +9,9 @@ export const addExpense = async () => {
   return expense.dataValues;
 };
 
-export const getAllExpenses = async () => {
-  if(!db) return;
-  
+export const getAllExpenses = async () => {  
   try {
-      const expenses = await db.Expense.findAll();
+      const expenses = await Expense.findAll();
       console.log('All Expenses:', JSON.stringify(expenses, null, 2));
       return expenses;
   } catch (error) {

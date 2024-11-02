@@ -9,7 +9,7 @@ const App = () => {
 
   //data will be the string we send from our server
   const apiCall = () => {
-    axios.get<void, {data: {description: string}}>('http://localhost:8081').then((data) => {
+    axios.post<void, {data: {description: string}}>('http://localhost:8081').then((data) => {
       const newExpense = `New expense: ${data.data.description}`;
       //this console.log will be in our frontend console
       setReturnFromServer(newExpense);
