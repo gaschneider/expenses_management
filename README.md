@@ -15,7 +15,7 @@ Check if you have node installed by using the command `node -v`, this project wa
 
 Check if you have MySQL installed, this project uses the Community Server 9.1.0, you can download the latest from [here](https://dev.mysql.com/downloads/mysql/)
 - During the installation it will request a password, remember it because you will need to put that password in the files `.env` under folder `server` in the variable `DB_PASSWORD`
-
+- For those `.env` files, create a `.env.development` following the `.env.example` add your password to the `DB_PASSWORD`, if you wanna run the tests, create a `.env.test` and to run for production `.env.production`
 
 Now to configure the client, in the terminal navigate to the folder `client` and run `npm install`
 
