@@ -1,7 +1,9 @@
-import { Expense } from '../database';
+import Expense from "../models/expense";
+
 
 export const addExpense = async () => {
   const expense = await Expense.create({
+      id: 0,
       description: 'Lunch',
       amount: 15.50,
       date: new Date(),

@@ -1,6 +1,13 @@
 import request from 'supertest';
-import app, {server} from '../src/index';
-import sequelize from '../src/database';
+import sequelize from '../src/config/database';
+import app, { startServer } from '../src/index';
+import { IncomingMessage, Server, ServerResponse } from 'http';
+
+let server: Server<typeof IncomingMessage, typeof ServerResponse>;
+
+beforeAll(async () => {
+    server = await startServer();
+})
 
 describe('Expenses', () => {
     it('should insert expense', async () => {
@@ -21,5 +28,7 @@ describe('Expenses', () => {
 afterAll(async () => {
 //   await sequelize.drop();
   await sequelize.close(); // Close connection after tests
-  server.close()
+  if(server){
+      server.close();
+  }
 });

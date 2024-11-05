@@ -1,7 +1,21 @@
-import { DataTypes, Sequelize } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
+import sequelize from '../config/database';
 
-const ExpenseModel = (sequelize: Sequelize) => {
-    return sequelize.define('Expense', {
+interface ExpenseAttributes {
+    id: number;
+    description: string;
+    amount: number;
+    date: Date;
+}
+class Expense extends Model<ExpenseAttributes> {
+    declare id: number;
+    declare description: string;
+    declare amount: number;
+    declare date: Date;
+}
+
+Expense.init(
+    {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -19,7 +33,11 @@ const ExpenseModel = (sequelize: Sequelize) => {
             type: DataTypes.DATE,
             allowNull: false,
         },
-    });
-};
+    },
+    {
+      sequelize,
+      modelName: 'Expense',
+    }
+  );
 
-export default ExpenseModel;
+export default Expense;

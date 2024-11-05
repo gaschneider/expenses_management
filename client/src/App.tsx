@@ -1,6 +1,11 @@
 import axios from 'axios';
 import './App.css';
 import { useState } from 'react';
+import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import RegisterPage from './pages/RegisterPage';
 
 
 
@@ -26,15 +31,39 @@ const App = () => {
   }
 
   return (
-    <div className="App">
-      <header className="App-header">
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          
+          {/* Protected routes */}
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <div className="App">
+                  <header className="App-header">
 
-        <button onClick={apiCall}>Make API Call</button>
-        <button onClick={apiCallExpenses}>Get expenses</button>
-        <h1 style={{color: "white"}}>{returnFromServer}</h1>
+                    <button onClick={apiCall}>Make API Call</button>
+                    <button onClick={apiCallExpenses}>Get expenses</button>
+                    <h1 style={{color: "white"}}>{returnFromServer}</h1>
 
-      </header>
-    </div>
+                  </header>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Redirect root to home */}
+          <Route
+            path="/"
+            element={<Navigate to="/home" replace />}
+          />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

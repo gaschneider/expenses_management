@@ -1,11 +1,10 @@
 import { Sequelize } from 'sequelize';
 import config, { Env } from "../config/config";
-import ExpenseModel from "./expense";
 
 const environment = (process.env.NODE_ENV || 'development') as Env;
 const dbConfig = config[environment];
 
-export const syncModels = async () => {
+export const createDatabaseIfNeeded = async () => {
     // Create a connection to MySQL without specifying a database
     let sequelize = new Sequelize(`mysql://${dbConfig.username}:${dbConfig.password}@${dbConfig.host}:3306`, {
         dialect: 'mysql'
@@ -18,23 +17,8 @@ export const syncModels = async () => {
     catch(error){
         console.error('Error creating database:', error);
         sequelize.close();
+        return false;
     }
 
-    const sequelizeWithDB = new Sequelize(dbConfig.database ?? "", dbConfig.username ?? "", dbConfig.password, {
-        host: dbConfig.host,
-        dialect: 'mysql',
-    });
-
-    try {
-        await sequelizeWithDB.authenticate();
-        console.log('Connection to the database has been established successfully.');
-        ExpenseModel(sequelizeWithDB);
-        await sequelizeWithDB.sync();
-
-        await sequelizeWithDB.close();        
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
+    return true;
 }
-
-syncModels();
