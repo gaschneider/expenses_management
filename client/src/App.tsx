@@ -1,35 +1,13 @@
-import axios from 'axios';
-import './App.css';
-import { useState } from 'react';
-import LoginPage from './pages/LoginPage';
-import ProtectedRoute from './components/ProtectedRoute';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import RegisterPage from './pages/RegisterPage';
-
-
+import "./App.css";
+import LoginPage from "./pages/LoginPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import RegisterPage from "./pages/RegisterPage";
+import HomePage from "./pages/HomePage";
+import ExpensesPage from "./pages/ExpensesPage";
 
 const App = () => {
-  const [returnFromServer, setReturnFromServer] = useState<string>();
-
-  //data will be the string we send from our server
-  const apiCall = () => {
-    axios.post<void, {data: {description: string}}>('http://localhost:8081').then((data) => {
-      const newExpense = `New expense: ${data.data.description}`;
-      //this console.log will be in our frontend console
-      setReturnFromServer(newExpense);
-      console.log(data.data);
-    })
-  }
-
-  //data will be the string we send from our server
-  const apiCallExpenses = () => {
-    axios.get<void, {data: string}>('http://localhost:8081/expenses').then((data) => {
-      //this console.log will be in our frontend console
-      console.log(data.data);
-    })
-  }
-
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -37,34 +15,42 @@ const App = () => {
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          
+
           {/* Protected routes */}
           <Route
             path="/home"
             element={
               <ProtectedRoute>
-                <div className="App">
-                  <header className="App-header">
-
-                    <button onClick={apiCall}>Make API Call</button>
-                    <button onClick={apiCallExpenses}>Get expenses</button>
-                    <h1 style={{color: "white"}}>{returnFromServer}</h1>
-
-                  </header>
-                </div>
+                <HomePage />
               </ProtectedRoute>
             }
           />
-          
-          {/* Redirect root to home */}
+
           <Route
-            path="/"
-            element={<Navigate to="/home" replace />}
+            path="/expenses"
+            element={
+              <ProtectedRoute>
+                <ExpensesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/" element={<Navigate to="/home" replace />} />
+
+          <Route
+            path="*"
+            element={
+              <ProtectedRoute>
+                <div className="p-4">
+                  <h1 className="text-2xl font-bold">404 - Page Not Found</h1>
+                </div>
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
   );
-}
+};
 
 export default App;

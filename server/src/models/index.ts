@@ -1,6 +1,6 @@
-import sequelize from '../config/database';
-import Expense from './expense';
-import User from './user';
+import sequelize from "../config/database";
+import Expense from "./expense";
+import User from "./user";
 
 // Add all your models here
 const models = {
