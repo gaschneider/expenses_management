@@ -4,7 +4,7 @@ import sequelize from "../config/database";
 import { UserAttributes, UserInstance } from "../types/auth";
 
 class User extends Model<UserAttributes, UserAttributes> implements UserInstance {
-  declare id: number;
+  declare id?: number;
   declare email: string;
   declare password: string;
   declare readonly createdAt: Date;

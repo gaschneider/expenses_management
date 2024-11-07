@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import User from "../models/user";
 import { UserAttributes, UserInstance } from "../types/auth";
 import passport from "passport";
+import { validateEmail } from "../helpers/emailHelper";
 
 export const registerAction = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -10,7 +11,7 @@ export const registerAction = async (req: Request, res: Response, next: NextFunc
     // Validate input
     if (!email || !password) {
       res.status(400).json({
-        message: "Email and password are required"
+        error: "Email and password are required"
       });
       return;
     }
@@ -19,7 +20,7 @@ export const registerAction = async (req: Request, res: Response, next: NextFunc
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       res.status(400).json({
-        message: "Email is already registered"
+        error: "Email is already registered"
       });
       return;
     }
@@ -27,14 +28,20 @@ export const registerAction = async (req: Request, res: Response, next: NextFunc
     // Validate password strength
     if (password.length < 8) {
       res.status(400).json({
-        message: "Password must be at least 8 characters long"
+        error: "Password must be at least 8 characters long"
+      });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      res.status(400).json({
+        error: "Invalid email"
       });
       return;
     }
 
     // Create new user
     const user = await User.create({
-      id: 0,
       email,
       password // Password will be hashed by the beforeCreate hook
     });
@@ -64,8 +71,7 @@ export const statusAction = (req: Request, res: Response) => {
     });
   } else {
     res.json({
-      isAuthenticated: false,
-      user: null
+      isAuthenticated: false
     });
   }
 };

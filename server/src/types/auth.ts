@@ -1,8 +1,8 @@
-import { Model } from 'sequelize';
+import { Model } from "sequelize";
 
 // Interface for User model attributes
 export interface UserAttributes {
-  id: number;
+  id?: number;
   email: string;
   password: string;
   createdAt?: Date;
@@ -18,7 +18,7 @@ export interface UserInstance extends Model<UserAttributes>, UserAttributes {
 declare global {
   namespace Express {
     interface User extends UserAttributes {
-      id: number;
+      id?: number;
       email: string;
     }
   }

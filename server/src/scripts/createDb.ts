@@ -9,15 +9,16 @@ export const createDatabaseIfNeeded = async () => {
   let sequelize = new Sequelize(
     `mysql://${dbConfig.username}:${dbConfig.password}@${dbConfig.host}:3306`,
     {
-      dialect: "mysql"
+      dialect: "mysql",
+      logging: dbConfig.logging
     }
   );
 
   try {
     await sequelize.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
-    console.log("Database created or already exists.");
+    dbConfig.logging && console.log("Database created or already exists.");
   } catch (error) {
-    console.error("Error creating database:", error);
+    dbConfig.logging && console.error("Error creating database:", error);
     sequelize.close();
     return false;
   }
