@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import User from "../models/user";
-import { UserAttributes, UserInstance } from "../types/auth";
+import { UserInstance } from "../types/auth";
 import passport from "passport";
 import { validateEmail } from "../helpers/emailHelper";
 
@@ -61,12 +61,22 @@ export const registerAction = async (req: Request, res: Response, next: NextFunc
 export const statusAction = (req: Request, res: Response) => {
   if (req.isAuthenticated() && req.user) {
     // Safe to type assert since we've checked isAuthenticated
-    const user = req.user as UserAttributes;
+    const user = req.user;
     res.json({
       isAuthenticated: true,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
+        groups: user.Groups?.map((group) => ({
+          id: group.id,
+          name: group.name,
+          description: group.description,
+          permissions: group.Permissions?.map((permission) => ({
+            id: permission.id,
+            name: permission.name,
+            description: permission.description
+          }))
+        }))
       }
     });
   } else {

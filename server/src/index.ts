@@ -2,12 +2,14 @@ import express from "express";
 const app = express();
 import cors from "cors";
 import { addExpense, getAllExpenses } from "./controllers/expenseController";
-import { sequelize } from "./models";
 import { createDatabaseIfNeeded } from "./scripts/createDb";
 import authRoutes from "./routes/auth";
 import session from "express-session";
 import passport from "passport";
 import "./config/passport";
+import sequelize from "./config/database";
+import { seedUserPermission } from "./seeders/seedUserPermission";
+import { defineAssociations } from "./models/associations";
 
 const initDatabase = async () => {
   try {
@@ -20,6 +22,8 @@ const initDatabase = async () => {
     // Use force: false in production!
     await sequelize.sync({ force: false });
     console.log("Database synchronized successfully.");
+    defineAssociations();
+    await seedUserPermission();
   } catch (error) {
     console.error("Unable to connect to the database:", error);
     process.exit(1);

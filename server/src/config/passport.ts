@@ -1,6 +1,8 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import User from "../models/user";
+import Group from "../models/group";
+import Permission from "../models/permission";
 
 passport.use(
   new LocalStrategy(
@@ -10,7 +12,21 @@ passport.use(
     },
     async (email, password, done) => {
       try {
-        const user = await User.findOne({ where: { email } });
+        const user = await User.findOne({
+          where: { email },
+          include: [
+            {
+              model: Group,
+              attributes: ["id", "name", "description"],
+              include: [
+                {
+                  model: Permission,
+                  attributes: ["id", "name", "description"]
+                }
+              ]
+            }
+          ]
+        });
         if (!user) {
           return done(null, false, { message: "Invalid email or password" });
         }
@@ -34,7 +50,20 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id: number, done) => {
   try {
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id, {
+      include: [
+        {
+          model: Group,
+          attributes: ["id", "name", "description"],
+          include: [
+            {
+              model: Permission,
+              attributes: ["id", "name", "description"]
+            }
+          ]
+        }
+      ]
+    });
     done(null, user);
   } catch (error) {
     done(error);

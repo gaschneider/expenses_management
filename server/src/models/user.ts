@@ -1,7 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 import bcrypt from "bcryptjs";
 import sequelize from "../config/database";
-import { UserAttributes, UserInstance } from "../types/auth";
+import { GroupInstance, UserAttributes, UserInstance } from "../types/auth";
 
 class User extends Model<UserAttributes, UserAttributes> implements UserInstance {
   declare id?: number;
@@ -13,6 +13,14 @@ class User extends Model<UserAttributes, UserAttributes> implements UserInstance
   public async validatePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }
+
+  // Declare associations
+  declare Groups?: GroupInstance[];
+
+  declare getGroups: () => Promise<GroupInstance[]>;
+  declare setGroups: (groups: GroupInstance[]) => Promise<void>;
+  declare addGroup: (group: GroupInstance) => Promise<void>;
+  declare removeGroup: (group: GroupInstance) => Promise<void>;
 }
 
 User.init(
