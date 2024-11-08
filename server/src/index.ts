@@ -17,12 +17,12 @@ const initDatabase = async () => {
     await sequelize.authenticate();
     console.log("Database connection established successfully.");
 
+    defineAssociations();
     // Sync all models
     // Note: force: true will drop tables if they exist
     // Use force: false in production!
     await sequelize.sync({ force: false });
     console.log("Database synchronized successfully.");
-    defineAssociations();
     await seedUserPermission();
   } catch (error) {
     console.error("Unable to connect to the database:", error);

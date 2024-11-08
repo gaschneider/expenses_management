@@ -1,19 +1,27 @@
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database";
-import { GroupAttributes, GroupInstance, PermissionAttributes } from "../types/auth";
+import { GroupAttributes, GroupInstance, PermissionAttributes, UserInstance } from "../types/auth";
 
 class Group extends Model<GroupAttributes> implements GroupInstance {
   declare id?: number;
   declare name: string;
   declare description: string;
 
-  // Declare associations
-  declare Permissions?: PermissionAttributes[];
+  // Update to match interface
+  declare permissions?: PermissionAttributes[];
+  declare users?: UserInstance[];
 
-  declare getPermission: () => Promise<PermissionAttributes[]>;
-  declare setPermission: (groups: PermissionAttributes[]) => Promise<void>;
-  declare addPermission: (group: PermissionAttributes) => Promise<void>;
-  declare removePermission: (group: PermissionAttributes) => Promise<void>;
+  // Update method names to be plural
+  declare getPermissions: () => Promise<PermissionAttributes[]>;
+  declare setPermissions: (permissions: PermissionAttributes[]) => Promise<void>;
+  declare addPermission: (permission: PermissionAttributes) => Promise<void>;
+  declare removePermission: (permission: PermissionAttributes) => Promise<void>;
+
+  // Add user-related methods
+  declare getUsers: () => Promise<UserInstance[]>;
+  declare setUsers: (users: UserInstance[]) => Promise<void>;
+  declare addUser: (user: UserInstance) => Promise<void>;
+  declare removeUser: (user: UserInstance) => Promise<void>;
 }
 
 Group.init(
@@ -35,7 +43,8 @@ Group.init(
   },
   {
     sequelize,
-    tableName: "groups"
+    tableName: "Groups",
+    modelName: "Group"
   }
 );
 

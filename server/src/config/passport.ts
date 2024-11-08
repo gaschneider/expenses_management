@@ -17,10 +17,12 @@ passport.use(
           include: [
             {
               model: Group,
+              as: "groups",
               attributes: ["id", "name", "description"],
               include: [
                 {
                   model: Permission,
+                  as: "permissions",
                   attributes: ["id", "name", "description"]
                 }
               ]
@@ -54,10 +56,12 @@ passport.deserializeUser(async (id: number, done) => {
       include: [
         {
           model: Group,
+          as: "groups",
           attributes: ["id", "name", "description"],
           include: [
             {
               model: Permission,
+              as: "permissions",
               attributes: ["id", "name", "description"]
             }
           ]

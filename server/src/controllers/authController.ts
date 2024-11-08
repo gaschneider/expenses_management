@@ -67,11 +67,11 @@ export const statusAction = (req: Request, res: Response) => {
       user: {
         id: user.id,
         email: user.email,
-        groups: user.Groups?.map((group) => ({
+        groups: user.groups?.map((group) => ({
           id: group.id,
           name: group.name,
           description: group.description,
-          permissions: group.Permissions?.map((permission) => ({
+          permissions: group.permissions?.map((permission) => ({
             id: permission.id,
             name: permission.name,
             description: permission.description

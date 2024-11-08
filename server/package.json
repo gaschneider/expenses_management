@@ -6,6 +6,7 @@
   "scripts": {
     "create-db": "tsx src/scripts/createDb.ts",
     "sync-db": "tsx src/scripts/syncDb.ts",
+    "sync-db-test": "cross-env NODE_ENV=test tsx src/scripts/syncDb.ts",
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
     "build": "tsc && tsc-alias",
     "start": "node dist/src/index.js",
