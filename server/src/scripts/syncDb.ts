@@ -2,7 +2,9 @@ import sequelize from "../config/database";
 
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ force: true });
+    if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+      sequelize.sync({ force: true }); // Be careful with this in production!
+    }
     console.log("Database synced successfully");
     process.exit(0);
   } catch (error) {

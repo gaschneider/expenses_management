@@ -10,7 +10,15 @@
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
     "build": "tsc && tsc-alias",
     "start": "node dist/src/index.js",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "db:migrate": "npm run build && sequelize-cli db:migrate",
+    "db:migrate:undo": "npm run build && sequelize-cli db:migrate:undo",
+    "db:migrate:generate": "sequelize-cli migration:generate --name",
+    "db:seed": "npm run build && sequelize-cli db:seed:all",
+    "db:seed:generate": "sequelize-cli seed:generate --name",
+    "db:seed:undo": "npm run build && sequelize-cli db:seed:undo:all",
+    "db:seed:undo:specific": "npm run build && sequelize-cli db:seed:undo --seed",
+    "db:reset": "npm run build && sequelize-cli db:migrate:undo:all && sequelize-cli db:migrate && sequelize-cli db:seed:all"
   },
   "jest": {
     "preset": "ts-jest",
@@ -58,6 +66,7 @@
     "@types/node": "^22.8.7",
     "@types/passport": "^1.0.17",
     "@types/passport-local": "^1.0.38",
+    "@types/sequelize": "^4.28.20",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.12.2",
     "@typescript-eslint/parser": "^8.12.2",
