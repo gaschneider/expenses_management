@@ -15,7 +15,7 @@ class User extends Model<UserAttributes, UserAttributes> implements UserInstance
   }
 
   // Declare associations
-  declare Groups?: GroupInstance[];
+  declare groups?: GroupInstance[];
 
   declare getGroups: () => Promise<GroupInstance[]>;
   declare setGroups: (groups: GroupInstance[]) => Promise<void>;

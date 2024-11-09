@@ -22,9 +22,12 @@ export const checkPermission = (requiredPermission: string) => {
         include: [
           {
             model: Group,
+            as: "groups",
+            attributes: ["name"],
             include: [
               {
                 model: Permission,
+                as: "permissions",
                 attributes: ["name"]
               }
             ]
@@ -37,8 +40,8 @@ export const checkPermission = (requiredPermission: string) => {
       }
 
       // Check if user has the required permission through any of their groups
-      const hasPermission = user.Groups?.some((group) =>
-        group.Permissions?.some((permission) => permission.name === requiredPermission)
+      const hasPermission = user.groups?.some((group) =>
+        group.permissions?.some((permission) => permission.name === requiredPermission)
       );
 
       if (!hasPermission) {
@@ -62,9 +65,12 @@ export const userHasPermission = async (
     include: [
       {
         model: Group,
+        as: "groups",
+        attributes: ["name"],
         include: [
           {
             model: Permission,
+            as: "permissions",
             attributes: ["name"]
           }
         ]
@@ -72,7 +78,7 @@ export const userHasPermission = async (
     ]
   });
 
-  return !!userWithGroups?.Groups?.some((group) =>
-    group.Permissions?.some((perm) => perm.name === permission)
+  return !!userWithGroups?.groups?.some((group) =>
+    group.permissions?.some((perm) => perm.name === permission)
   );
 };
