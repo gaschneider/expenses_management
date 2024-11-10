@@ -2,7 +2,7 @@ import { Op, Transaction } from "sequelize";
 import { AuditAction } from "../types/auth";
 import PermissionAuditLog from "../models/PermissionAuditLog";
 import Department from "../models/Department";
-import User from "../models/User";
+import User from "../models/Users";
 import sequelize from "../config/database";
 import UserDepartmentPermission from "../models/UserDepartmentPermission";
 import { Request, Response } from "express";

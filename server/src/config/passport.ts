@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import User from "../models/User";
+import User from "../models/Users";
 import UserPermission from "../models/UserPermission";
 import Department from "../models/Department";
 
@@ -24,6 +24,7 @@ passport.use(
               model: Department,
               as: "departments",
               through: {
+                as: "userDepartmentPermission",
                 attributes: ["permissions"]
               },
               attributes: ["id", "name", "description"]
@@ -39,7 +40,7 @@ passport.use(
           return done(null, false, { message: "Invalid email or password" });
         }
 
-        return done(null, user);
+        return done(null, getUserDTO(user) ?? undefined);
       } catch (error) {
         return done(error);
       }
@@ -64,14 +65,32 @@ passport.deserializeUser(async (id: number, done) => {
           model: Department,
           as: "departments",
           through: {
+            as: "userDepartmentPermission",
             attributes: ["permissions"]
           },
           attributes: ["id", "name", "description"]
         }
       ]
     });
-    done(null, user);
+    done(null, getUserDTO(user));
   } catch (error) {
     done(error);
   }
 });
+
+const getUserDTO = (user: User | null) => {
+  if (!user) return null;
+  return {
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    permissions: user.userPermission?.permissions,
+    departmentPermissions: user.departments?.reduce((prev, curr) => {
+      if (curr.id && curr.userDepartmentPermission?.permissions) {
+        prev[curr.id] = curr.userDepartmentPermission?.permissions;
+      }
+      return prev;
+    }, {} as Record<number, string>)
+  };
+};

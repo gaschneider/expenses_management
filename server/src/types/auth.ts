@@ -1,8 +1,7 @@
 import { Model } from "sequelize";
 import Department from "../models/Department";
 import UserDepartmentPermission from "../models/UserDepartmentPermission";
-import User from "../models/User";
-import UserPermission from "../models/UserPermission";
+import User from "../models/Users";
 
 // Interface for User model attributes
 export interface UserAttributes {
@@ -23,7 +22,7 @@ export interface DepartmenAttributes {
   createdAt?: Date;
   updatedAt?: Date;
   users?: User[];
-  userDepartmentPermissions?: UserDepartmentPermission[];
+  userDepartmentPermission?: UserDepartmentPermission[];
 }
 
 // Interface for User Department Permissions model attributes

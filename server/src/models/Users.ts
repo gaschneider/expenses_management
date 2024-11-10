@@ -15,8 +15,8 @@ class User extends Model<UserAttributes, UserAttributes> implements UserInstance
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 
-  declare userPermissions?: UserPermission;
-  declare userDepartmentPermissions?: UserDepartmentPermission[];
+  declare userPermission?: UserPermission;
+  declare departments?: Department[];
 
   declare getUserPermissions: () => Promise<UserPermission[]>;
   declare setUserPermissions: (permissions: UserPermission[]) => Promise<void>;
