@@ -96,7 +96,7 @@ export enum AuditAction {
 // Extend Express Request type to include our User type
 declare global {
   namespace Express {
-    interface User extends UserAttributes {
+    interface User extends Omit<UserAttributes, "password"> {
       id?: number;
       firstName: string;
       lastName: string;

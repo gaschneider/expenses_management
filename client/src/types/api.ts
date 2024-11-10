@@ -3,7 +3,7 @@ export type UserDTO = {
   firstName: string;
   lastName: string;
   email: string;
-  userPermission: { permissions: string };
+  permissions: string;
   departments: Record<number, string>;
 };
 

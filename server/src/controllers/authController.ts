@@ -66,17 +66,7 @@ export const statusAction = (req: Request, res: Response) => {
     const user = req.user;
     res.json({
       isAuthenticated: true,
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        permissions: user.userPermission?.permissions,
-        departmentPermissions: user.departments?.reduce((prev, curr) => {
-          prev[curr.id] = curr.userDepartmentPermission.permissions;
-          return prev;
-        }, {} as Record<number, string>)
-      }
+      user: getUserDTO(user)
     });
   } else {
     res.json({
@@ -93,7 +83,10 @@ export const loginAction = (req: Request, res: Response, next: NextFunction) => 
     }
     req.logIn(user, (err) => {
       if (err) return next(err);
-      return res.json({ message: "Login successful", user });
+      return res.json({
+        message: "Login successful",
+        user: getUserDTO(user)
+      });
     });
   })(req, res, next);
 };
@@ -102,4 +95,18 @@ export const logoutAction = (req: Request, res: Response) => {
   req.logout(() => {
     res.json({ message: "Logout successful" });
   });
+};
+
+const getUserDTO = (user: Express.User) => {
+  return {
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    permissions: user.userPermission?.permissions,
+    departmentPermissions: user.departments?.reduce((prev, curr) => {
+      prev[curr.id] = curr.userDepartmentPermission.permissions;
+      return prev;
+    }, {} as Record<number, string>)
+  };
 };
