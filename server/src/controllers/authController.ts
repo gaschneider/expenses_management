@@ -3,6 +3,7 @@ import { UserInstance } from "../types/auth";
 import passport from "passport";
 import { validateEmail } from "../helpers/emailHelper";
 import User from "../models/User";
+import { getUserDTO } from "../config/passport";
 
 export const registerAction = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -84,8 +85,7 @@ export const loginAction = (req: Request, res: Response, next: NextFunction) => 
     req.logIn(user, (err) => {
       if (err) return next(err);
       return res.json({
-        message: "Login successful",
-        user
+        message: "Login successful"
       });
     });
   })(req, res, next);

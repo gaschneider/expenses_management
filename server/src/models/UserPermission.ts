@@ -32,7 +32,14 @@ UserPermission.init(
   {
     sequelize,
     modelName: "UserPermission",
-    tableName: "UserPermissions"
+    tableName: "UserPermissions",
+    indexes: [
+      {
+        unique: true,
+        fields: ["userId"],
+        name: "user_unique"
+      }
+    ]
   }
 );
 

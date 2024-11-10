@@ -3,6 +3,7 @@ import sequelize from "../config/database";
 import { DepartmenAttributes } from "../types/auth";
 import UserDepartmentPermission from "./UserDepartmentPermission";
 import User from "./User";
+import Expense from "./Expense";
 
 class Department extends Model<DepartmenAttributes, DepartmenAttributes> {
   declare id?: number;
@@ -14,6 +15,7 @@ class Department extends Model<DepartmenAttributes, DepartmenAttributes> {
   // Declare relationship properties
   declare users?: User[];
   declare userDepartmentPermission?: UserDepartmentPermission;
+  declare expenses?: Expense[];
 
   // Declare association methods
   declare getUsers: () => Promise<User[]>;
@@ -21,6 +23,11 @@ class Department extends Model<DepartmenAttributes, DepartmenAttributes> {
   declare addUser: (user: User) => Promise<void>;
   declare removeUser: (user: User) => Promise<void>;
   declare getUserDepartmentPermissions: () => Promise<UserDepartmentPermission[]>;
+
+  declare getExpenses: () => Promise<Expense[]>;
+  declare setExpenses: (permissions: Expense[]) => Promise<void>;
+  declare addExpense: (permission: Expense) => Promise<void>;
+  declare removeExpense: (permission: Expense) => Promise<void>;
 
   // User Permission Methods
   public async addUserPermissionString(

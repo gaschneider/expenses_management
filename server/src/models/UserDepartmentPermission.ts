@@ -1,8 +1,8 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import { UserDepartmentPermissionAttributes } from "../types/auth";
-import User from "./User";
 import Department from "./Department";
+import User from "./User";
 
 class UserDepartmentPermission extends Model<
   UserDepartmentPermissionAttributes,
@@ -131,7 +131,14 @@ UserDepartmentPermission.init(
   {
     sequelize,
     modelName: "UserDepartmentPermission",
-    tableName: "UserDepartmentPermissions"
+    tableName: "UserDepartmentPermissions",
+    indexes: [
+      {
+        unique: true,
+        fields: ["userId", "departmentId"],
+        name: "user_department_unique"
+      }
+    ]
   }
 );
 

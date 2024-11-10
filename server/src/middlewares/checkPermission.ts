@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from "express";
 import User from "../models/User";
 import { SystemPermission, UserInstance } from "../types/auth";
 import UserPermission from "../models/UserPermission";
-import UserDepartmentPermission from "../models/UserDepartmentPermission";
 import Department from "../models/Department";
 
 // Extend Express Request type to include our User type
@@ -19,23 +18,7 @@ export const checkPermission = (requiredPermission: string, departmentId?: numbe
       }
 
       // Find user with groups and permissions
-      const user = await User.findByPk(req.user.id, {
-        include: [
-          {
-            model: UserPermission,
-            as: "userPermission",
-            attributes: ["permissions"]
-          },
-          {
-            model: Department,
-            as: "departments",
-            through: {
-              attributes: ["permissions"]
-            },
-            attributes: ["id", "name", "description"]
-          }
-        ]
-      });
+      const user = await User.findByPk(req.user.id);
 
       if (!user) {
         return res.status(401).json({ error: "User not found" });
@@ -72,23 +55,7 @@ export const userHasPermission = async (
   permission: string,
   departmentId?: number
 ): Promise<boolean> => {
-  const userRecord = await User.findByPk(user.id, {
-    include: [
-      {
-        model: UserPermission,
-        as: "userPermission",
-        attributes: ["permissions"]
-      },
-      {
-        model: Department,
-        as: "departments",
-        through: {
-          attributes: ["permissions"]
-        },
-        attributes: ["id", "name", "description"]
-      }
-    ]
-  });
+  const userRecord = await User.findByPk(user.id);
 
   if (!userRecord) {
     return false;

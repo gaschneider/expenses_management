@@ -1,4 +1,6 @@
 import Department from "./Department";
+import Expense from "./Expense";
+import ExpenseStatus from "./ExpenseStatus";
 import User from "./User";
 import UserDepartmentPermission from "./UserDepartmentPermission";
 import UserPermission from "./UserPermission";
@@ -46,5 +48,37 @@ export const defineAssociations = () => {
   UserDepartmentPermission.belongsTo(Department, {
     foreignKey: "departmentId",
     as: "department"
+  });
+
+  // Expenses association
+
+  Expense.hasMany(ExpenseStatus, {
+    foreignKey: "expenseId",
+    as: "expenseStatuses"
+  });
+
+  Expense.belongsTo(Department, {
+    foreignKey: "departmentId",
+    as: "department"
+  });
+
+  Expense.belongsTo(User, {
+    foreignKey: "requesterId",
+    as: "requester"
+  });
+
+  ExpenseStatus.belongsTo(Expense, {
+    foreignKey: "expenseId",
+    as: "expense"
+  });
+
+  ExpenseStatus.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user"
+  });
+
+  ExpenseStatus.belongsTo(User, {
+    foreignKey: "nextApproverId",
+    as: "nextApprover"
   });
 };

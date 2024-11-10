@@ -22,9 +22,9 @@ import {
   Assessment as AssessmentIcon,
   Logout as LogoutIcon
 } from "@mui/icons-material";
-import api from "../api/axios.config";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import InitialsAvatar from "./InitialsAvatar";
+import { useAuth } from "../contexts/AuthContext";
 
 const drawerWidth = 240;
 
@@ -41,6 +41,7 @@ interface NavItem {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { logout } = useAuth();
   const { user } = useCurrentUser();
 
   const navItems: NavItem[] = [
@@ -48,16 +49,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: "Expenses", path: "/expenses", icon: <ReceiptIcon /> },
     { text: "Reports", path: "/reports", icon: <AssessmentIcon /> }
   ];
-
-  const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout");
-      localStorage.removeItem("token");
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -71,7 +62,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Typography>
           <Box sx={{ display: "flex" }}>
             <InitialsAvatar firstName={user.firstName} lastName={user.lastName} />
-            <Button color="inherit" onClick={handleLogout} startIcon={<LogoutIcon />}>
+            <Button color="inherit" onClick={logout} startIcon={<LogoutIcon />}>
               Logout
             </Button>
           </Box>

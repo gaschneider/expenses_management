@@ -5,6 +5,8 @@ import { UserAttributes, UserInstance } from "../types/auth";
 import UserPermission from "./UserPermission";
 import UserDepartmentPermission from "./UserDepartmentPermission";
 import Department from "./Department";
+import Expense from "./Expense";
+import ExpenseStatus from "./ExpenseStatus";
 
 class User extends Model<UserAttributes, UserAttributes> implements UserInstance {
   declare id?: number;
@@ -17,6 +19,7 @@ class User extends Model<UserAttributes, UserAttributes> implements UserInstance
 
   declare userPermission?: UserPermission;
   declare departments?: Department[];
+  declare expenses?: Expense[];
 
   declare getUserPermissions: () => Promise<UserPermission[]>;
   declare setUserPermissions: (permissions: UserPermission[]) => Promise<void>;
@@ -26,6 +29,11 @@ class User extends Model<UserAttributes, UserAttributes> implements UserInstance
   declare setDepartments: (departments: Department[]) => Promise<void>;
   declare addDepartment: (department: Department) => Promise<void>;
   declare removeDepartment: (department: Department) => Promise<void>;
+
+  declare getExpenses: () => Promise<Expense[]>;
+  declare setExpenses: (permissions: Expense[]) => Promise<void>;
+  declare addExpense: (permission: Expense) => Promise<void>;
+  declare removeExpense: (permission: Expense) => Promise<void>;
 
   public async validatePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);

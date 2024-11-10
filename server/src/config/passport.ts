@@ -78,7 +78,7 @@ passport.deserializeUser(async (id: number, done) => {
   }
 });
 
-const getUserDTO = (user: User | null) => {
+export const getUserDTO = (user: User | null) => {
   if (!user) return null;
   return {
     id: user.id,
