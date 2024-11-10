@@ -1,5 +1,5 @@
 import Department from "./Department";
-import User from "./Users";
+import User from "./User";
 import UserDepartmentPermission from "./UserDepartmentPermission";
 import UserPermission from "./UserPermission";
 

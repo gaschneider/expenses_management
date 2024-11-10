@@ -1,6 +1,6 @@
 // middleware/checkPermission.ts
 import { Request, Response, NextFunction } from "express";
-import User from "../models/Users";
+import User from "../models/User";
 import { SystemPermission, UserInstance } from "../types/auth";
 import UserPermission from "../models/UserPermission";
 import UserDepartmentPermission from "../models/UserDepartmentPermission";

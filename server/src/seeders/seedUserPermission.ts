@@ -1,5 +1,5 @@
 import Department from "../models/Department";
-import User from "../models/Users";
+import User from "../models/User";
 import UserPermission from "../models/UserPermission";
 import { DepartmentPermission, SystemPermission } from "../types/auth";
 

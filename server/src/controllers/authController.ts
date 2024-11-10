@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { UserInstance } from "../types/auth";
 import passport from "passport";
 import { validateEmail } from "../helpers/emailHelper";
-import User from "../models/Users";
+import User from "../models/User";
 
 export const registerAction = async (req: Request, res: Response, next: NextFunction) => {
   try {

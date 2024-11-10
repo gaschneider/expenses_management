@@ -2,7 +2,7 @@ import { Model, DataTypes, Transaction } from "sequelize";
 import sequelize from "../config/database";
 import { DepartmenAttributes } from "../types/auth";
 import UserDepartmentPermission from "./UserDepartmentPermission";
-import User from "./Users";
+import User from "./User";
 
 class Department extends Model<DepartmenAttributes, DepartmenAttributes> {
   declare id?: number;

@@ -1,7 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
 import { UserDepartmentPermissionAttributes } from "../types/auth";
-import User from "./Users";
+import User from "./User";
 import Department from "./Department";
 
 class UserDepartmentPermission extends Model<

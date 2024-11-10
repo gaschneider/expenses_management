@@ -2,7 +2,7 @@ import request from "supertest";
 import sequelize from "../src/config/database";
 import app, { startServer } from "../src/index";
 import { Server } from "http";
-import User from "../src/models/Users";
+import User from "../src/models/User";
 
 describe("Authentication Endpoints", () => {
   let server: Server;
