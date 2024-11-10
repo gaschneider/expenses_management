@@ -23,6 +23,8 @@ import {
   Logout as LogoutIcon
 } from "@mui/icons-material";
 import api from "../api/axios.config";
+import { useCurrentUser } from "../hooks/useCurrentUser";
+import InitialsAvatar from "./InitialsAvatar";
 
 const drawerWidth = 240;
 
@@ -39,6 +41,7 @@ interface NavItem {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { user } = useCurrentUser();
 
   const navItems: NavItem[] = [
     { text: "Home", path: "/", icon: <HomeIcon /> },
@@ -66,9 +69,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Typography variant="h6" noWrap component="div">
             Dashboard
           </Typography>
-          <Button color="inherit" onClick={handleLogout} startIcon={<LogoutIcon />}>
-            Logout
-          </Button>
+          <Box sx={{ display: "flex" }}>
+            <InitialsAvatar firstName={user.firstName} lastName={user.lastName} />
+            <Button color="inherit" onClick={handleLogout} startIcon={<LogoutIcon />}>
+              Logout
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
 

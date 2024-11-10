@@ -1,8 +1,8 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import User from "../models/user";
-import Group from "../models/group";
-import Permission from "../models/permission";
+import User from "../models/User";
+import UserPermission from "../models/UserPermission";
+import Department from "../models/Department";
 
 passport.use(
   new LocalStrategy(
@@ -16,16 +16,17 @@ passport.use(
           where: { email },
           include: [
             {
-              model: Group,
-              as: "groups",
-              attributes: ["id", "name", "description"],
-              include: [
-                {
-                  model: Permission,
-                  as: "permissions",
-                  attributes: ["id", "name", "description"]
-                }
-              ]
+              model: UserPermission,
+              as: "userPermission",
+              attributes: ["permissions"]
+            },
+            {
+              model: Department,
+              as: "departments",
+              through: {
+                attributes: ["permissions"]
+              },
+              attributes: ["id", "name", "description"]
             }
           ]
         });
@@ -55,16 +56,17 @@ passport.deserializeUser(async (id: number, done) => {
     const user = await User.findByPk(id, {
       include: [
         {
-          model: Group,
-          as: "groups",
-          attributes: ["id", "name", "description"],
-          include: [
-            {
-              model: Permission,
-              as: "permissions",
-              attributes: ["id", "name", "description"]
-            }
-          ]
+          model: UserPermission,
+          as: "userPermission",
+          attributes: ["permissions"]
+        },
+        {
+          model: Department,
+          as: "departments",
+          through: {
+            attributes: ["permissions"]
+          },
+          attributes: ["id", "name", "description"]
         }
       ]
     });

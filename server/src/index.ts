@@ -1,7 +1,6 @@
 import express from "express";
 const app = express();
 import cors from "cors";
-import { addExpense, getAllExpenses } from "./controllers/expenseController";
 import { createDatabaseIfNeeded } from "./scripts/createDb";
 import authRoutes from "./routes/auth";
 import session from "express-session";
@@ -22,10 +21,12 @@ const initDatabase = async () => {
     // Note: force: true will drop tables if they exist
     // Use force: false in production!
     if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
-      sequelize.sync({ alter: true }); // Be careful with this in production!
+      await sequelize.sync({ alter: true }); // Be careful with this in production!
     }
     console.log("Database synchronized successfully.");
-    await seedUserPermission();
+    if (process.env.NODE_ENV !== "test") {
+      await seedUserPermission();
+    }
   } catch (error) {
     console.error("Unable to connect to the database:", error);
     process.exit(1);
@@ -62,17 +63,6 @@ export const startServer = async () => {
 
   // Mount routes
   app.use("/api/auth", authRoutes);
-
-  // Your other routes
-  app.post("/api/expenses", async (req, res) => {
-    const newExpense = await addExpense();
-    res.send(newExpense);
-  });
-
-  app.get("/api/expenses", async (req, res) => {
-    const expenses = await getAllExpenses();
-    res.send(expenses);
-  });
 
   const server = app.listen(8081, () => {
     console.log("Server listening on port 8081");

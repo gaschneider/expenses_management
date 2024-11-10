@@ -2,7 +2,7 @@ import request from "supertest";
 import sequelize from "../src/config/database";
 import app, { startServer } from "../src/index";
 import { Server } from "http";
-import User from "../src/models/user";
+import User from "../src/models/User";
 
 describe("Authentication Endpoints", () => {
   let server: Server;
@@ -21,11 +21,13 @@ describe("Authentication Endpoints", () => {
 
   beforeEach(async () => {
     // Clear database before each test
-    await User.destroy({ where: {}, truncate: true });
+    await User.destroy({ where: {}, cascade: true });
   });
 
   describe("POST /auth/register", () => {
     const validUser = {
+      firstName: "Valid",
+      lastName: "User",
       email: "test@example.com",
       password: "Password123!"
     };
@@ -71,6 +73,8 @@ describe("Authentication Endpoints", () => {
 
   describe("POST /auth/login", () => {
     const testUser = {
+      firstName: "Test",
+      lastName: "User",
       email: "test@example.com",
       password: "Password123!"
     };
@@ -122,6 +126,8 @@ describe("Authentication Endpoints", () => {
 
   describe("GET /auth/status", () => {
     const testUser = {
+      firstName: "Test",
+      lastName: "User",
       email: "test@example.com",
       password: "Password123!"
     };

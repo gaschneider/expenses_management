@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../models/user";
+import User from "../models/User";
 import { UserInstance } from "../types/auth";
 import passport from "passport";
 import { validateEmail } from "../helpers/emailHelper";
 
 export const registerAction = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, firstName, lastName } = req.body;
 
     // Validate input
     if (!email || !password) {
@@ -42,6 +42,8 @@ export const registerAction = async (req: Request, res: Response, next: NextFunc
 
     // Create new user
     const user = await User.create({
+      firstName,
+      lastName,
       email,
       password // Password will be hashed by the beforeCreate hook
     });
@@ -66,17 +68,14 @@ export const statusAction = (req: Request, res: Response) => {
       isAuthenticated: true,
       user: {
         id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
-        groups: user.groups?.map((group) => ({
-          id: group.id,
-          name: group.name,
-          description: group.description,
-          permissions: group.permissions?.map((permission) => ({
-            id: permission.id,
-            name: permission.name,
-            description: permission.description
-          }))
-        }))
+        permissions: user.userPermission?.permissions,
+        departmentPermissions: user.departments?.reduce((prev, curr) => {
+          prev[curr.id] = curr.userDepartmentPermission.permissions;
+          return prev;
+        }, {} as Record<number, string>)
       }
     });
   } else {
@@ -94,7 +93,7 @@ export const loginAction = (req: Request, res: Response, next: NextFunction) => 
     }
     req.logIn(user, (err) => {
       if (err) return next(err);
-      return res.json({ message: "Login successful" });
+      return res.json({ message: "Login successful", user });
     });
   })(req, res, next);
 };

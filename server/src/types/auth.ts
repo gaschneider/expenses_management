@@ -1,60 +1,96 @@
 import { Model } from "sequelize";
+import Department from "../models/Department";
+import UserDepartmentPermission from "../models/UserDepartmentPermission";
+import User from "../models/User";
+import UserPermission from "../models/UserPermission";
 
 // Interface for User model attributes
 export interface UserAttributes {
   id?: number;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export interface PermissionAttributes {
+// Interface for Department model attributes
+export interface DepartmenAttributes {
   id?: number;
   name: string;
   description: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  users?: User[];
+  userDepartmentPermissions?: UserDepartmentPermission[];
 }
 
-export interface GroupAttributes {
+// Interface for User Department Permissions model attributes
+export interface UserDepartmentPermissionAttributes {
   id?: number;
-  name: string;
-  description: string;
+  userId: number;
+  departmentId: number;
+  permissions: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  user?: User;
+  department?: Department;
+}
+
+// Interface for User Permissions model attributes
+export interface UserPermissionAttributes {
+  id?: number;
+  userId: number;
+  permissions: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// Interface for Permission Audit Log model attributes
+export interface PermissionAuditLogAttributes {
+  id?: number;
+  targetUserId: number; // User whose permissions were changed
+  performedByUserId: number; // User who made the change
+  action: AuditAction;
+  entityType: string; // 'UserPermission' or 'UserDepartmentPermission'
+  entityId: number;
+  departmentId?: number;
+  oldPermissions?: string;
+  newPermissions: string;
+  timestamp: Date;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface UserInstance extends Model<UserAttributes>, UserAttributes {
   validatePassword(password: string): Promise<boolean>;
-
-  // Use lowercase to match association aliases
-  groups?: GroupInstance[];
-  getGroups: () => Promise<GroupInstance[]>;
-  setGroups: (groups: GroupInstance[]) => Promise<void>;
-  addGroup: (group: GroupInstance) => Promise<void>;
-  removeGroup: (group: GroupInstance) => Promise<void>;
 }
 
-export interface GroupInstance extends Model<GroupAttributes>, GroupAttributes {
-  permissions?: PermissionAttributes[];
-  users?: UserInstance[];
-
-  getPermissions: () => Promise<PermissionAttributes[]>;
-  setPermissions: (permissions: PermissionAttributes[]) => Promise<void>;
-  addPermission: (permission: PermissionAttributes) => Promise<void>;
-  removePermission: (permission: PermissionAttributes) => Promise<void>;
-
-  getUsers: () => Promise<UserInstance[]>;
-  setUsers: (users: UserInstance[]) => Promise<void>;
-  addUser: (user: UserInstance) => Promise<void>;
-  removeUser: (user: UserInstance) => Promise<void>;
+export enum DepartmentPermission {
+  VIEW_EXPENSES = "VIEW_EXPENSES",
+  CREATE_EXPENSES = "CREATE_EXPENSES",
+  APPROVE_EXPENSES = "APPROVE_EXPENSES",
+  REJECT_EXPENSES = "REJECT_EXPENSES",
+  CREATE_WORKFLOW_RULES = "CREATE_WORKFLOW_RULES",
+  EDIT_WORKFLOW_RULES = "EDIT_WORKFLOW_RULES",
+  DELETE_WORKFLOW_RULES = "DELETE_WORKFLOW_RULES"
 }
 
-export interface GroupPermissionAttributes {
-  groupId: number;
-  permissionId: number;
+export enum SystemPermission {
+  CREATE_DEPARTMENT = "CREATE_DEPARTMENT",
+  EDIT_DEPARTMENT = "EDIT_DEPARTMENT",
+  DELETE_DEPARTMENT = "DELETE_DEPARTMENT",
+  MANAGE_USER_DEPARTMENT_PERMISSIONS = "MANAGE_USER_DEPARTMENT_PERMISSIONS",
+  ADMIN = "ADMIN"
 }
 
-export interface UserGroupAttributes {
-  userId: number;
-  groupId: number;
+export enum AuditAction {
+  GRANT = "GRANT",
+  REVOKE = "REVOKE",
+  MODIFY = "MODIFY"
 }
 
 // Extend Express Request type to include our User type
@@ -62,8 +98,20 @@ declare global {
   namespace Express {
     interface User extends UserAttributes {
       id?: number;
+      firstName: string;
+      lastName: string;
       email: string;
-      groups?: GroupInstance[];
+      userPermission?: {
+        permissions: string;
+      };
+      departments?: {
+        id: number;
+        name: string;
+        description: string;
+        userDepartmentPermission: {
+          permissions: string;
+        };
+      }[];
     }
   }
 }

@@ -1,18 +1,15 @@
 // src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from "../api/axios.config"
+import React, { createContext, useContext, useState, useEffect } from "react";
+import api from "../api/axios.config";
+import { UserDTO } from "../types/api";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-}
-
-interface User {
-  id: number;
-  email: string;
+  user: UserDTO | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -20,7 +17,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserDTO | null>(null);
 
   // Check authentication status on mount
   useEffect(() => {
@@ -29,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuthStatus = async () => {
     try {
-      const response = await api.get('/auth/status', { withCredentials: true });
+      const response = await api.get("/auth/status", { withCredentials: true });
       setIsAuthenticated(response.data.isAuthenticated);
       if (response.data.user) {
         setUser(response.data.user);
@@ -42,13 +39,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (firstName: string, lastName: string, email: string, password: string) => {
     try {
-      const response = await api.post('/auth/register', {
+      const response = await api.post("/auth/register", {
+        firstName,
+        lastName,
         email,
-        password,
+        password
       });
-      
+
       // Don't automatically log in after registration
       // User should explicitly log in
       return response.data;
@@ -57,14 +56,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-      throw new Error('Registration failed. Please try again.');
+      throw new Error("Registration failed. Please try again.");
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
       const response = await api.post(
-        '/auth/login',
+        "/auth/login",
         { email, password },
         { withCredentials: true }
       );
@@ -77,20 +76,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-      throw new Error('Login failed. Please try again.');
+      throw new Error("Login failed. Please try again.");
     }
   };
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout', {}, { withCredentials: true });
+      await api.post("/auth/logout", {}, { withCredentials: true });
     } finally {
       setIsAuthenticated(false);
       setUser(null);
     }
   };
 
-  if (loading) {
+  if (loading && user) {
     // You might want to replace this with a proper loading component
     return <div>Loading...</div>;
   }
@@ -103,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
+        user
       }}
     >
       {children}
@@ -113,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

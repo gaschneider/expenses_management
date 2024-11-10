@@ -1,31 +1,21 @@
-import { useState, useEffect } from "react";
-import api from "../api/axios.config";
-import { UserDTO } from "../types/api";
+import { SystemPermission } from "../types/api";
+import { useAuth } from "../contexts/AuthContext";
 
 export const useCurrentUser = () => {
-  const [user, setUser] = useState<UserDTO>();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await api.get("/auth/status");
-        setUser(response.data.user);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
-  const userHasPermission = (permission: string) => {
-    console.log(user);
+  const userHasPermission = (permission: string, departmentId?: number) => {
     if (!user) return false;
 
-    return !!user?.groups?.some((group) =>
-      group.permissions?.some((perm) => perm.name === permission)
-    );
+    if (user.userPermission.permissions.includes(SystemPermission.ADMIN)) {
+      return true;
+    }
+
+    // if (departmentId) {
+    //   return user.departmentPermissions?.[departmentId]?.includes(permission);
+    // }
+    return user.userPermission.permissions.includes(permission);
   };
 
-  return { user, userHasPermission };
+  return { user: user!, userHasPermission };
 };

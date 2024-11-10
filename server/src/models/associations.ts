@@ -1,39 +1,50 @@
-import Group from "./group";
-import GroupPermission from "./groupPermission";
-import Permission from "./permission";
-import User from "./user";
-import UserGroup from "./userGroup";
+import Department from "./Department";
+import User from "./User";
+import UserDepartmentPermission from "./UserDepartmentPermission";
+import UserPermission from "./UserPermission";
 
 export const defineAssociations = () => {
-  User.belongsToMany(Group, {
-    through: UserGroup,
+  // User - UserPermission Association
+  User.hasOne(UserPermission, {
     foreignKey: "userId",
-    otherKey: "groupId",
-    as: "groups",
+    as: "userPermission",
     onDelete: "CASCADE"
   });
+  UserPermission.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user"
+  });
 
-  Group.belongsToMany(User, {
-    through: UserGroup,
-    foreignKey: "groupId",
-    otherKey: "userId",
+  // User - Department Association (through UserDepartmentPermission)
+  User.belongsToMany(Department, {
+    through: UserDepartmentPermission,
+    foreignKey: "userId",
+    as: "departments",
+    onDelete: "CASCADE"
+  });
+  Department.belongsToMany(User, {
+    through: UserDepartmentPermission,
+    foreignKey: "departmentId",
     as: "users",
     onDelete: "CASCADE"
   });
 
-  Group.belongsToMany(Permission, {
-    through: GroupPermission,
-    foreignKey: "groupId",
-    otherKey: "permissionId",
-    as: "permissions",
-    onDelete: "CASCADE"
+  User.hasMany(UserDepartmentPermission, {
+    foreignKey: "userId",
+    as: "userDepartmentPermissions"
+  });
+  Department.hasMany(UserDepartmentPermission, {
+    foreignKey: "departmentId",
+    as: "userDepartmentPermissions"
   });
 
-  Permission.belongsToMany(Group, {
-    through: GroupPermission,
-    foreignKey: "permissionId",
-    otherKey: "groupId",
-    as: "groups",
-    onDelete: "CASCADE"
+  // UserDepartmentPermission associations
+  UserDepartmentPermission.belongsTo(User, {
+    foreignKey: "userId",
+    as: "user"
+  });
+  UserDepartmentPermission.belongsTo(Department, {
+    foreignKey: "departmentId",
+    as: "department"
   });
 };
