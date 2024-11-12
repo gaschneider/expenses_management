@@ -7,6 +7,12 @@ export type UserDTO = {
   departments: Record<number, string>;
 };
 
+export type DepartmentDTO = {
+  id?: number;
+  name: string;
+  description: string;
+};
+
 export enum DepartmentPermission {
   VIEW_EXPENSES = "VIEW_EXPENSES",
   CREATE_EXPENSES = "CREATE_EXPENSES",

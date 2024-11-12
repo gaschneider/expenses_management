@@ -2,26 +2,22 @@
 import { Request, Response, NextFunction } from "express";
 import User from "../models/User";
 import { SystemPermission, UserInstance } from "../types/auth";
-import UserPermission from "../models/UserPermission";
-import Department from "../models/Department";
 
-// Extend Express Request type to include our User type
-interface AuthenticatedRequest extends Request {
-  user?: UserInstance;
-}
-
-export const checkPermission = (requiredPermission: string, departmentId?: number) => {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+// required permission works as OR, if wanna check multiple permissions as AND, chain in the route middleware
+export const checkPermission = (requiredPermissions: string | string[], departmentId?: number) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
+        res.status(401).json({ error: "Unauthorized" });
+        return;
       }
 
       // Find user with groups and permissions
       const user = await User.findByPk(req.user.id);
 
       if (!user) {
-        return res.status(401).json({ error: "User not found" });
+        res.status(401).json({ error: "User not found" });
+        return;
       }
 
       if (await user.hasPermissionString(SystemPermission.ADMIN)) {
@@ -29,19 +25,28 @@ export const checkPermission = (requiredPermission: string, departmentId?: numbe
         return;
       }
 
-      let hasPermission = false;
-      // Check if user has the required permission
-      if (departmentId) {
-        hasPermission = await user.hasDepartmentPermissionString(departmentId, requiredPermission);
-      } else {
-        hasPermission = await user.hasPermissionString(requiredPermission);
+      for (let index = 0; index < requiredPermissions.length; index++) {
+        let hasPermission = false;
+        const requiredPermission = requiredPermissions[index];
+
+        // Check if user has the required permission
+        if (departmentId) {
+          hasPermission = await user.hasDepartmentPermissionString(
+            departmentId,
+            requiredPermission
+          );
+        } else {
+          hasPermission = await user.hasPermissionString(requiredPermission);
+        }
+
+        if (hasPermission) {
+          next();
+          return;
+        }
       }
 
-      if (!hasPermission) {
-        return res.status(403).json({ error: "Insufficient permissions" });
-      }
-
-      next();
+      res.status(403).json({ error: "Insufficient permissions" });
+      return;
     } catch (error) {
       console.error("Permission check error:", error);
       res.status(500).json({ error: "Internal server error" });

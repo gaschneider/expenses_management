@@ -6,6 +6,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import ExpensesPage from "./pages/ExpensesPage";
+import DepartmentsPage from "./pages/DepartmentsPage";
+import DepartmentForm from "./components/DepartmentForm";
 
 const App = () => {
   return (
@@ -36,6 +38,31 @@ const App = () => {
           />
 
           <Route path="/" element={<Navigate to="/home" replace />} />
+
+          <Route
+            path="/departments"
+            element={
+              <ProtectedRoute>
+                <DepartmentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/departments/create"
+            element={
+              <ProtectedRoute>
+                <DepartmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/departments/edit/:id"
+            element={
+              <ProtectedRoute>
+                <DepartmentForm />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="*"
