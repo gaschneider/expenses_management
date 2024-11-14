@@ -1,9 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import { UserInstance } from "../types/auth";
-import passport from "passport";
-import { validateEmail } from "../helpers/emailHelper";
-import User from "../models/User";
-import { getUserDTO } from "../config/passport";
 import Department from "../models/Department";
 
 const departmentToDTO = (department: Department) => {
@@ -41,13 +36,20 @@ export const createDepartment = async (req: Request, res: Response, next: NextFu
     }
 
     // Create new department
-    await Department.create({
+    const newDepartment = await Department.create({
       name,
       description
     });
 
+    const newDepartmentInfo = newDepartment.get();
+
     res.status(201).json({
-      message: "Department created successfully"
+      message: "Department created successfully",
+      department: {
+        id: newDepartmentInfo.id,
+        name: newDepartmentInfo.name,
+        description: newDepartmentInfo.description
+      }
     });
   } catch (error) {
     next(error);
@@ -57,40 +59,40 @@ export const createDepartment = async (req: Request, res: Response, next: NextFu
 export const getDepartments = async (req: Request, res: Response) => {
   const departments = await Department.findAll();
 
-  res.json(departments.map(departmentToDTO));
+  res.status(200).json(departments.map(departmentToDTO));
 };
 
 export const getDepartmentById = async (req: Request, res: Response) => {
   const { id } = req.params;
 
-  if (id == null || typeof id != "string") {
-    res.status(401).json({ error: "Invalid department id" });
+  if (id == null || typeof id != "string" || !Number.isFinite(Number(id))) {
+    res.status(400).json({ error: "Invalid department id" });
     return;
   }
 
   const department = await Department.findOne({ where: { id } });
 
   if (!department) {
-    res.status(400).json({
+    res.status(404).json({
       error: "Department not found"
     });
     return;
   }
 
-  res.json(departmentToDTO(department));
+  res.status(200).json(departmentToDTO(department));
 };
 
 export const editDepartment = async (req: Request, res: Response) => {
   const { id } = req.params;
-  if (id == null || typeof id != "string") {
-    res.status(401).json({ error: "Invalid department id" });
+  if (id == null || typeof id != "string" || !Number.isFinite(Number(id))) {
+    res.status(400).json({ error: "Invalid department id" });
     return;
   }
 
   const department = await Department.findOne({ where: { id } });
 
   if (!department) {
-    res.status(400).json({
+    res.status(404).json({
       error: "Department not found"
     });
     return;
@@ -109,15 +111,15 @@ export const editDepartment = async (req: Request, res: Response) => {
 export const deleteDepartment = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
 
-  if (id == null || typeof id != "string") {
-    res.status(401).json({ error: "Invalid department id" });
+  if (id == null || typeof id != "string" || !Number.isFinite(Number(id))) {
+    res.status(400).json({ error: "Invalid department id" });
     return;
   }
 
   const department = await Department.findOne({ where: { id } });
 
   if (!department) {
-    res.status(400).json({
+    res.status(404).json({
       error: "Department not found"
     });
     return;
