@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Department from "../models/Department";
+import { Op } from "sequelize";
 
 const departmentToDTO = (department: Department) => {
   return {
@@ -99,7 +100,30 @@ export const editDepartment = async (req: Request, res: Response) => {
   }
 
   const { name, description } = req.body;
-  department.update({
+
+  if (!name) {
+    res.status(400).json({
+      error: "Name is required"
+    });
+    return;
+  }
+
+  const countDepartments = await Department.count({
+    where: {
+      name,
+      id: {
+        [Op.ne]: department.id
+      }
+    }
+  });
+  if (countDepartments > 0) {
+    res.status(400).json({
+      error: "Department already exists"
+    });
+    return;
+  }
+
+  await department.update({
     name,
     description
   });

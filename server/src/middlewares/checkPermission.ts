@@ -25,9 +25,13 @@ export const checkPermission = (requiredPermissions: string | string[], departme
         return;
       }
 
-      for (let index = 0; index < requiredPermissions.length; index++) {
+      const innerRequiredPermissions = Array.isArray(requiredPermissions)
+        ? requiredPermissions
+        : [requiredPermissions];
+
+      for (let index = 0; index < innerRequiredPermissions.length; index++) {
         let hasPermission = false;
-        const requiredPermission = requiredPermissions[index];
+        const requiredPermission = innerRequiredPermissions[index];
 
         // Check if user has the required permission
         if (departmentId) {
