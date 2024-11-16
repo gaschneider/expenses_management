@@ -29,6 +29,7 @@ After those steps you should have all setup
 
 Navigate to server folder in the terminal
 - Execute the command `npm start`
+- Another option is also execute `npm run dev` it will run the server using the typescript files instead of js built ones.
 
 Navigate to client folder in the terminal
 - Execute the command `npm start`
