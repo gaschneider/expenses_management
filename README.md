@@ -22,6 +22,7 @@ Now to configure the client, in the terminal navigate to the folder `client` and
 To configure the server, in the terminal, navigate to the folder `server`:
 - run `npm install`
 - run `npm run create-db`
+- run `npm run db:migrate`
 
 After those steps you should have all setup
 
