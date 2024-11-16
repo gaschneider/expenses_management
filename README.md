@@ -22,6 +22,7 @@ Now to configure the client, in the terminal navigate to the folder `client` and
 To configure the server, in the terminal, navigate to the folder `server`:
 - run `npm install`
 - run `npm run create-db`
+- run `npm run db:migrate`
 
 After those steps you should have all setup
 
@@ -29,6 +30,7 @@ After those steps you should have all setup
 
 Navigate to server folder in the terminal
 - Execute the command `npm start`
+- Another option is also execute `npm run dev` it will run the server using the typescript files instead of js built ones.
 
 Navigate to client folder in the terminal
 - Execute the command `npm start`
