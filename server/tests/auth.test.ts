@@ -13,6 +13,7 @@ describe("Authentication Endpoints", () => {
   });
 
   afterAll(async () => {
+    await User.destroy({ where: {}, cascade: true });
     await sequelize.close(); // Close connection after tests
     if (server) {
       server.close();

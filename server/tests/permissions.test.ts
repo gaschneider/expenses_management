@@ -28,6 +28,9 @@ describe("Permissions validation", () => {
   });
 
   afterAll(async () => {
+    await User.destroy({ where: {}, cascade: true });
+    await UserPermission.destroy({ where: {} });
+    await UserDepartmentPermission.destroy({ where: {} });
     await sequelize.close(); // Close connection after tests
     if (server) {
       server.close();

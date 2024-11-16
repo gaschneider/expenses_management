@@ -1,5 +1,5 @@
 // src/components/Layout.tsx
-import React, { ReactNode } from "react";
+import React, { ReactNode, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -19,12 +19,14 @@ import {
 import {
   Home as HomeIcon,
   Receipt as ReceiptIcon,
-  Assessment as AssessmentIcon,
+  Business as BusinessIcon,
   Logout as LogoutIcon
 } from "@mui/icons-material";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import InitialsAvatar from "./InitialsAvatar";
 import { useAuth } from "../contexts/AuthContext";
+import { useUserHasPagePermission } from "../hooks/useUserHasPagePermission";
+import { SystemPermission } from "../types/api";
 
 const drawerWidth = 240;
 
@@ -43,12 +45,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const theme = useTheme();
   const { logout } = useAuth();
   const { user } = useCurrentUser();
+  const departmentPagePermission = useUserHasPagePermission(
+    [
+      SystemPermission.CREATE_DEPARTMENT,
+      SystemPermission.DELETE_DEPARTMENT,
+      SystemPermission.EDIT_DEPARTMENT
+    ],
+    false
+  );
 
-  const navItems: NavItem[] = [
-    { text: "Home", path: "/", icon: <HomeIcon /> },
-    { text: "Expenses", path: "/expenses", icon: <ReceiptIcon /> },
-    { text: "Reports", path: "/reports", icon: <AssessmentIcon /> }
-  ];
+  const navItems: NavItem[] = useMemo(() => {
+    const navItems = [
+      { text: "Home", path: "/", icon: <HomeIcon /> },
+      { text: "Expenses", path: "/expenses", icon: <ReceiptIcon /> }
+    ];
+    if (departmentPagePermission) {
+      navItems.push({ text: "Departments", path: "/departments", icon: <BusinessIcon /> });
+    }
+    return navItems;
+  }, [departmentPagePermission]);
 
   return (
     <Box sx={{ display: "flex" }}>
