@@ -103,7 +103,9 @@ class Department extends Model<DepartmenAttributes, DepartmenAttributes> {
         userId
       }
     });
-    return userPermission ? userPermission.permissions.split(",") : [];
+    return userPermission && userPermission.permissions
+      ? userPermission.permissions.split(",")
+      : [];
   }
 
   public async hasUserPermissionString(userId: number, permission: string): Promise<boolean> {

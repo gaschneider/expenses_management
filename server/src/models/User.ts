@@ -99,7 +99,9 @@ class User extends Model<UserAttributes, UserAttributes> implements UserInstance
     const userPermission = await UserPermission.findOne({
       where: { userId: this.id! }
     });
-    return userPermission ? userPermission.permissions.split(",") : [];
+    return userPermission && userPermission.permissions
+      ? userPermission.permissions.split(",")
+      : [];
   }
 
   public async hasPermissionString(permission: string): Promise<boolean> {

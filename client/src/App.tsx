@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import ExpensesPage from "./pages/ExpensesPage";
 import DepartmentsPage from "./pages/DepartmentsPage";
 import DepartmentForm from "./components/DepartmentForm";
+import UserManagementPage from "./pages/UserManagementPage";
 
 const App = () => {
   return (
@@ -60,6 +61,15 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <DepartmentForm />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user-management"
+            element={
+              <ProtectedRoute>
+                <UserManagementPage />
               </ProtectedRoute>
             }
           />
