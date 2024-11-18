@@ -98,6 +98,11 @@ describe("Departments Endpoints", () => {
         description: "Finance department"
       };
 
+      beforeEach(async () => {
+        // Clear database before each test
+        await Department.destroy({ where: {}, cascade: true });
+      });
+
       afterAll(async () => {
         // Clear database before each test
         await Department.destroy({ where: {}, cascade: true });
@@ -469,6 +474,8 @@ describe("Departments Endpoints", () => {
         // Verify department was created in database
         const department = await Department.findOne({ where: { name: validDepartment.name } });
         expect(department).not.toBeNull();
+
+        await Department.destroy({ where: {}, cascade: true });
       });
     });
 
