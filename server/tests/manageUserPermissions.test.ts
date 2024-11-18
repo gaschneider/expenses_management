@@ -282,4 +282,152 @@ describe("Manage user permissions endpoints", () => {
       });
     });
   });
+
+  describe("Authenticated no permission user", () => {
+    const noPermissionsUserInfo = {
+      firstName: "No",
+      lastName: "Permissions",
+      email: "no@permissions.com",
+      password: "Password123!"
+    };
+
+    let userToUpdatePermissions: User;
+    let itDepartment: Department;
+    let financeDepartment: Department;
+
+    beforeAll(async () => {
+      await User.create(noPermissionsUserInfo);
+
+      userToUpdatePermissions = await User.create({
+        firstName: "Manage",
+        lastName: "Permissions",
+        email: "manage@permissions.com",
+        password: "Password123!"
+      });
+
+      itDepartment = await Department.create({
+        name: "IT",
+        description: "IT Department"
+      });
+
+      financeDepartment = await Department.create({
+        name: "Finance",
+        description: "Finance Department"
+      });
+
+      agent = request.agent(app);
+      await agent.post("/api/auth/login").send(noPermissionsUserInfo).expect(200);
+    });
+
+    afterAll(async () => {
+      await PermissionAuditLog.destroy({ where: {} });
+      await User.destroy({ where: {}, cascade: true });
+      await Department.destroy({ where: {}, cascade: true });
+    });
+
+    describe("GET /users", () => {
+      it("should not retrieve all users", async () => {
+        await agent.get(usersBaseEndpoint).expect(403);
+      });
+    });
+
+    describe("PUT /users", () => {
+      it("should not update specific user permission", async () => {
+        await agent
+          .put(`${usersBaseEndpoint}/${userToUpdatePermissions.id}`)
+          .send({
+            systemPermissions: [
+              SystemPermission.CREATE_DEPARTMENT,
+              SystemPermission.DELETE_DEPARTMENT
+            ],
+            departments: [
+              {
+                departmentId: itDepartment.id,
+                departmentName: itDepartment.name,
+                permissions: [DepartmentPermission.APPROVE_EXPENSES]
+              },
+              {
+                departmentId: financeDepartment.id,
+                departmentName: financeDepartment.name,
+                permissions: [DepartmentPermission.VIEW_EXPENSES]
+              }
+            ]
+          })
+          .expect(403);
+      });
+
+      it("should not throw invalid id due to forbidden", async () => {
+        await agent.put(`${usersBaseEndpoint}/abc`).expect(403);
+      });
+    });
+  });
+
+  describe("User not authenticated", () => {
+    let userToUpdatePermissions: User;
+    let itDepartment: Department;
+    let financeDepartment: Department;
+
+    beforeAll(async () => {
+      userToUpdatePermissions = await User.create({
+        firstName: "Manage",
+        lastName: "Permissions",
+        email: "manage@permissions.com",
+        password: "Password123!"
+      });
+
+      itDepartment = await Department.create({
+        name: "IT",
+        description: "IT Department"
+      });
+
+      financeDepartment = await Department.create({
+        name: "Finance",
+        description: "Finance Department"
+      });
+
+      agent = request.agent(app);
+    });
+
+    afterAll(async () => {
+      await PermissionAuditLog.destroy({ where: {} });
+      await User.destroy({ where: {}, cascade: true });
+      await Department.destroy({ where: {}, cascade: true });
+    });
+
+    describe("GET /users", () => {
+      it("should not retrieve all users", async () => {
+        await agent.get(usersBaseEndpoint).expect(401);
+      });
+    });
+
+    describe("PUT /users", () => {
+      it("should not update specific user permission", async () => {
+        await agent
+          .put(`${usersBaseEndpoint}/${userToUpdatePermissions.id}`)
+          .send({
+            systemPermissions: [
+              SystemPermission.CREATE_DEPARTMENT,
+              SystemPermission.DELETE_DEPARTMENT
+            ],
+            departments: [
+              {
+                departmentId: itDepartment.id,
+                departmentName: itDepartment.name,
+                permissions: [DepartmentPermission.APPROVE_EXPENSES]
+              },
+              {
+                departmentId: financeDepartment.id,
+                departmentName: financeDepartment.name,
+                permissions: [DepartmentPermission.VIEW_EXPENSES]
+              }
+            ]
+          })
+          .expect(401);
+      });
+
+      it("should not throw invalid id due to unauthorized", async () => {
+        await agent.put(`${usersBaseEndpoint}/abc`).expect(401);
+      });
+    });
+  });
 });
