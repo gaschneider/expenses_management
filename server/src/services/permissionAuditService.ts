@@ -71,9 +71,9 @@ export class PermissionAuditService {
       where,
       order: [["timestamp", "DESC"]],
       include: [
-        { model: User, as: "targetUser", attributes: ["name", "email"] },
-        { model: User, as: "performedByUser", attributes: ["name", "email"] },
-        { model: Department, attributes: ["name"], required: false }
+        { model: User, as: "targetUser", attributes: ["firstName", "lastName", "email"] },
+        { model: User, as: "performedByUser", attributes: ["firstName", "lastName", "email"] },
+        { model: Department, as: "department", attributes: ["name"], required: false }
       ]
     });
   }

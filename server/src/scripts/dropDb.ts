@@ -3,9 +3,9 @@ import sequelize from "../config/database";
 const dropDb = async () => {
   if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
     try {
-      sequelize.authenticate();
-      sequelize.drop();
-      sequelize.close();
+      await sequelize.authenticate();
+      await sequelize.drop();
+      await sequelize.close();
       console.log("Database dropped successfully");
       process.exit(0);
     } catch (error) {
@@ -17,4 +17,4 @@ const dropDb = async () => {
   }
 };
 
-dropDb();
+await dropDb();

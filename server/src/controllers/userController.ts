@@ -5,39 +5,11 @@ import {
   updateUserDepartmentPermissions,
   updateUserPermissions
 } from "../services/permissionAuditService";
-
-type UserDTO = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  systemPermissions: string[];
-  departments: {
-    departmentId: number;
-    departmentName: string;
-    permissions: string[];
-  }[];
-};
-
-const userToDTO = async (user: User) => {
-  const departmentsByUser = await user.getDepartments();
-  const userDepartmentPermissionsPromises = departmentsByUser.map(async (d: Department) => ({
-    departmentId: d.id!,
-    departmentName: d.name,
-    permissions: await d.getUserPermissionStrings(user.id!)
-  }));
-
-  const userDepartmentPermissions = await Promise.all(userDepartmentPermissionsPromises);
-
-  return {
-    id: user.id!,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    systemPermissions: await user.getUserPermissionStrings(),
-    departments: userDepartmentPermissions
-  } as UserDTO;
-};
+import {
+  userToWithPermissionsDTO,
+  UserWithPermissionsDTO
+} from "../helpers/userToWithPermissionsDTO";
+import UserDepartmentPermission from "../models/UserDepartmentPermission";
 
 export const putUserById = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -53,19 +25,19 @@ export const putUserById = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    const { systemPermissions, departments } = req.body as UserDTO;
+    const { systemPermissions, departments } = req.body as UserWithPermissionsDTO;
 
     const user = await User.findByPk(id);
 
     if (!user) {
-      res.status(401).json({ error: "User not found" });
+      res.status(404).json({ error: "User not found" });
       return;
     }
 
     if (!systemPermissions) {
-      updateUserPermissions(req, user.id!, "", true);
+      await updateUserPermissions(req, user.id!, "", true);
     } else {
-      updateUserPermissions(req, user.id!, systemPermissions.join(","), true);
+      await updateUserPermissions(req, user.id!, systemPermissions.join(","), true);
     }
 
     const newUserDepartments = new Map<number, string[]>();
@@ -75,26 +47,33 @@ export const putUserById = async (req: Request, res: Response, next: NextFunctio
     });
 
     const existingUserDepartments = await user.getDepartments();
+    const updatePromises: Promise<UserDepartmentPermission | null | undefined>[] = [];
     existingUserDepartments.forEach((ud) => {
       if (!ud.id) return;
 
       const newUserDepartmentPermissions = newUserDepartments.get(ud.id);
       if (newUserDepartmentPermissions) {
-        updateUserDepartmentPermissions(
-          req,
-          user.id!,
-          ud.id,
-          newUserDepartmentPermissions.join(",")
+        updatePromises.push(
+          updateUserDepartmentPermissions(
+            req,
+            user.id!,
+            ud.id,
+            newUserDepartmentPermissions.join(",")
+          )
         );
         newUserDepartments.delete(ud.id);
       } else {
-        updateUserDepartmentPermissions(req, user.id!, ud.id, "", true);
+        updatePromises.push(updateUserDepartmentPermissions(req, user.id!, ud.id, "", true));
       }
     });
 
     newUserDepartments.entries().forEach(([dId, dPermissions]) => {
-      updateUserDepartmentPermissions(req, user.id!, dId, dPermissions.join(","));
+      updatePromises.push(
+        updateUserDepartmentPermissions(req, user.id!, dId, dPermissions.join(","))
+      );
     });
+
+    await Promise.all(updatePromises);
 
     res.status(200).json({
       message: "Permissions updated successfully"
@@ -107,7 +86,7 @@ export const putUserById = async (req: Request, res: Response, next: NextFunctio
 export const getUsers = async (req: Request, res: Response) => {
   const users = await User.findAll();
 
-  const usersDTOPromises = users.map(userToDTO);
+  const usersDTOPromises = users.map(userToWithPermissionsDTO);
 
   const usersDTO = await Promise.all(usersDTOPromises);
 

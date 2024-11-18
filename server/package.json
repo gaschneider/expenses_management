@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "create-db": "tsx src/scripts/createDb.ts",
+    "create-db-test": "cross-env NODE_ENV=test tsx src/scripts/createDb.ts",
     "sync-db": "tsx src/scripts/syncDb.ts",
     "sync-db-test": "cross-env NODE_ENV=test tsx src/scripts/syncDb.ts",
     "drop-db": "tsx src/scripts/dropDb.ts",

@@ -1,7 +1,7 @@
 import express from "express";
 const app = express();
 import cors from "cors";
-import { createDatabaseIfNeeded } from "./scripts/createDb";
+import { createDatabaseIfNeeded } from "./helpers/createDatabaseIfNeeded";
 import authRoutes from "./routes/auth";
 import departmentRoutes from "./routes/department";
 import userRoutes from "./routes/user";

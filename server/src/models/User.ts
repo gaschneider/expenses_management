@@ -183,7 +183,9 @@ class User extends Model<UserAttributes, UserAttributes> implements UserInstance
         departmentId
       }
     });
-    return departmentPermission ? departmentPermission.permissions.split(",") : [];
+    return departmentPermission && departmentPermission.permissions
+      ? departmentPermission.permissions.split(",")
+      : [];
   }
 
   public async hasDepartmentPermissionString(

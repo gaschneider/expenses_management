@@ -136,7 +136,10 @@ const UserManagementPage = () => {
   const handleSaveUser = useCallback(async () => {
     if (selectedUser) {
       try {
-        const response = await api.put(`/users/${selectedUser.id}`, selectedUser);
+        const response = await api.put(`/users/${selectedUser.id}`, {
+          systemPermissions: selectedUser.systemPermissions,
+          departments: selectedUser.departments
+        });
 
         showSnackbar(response.data.message);
 
@@ -149,6 +152,14 @@ const UserManagementPage = () => {
       }
     }
   }, [fetchUsers, selectedUser, showSnackbar]);
+
+  const formatPermission = useCallback((permission: string) => {
+    let formatted = permission.replace(/_/g, " ").toLowerCase();
+
+    formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+
+    return formatted;
+  }, []);
 
   return (
     <Box sx={{ padding: theme.spacing(3) }}>
@@ -213,7 +224,12 @@ const UserManagementPage = () => {
                     renderValue={(selected) => (
                       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                         {(selected as SystemPermission[]).map((permission) => (
-                          <Chip key={permission} label={permission} size="small" color="primary" />
+                          <Chip
+                            key={permission}
+                            label={formatPermission(permission)}
+                            size="small"
+                            color="primary"
+                          />
                         ))}
                       </Box>
                     )}
@@ -221,7 +237,7 @@ const UserManagementPage = () => {
                   >
                     {Object.values(SystemPermission).map((permission) => (
                       <MenuItem key={permission} value={permission}>
-                        {permission}
+                        {formatPermission(permission)}
                       </MenuItem>
                     ))}
                   </Select>
@@ -314,7 +330,7 @@ const UserManagementPage = () => {
                                     {(selected as DepartmentPermission[]).map((permission) => (
                                       <Chip
                                         key={permission}
-                                        label={permission}
+                                        label={formatPermission(permission)}
                                         size="small"
                                         color="primary"
                                       />
@@ -326,7 +342,7 @@ const UserManagementPage = () => {
                               >
                                 {Object.values(DepartmentPermission).map((permission) => (
                                   <MenuItem key={permission} value={permission}>
-                                    {permission}
+                                    {formatPermission(permission)}
                                   </MenuItem>
                                 ))}
                               </Select>

@@ -18,7 +18,9 @@ router.get(
   checkPermission([
     SystemPermission.CREATE_DEPARTMENT,
     SystemPermission.EDIT_DEPARTMENT,
-    SystemPermission.DELETE_DEPARTMENT
+    SystemPermission.DELETE_DEPARTMENT,
+    SystemPermission.MANAGE_USER_SYSTEM_PERMISSIONS,
+    SystemPermission.MANAGE_USER_DEPARTMENT_PERMISSIONS
   ]),
   getDepartments
 );
