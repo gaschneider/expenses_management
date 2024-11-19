@@ -11,7 +11,11 @@ import {
 } from "../helpers/userToWithPermissionsDTO";
 import UserDepartmentPermission from "../models/UserDepartmentPermission";
 
-export const putUserById = async (req: Request, res: Response, next: NextFunction) => {
+export const putUserSystemPermissionsById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.user) {
       res.status(401).json({ error: "Authenticated user not found" });
@@ -25,8 +29,6 @@ export const putUserById = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    const { systemPermissions, departments } = req.body as UserWithPermissionsDTO;
-
     const user = await User.findByPk(id);
 
     if (!user) {
@@ -34,10 +36,47 @@ export const putUserById = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
+    const { systemPermissions } = req.body as UserWithPermissionsDTO;
+
     if (!systemPermissions) {
       await updateUserPermissions(req, user.id!, "", true);
     } else {
-      await updateUserPermissions(req, user.id!, systemPermissions.join(","), true);
+      await updateUserPermissions(req, user.id!, systemPermissions.join(","));
+    }
+
+    res.status(200).json({
+      message: "System permissions updated successfully"
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const putUserDepartmentPermissionsById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: "Authenticated user not found" });
+      return;
+    }
+
+    const { id } = req.params;
+
+    if (id == null || typeof id != "string" || !Number.isFinite(Number(id))) {
+      res.status(400).json({ error: "Invalid user id" });
+      return;
+    }
+
+    const { departments } = req.body as UserWithPermissionsDTO;
+
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
     }
 
     const newUserDepartments = new Map<number, string[]>();
@@ -76,7 +115,7 @@ export const putUserById = async (req: Request, res: Response, next: NextFunctio
     await Promise.all(updatePromises);
 
     res.status(200).json({
-      message: "Permissions updated successfully"
+      message: "Department permissions updated successfully"
     });
   } catch (error) {
     next(error);

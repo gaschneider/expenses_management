@@ -20,9 +20,15 @@ import {
   useTheme,
   Box,
   Stack,
-  styled
+  styled,
+  Theme
 } from "@mui/material";
-import { Edit as EditIcon, Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Security as SecurityIcon,
+  Group as GroupIcon
+} from "@mui/icons-material";
 import { SystemPermission, DepartmentPermission } from "../types/api";
 import api from "../api/axios.config";
 import { useUserHasPagePermission } from "../hooks/useUserHasPagePermission";
@@ -65,13 +71,33 @@ const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   }
 }));
 
+const getMenuItemStyle = (permission: string, selectedPermissions: string[], theme: Theme) => {
+  return {
+    fontWeight: selectedPermissions.includes(permission)
+      ? theme.typography.fontWeightMedium
+      : theme.typography.fontWeightRegular
+  };
+};
+
 const UserManagementPage = () => {
-  useUserHasPagePermission(SystemPermission.MANAGE_USER_DEPARTMENT_PERMISSIONS);
+  useUserHasPagePermission([
+    SystemPermission.MANAGE_USER_SYSTEM_PERMISSIONS,
+    SystemPermission.MANAGE_USER_DEPARTMENT_PERMISSIONS
+  ]);
+  const canEditSystemPermissions = useUserHasPagePermission(
+    SystemPermission.MANAGE_USER_SYSTEM_PERMISSIONS,
+    false
+  );
+  const canEditDepartmentPermissions = useUserHasPagePermission(
+    SystemPermission.MANAGE_USER_DEPARTMENT_PERMISSIONS,
+    false
+  );
   const theme = useTheme();
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSystemPermissionModalOpen, setIsSystemPermissionModalOpen] = useState(false);
+  const [isDepartmentPermissionModalOpen, setIsDepartmentPermissionModalOpen] = useState(false);
   const showSnackbar = useSnackbar();
 
   const fetchUsers = useCallback(async () => {
@@ -97,24 +123,61 @@ const UserManagementPage = () => {
   useEffect(() => {
     // Fetch users and departments
     fetchUsers();
-    fetchDepartments();
-  }, [fetchDepartments, fetchUsers]);
+    canEditDepartmentPermissions && fetchDepartments();
+  }, [canEditDepartmentPermissions, fetchDepartments, fetchUsers]);
 
-  const handleEditUser = useCallback((user: User) => {
+  const handleEditSystemPermissions = useCallback((user: User) => {
     setSelectedUser(user);
-    setIsModalOpen(true);
+    setIsSystemPermissionModalOpen(true);
+  }, []);
+
+  const handleEditDepartmentPermissions = useCallback((user: User) => {
+    setSelectedUser(user);
+    setIsDepartmentPermissionModalOpen(true);
   }, []);
 
   const availableDepartments = useMemo(() => {
     if (selectedUser) {
-      const availableDepartments = departments.filter(
+      return departments.filter(
         (dept) => !selectedUser.departments.find((userDept) => userDept.departmentId === dept.id)
       );
-
-      return availableDepartments;
     }
     return [];
   }, [departments, selectedUser]);
+
+  const handleSaveSystemPermissions = useCallback(async () => {
+    if (selectedUser) {
+      try {
+        const response = await api.put(`/users/system-permissions/${selectedUser.id}`, {
+          systemPermissions: selectedUser.systemPermissions
+        });
+
+        showSnackbar(response.data.message);
+        await fetchUsers();
+        setIsSystemPermissionModalOpen(false);
+      } catch (error) {
+        showSnackbar("Error saving system permissions");
+        console.error("Error saving system permissions:", error);
+      }
+    }
+  }, [fetchUsers, selectedUser, showSnackbar]);
+
+  const handleSaveDepartmentPermissions = useCallback(async () => {
+    if (selectedUser) {
+      try {
+        const response = await api.put(`/users/department-permissions/${selectedUser.id}`, {
+          departments: selectedUser.departments
+        });
+
+        showSnackbar(response.data.message);
+        await fetchUsers();
+        setIsDepartmentPermissionModalOpen(false);
+      } catch (error) {
+        showSnackbar("Error saving department permissions");
+        console.error("Error saving department permissions:", error);
+      }
+    }
+  }, [fetchUsers, selectedUser, showSnackbar]);
 
   const handleAddDepartment = useCallback(() => {
     if (selectedUser) {
@@ -132,26 +195,6 @@ const UserManagementPage = () => {
       }
     }
   }, [availableDepartments, selectedUser]);
-
-  const handleSaveUser = useCallback(async () => {
-    if (selectedUser) {
-      try {
-        const response = await api.put(`/users/${selectedUser.id}`, {
-          systemPermissions: selectedUser.systemPermissions,
-          departments: selectedUser.departments
-        });
-
-        showSnackbar(response.data.message);
-
-        // Refresh users list
-        await fetchUsers();
-        setIsModalOpen(false);
-      } catch (error) {
-        showSnackbar("Error saving user");
-        console.error("Error saving user:", error);
-      }
-    }
-  }, [fetchUsers, selectedUser, showSnackbar]);
 
   const formatPermission = useCallback((permission: string) => {
     let formatted = permission.replace(/_/g, " ").toLowerCase();
@@ -183,9 +226,27 @@ const UserManagementPage = () => {
                   <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell align="right">
-                    <IconButton onClick={() => handleEditUser(user)} color="primary" size="small">
-                      <EditIcon />
-                    </IconButton>
+                    {canEditSystemPermissions && (
+                      <IconButton
+                        onClick={() => handleEditSystemPermissions(user)}
+                        color="primary"
+                        size="small"
+                        title="Edit System Permissions"
+                      >
+                        <SecurityIcon />
+                      </IconButton>
+                    )}
+                    {canEditDepartmentPermissions && (
+                      <IconButton
+                        onClick={() => handleEditDepartmentPermissions(user)}
+                        color="secondary"
+                        size="small"
+                        title="Edit Department Permissions"
+                        sx={{ ml: 1 }}
+                      >
+                        <GroupIcon />
+                      </IconButton>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -194,12 +255,80 @@ const UserManagementPage = () => {
         </StyledTableContainer>
       </Paper>
 
-      <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} maxWidth="md" fullWidth>
+      {/* System Permissions Modal */}
+      <Dialog
+        open={isSystemPermissionModalOpen}
+        onClose={() => setIsSystemPermissionModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
         {selectedUser && (
           <>
             <StyledDialogTitle>
               <Typography variant="h6">
-                {`${selectedUser.firstName} ${selectedUser.lastName}`}
+                System Permissions for {`${selectedUser.firstName} ${selectedUser.lastName}`}
+              </Typography>
+              <Typography variant="subtitle1" color="textSecondary" sx={{ mt: 0.5 }}>
+                {selectedUser.email}
+              </Typography>
+            </StyledDialogTitle>
+
+            <DialogContent>
+              <Select
+                multiple
+                value={selectedUser.systemPermissions}
+                onChange={(e) =>
+                  setSelectedUser({
+                    ...selectedUser,
+                    systemPermissions: e.target.value as SystemPermission[]
+                  })
+                }
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {(selected as SystemPermission[]).map((permission) => (
+                      <Chip
+                        key={permission}
+                        label={formatPermission(permission)}
+                        size="small"
+                        color="primary"
+                      />
+                    ))}
+                  </Box>
+                )}
+                fullWidth
+              >
+                {Object.values(SystemPermission).map((permission) => (
+                  <MenuItem key={permission} value={permission}>
+                    {formatPermission(permission)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </DialogContent>
+
+            <DialogActions sx={{ padding: theme.spacing(3) }}>
+              <Button onClick={() => setIsSystemPermissionModalOpen(false)} sx={{ mr: 1 }}>
+                Cancel
+              </Button>
+              <Button variant="contained" color="primary" onClick={handleSaveSystemPermissions}>
+                Save System Permissions
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+
+      {/* Department Permissions Modal */}
+      <Dialog
+        open={isDepartmentPermissionModalOpen}
+        onClose={() => setIsDepartmentPermissionModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        {selectedUser && (
+          <>
+            <StyledDialogTitle>
+              <Typography variant="h6">
+                Department Permissions for {`${selectedUser.firstName} ${selectedUser.lastName}`}
               </Typography>
               <Typography variant="subtitle1" color="textSecondary" sx={{ mt: 0.5 }}>
                 {selectedUser.email}
@@ -208,41 +337,6 @@ const UserManagementPage = () => {
 
             <DialogContent>
               <Stack spacing={3} sx={{ mt: 1 }}>
-                <Box>
-                  <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
-                    System Permissions
-                  </Typography>
-                  <Select
-                    multiple
-                    value={selectedUser.systemPermissions}
-                    onChange={(e) =>
-                      setSelectedUser({
-                        ...selectedUser,
-                        systemPermissions: e.target.value as SystemPermission[]
-                      })
-                    }
-                    renderValue={(selected) => (
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {(selected as SystemPermission[]).map((permission) => (
-                          <Chip
-                            key={permission}
-                            label={formatPermission(permission)}
-                            size="small"
-                            color="primary"
-                          />
-                        ))}
-                      </Box>
-                    )}
-                    fullWidth
-                  >
-                    {Object.values(SystemPermission).map((permission) => (
-                      <MenuItem key={permission} value={permission}>
-                        {formatPermission(permission)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-
                 <Box>
                   <Box
                     sx={{
@@ -341,7 +435,11 @@ const UserManagementPage = () => {
                                 size="small"
                               >
                                 {Object.values(DepartmentPermission).map((permission) => (
-                                  <MenuItem key={permission} value={permission}>
+                                  <MenuItem
+                                    key={permission}
+                                    value={permission}
+                                    style={getMenuItemStyle(permission, dept.permissions, theme)}
+                                  >
                                     {formatPermission(permission)}
                                   </MenuItem>
                                 ))}
@@ -374,11 +472,11 @@ const UserManagementPage = () => {
             </DialogContent>
 
             <DialogActions sx={{ padding: theme.spacing(3) }}>
-              <Button onClick={() => setIsModalOpen(false)} sx={{ mr: 1 }}>
+              <Button onClick={() => setIsDepartmentPermissionModalOpen(false)} sx={{ mr: 1 }}>
                 Cancel
               </Button>
-              <Button variant="contained" color="primary" onClick={handleSaveUser}>
-                Save Changes
+              <Button variant="contained" color="primary" onClick={handleSaveDepartmentPermissions}>
+                Save Department Permissions
               </Button>
             </DialogActions>
           </>

@@ -1,10 +1,9 @@
-import request from "supertest";
 import sequelize from "../src/config/database";
-import app, { startServer } from "../src/index";
+import { startServer } from "../src/index";
 import { Server } from "http";
 import User from "../src/models/User";
 import { SystemPermission } from "../src/types/auth";
-import { checkPermission, userHasPermission } from "../src/middlewares/checkPermission";
+import { userHasPermission } from "../src/middlewares/checkPermission";
 import UserPermission from "../src/models/UserPermission";
 import UserDepartmentPermission from "../src/models/UserDepartmentPermission";
 

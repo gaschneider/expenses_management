@@ -15,6 +15,8 @@ describe("Manage user permissions endpoints", () => {
   let agent: TestAgent;
 
   const usersBaseEndpoint = "/api/users";
+  const usersSystemPermissionsEndpoint = "/api/users/system-permissions";
+  const usersDepartmentPermissionsEndpoint = "/api/users/department-permissions";
 
   beforeAll(async () => {
     server = await startServer();
@@ -89,14 +91,37 @@ describe("Manage user permissions endpoints", () => {
     });
 
     describe("PUT /users", () => {
-      it("should update specific user permission", async () => {
+      it("should update specific user system permission", async () => {
         const response = await agent
-          .put(`${usersBaseEndpoint}/${userToUpdatePermissions.id}`)
+          .put(`${usersSystemPermissionsEndpoint}/${userToUpdatePermissions.id}`)
           .send({
             systemPermissions: [
               SystemPermission.CREATE_DEPARTMENT,
               SystemPermission.DELETE_DEPARTMENT
-            ],
+            ]
+          })
+          .expect(200);
+
+        expect(response.body).toHaveProperty("message", "System permissions updated successfully");
+
+        const userWithPermissions = await User.findByPk(userToUpdatePermissions.id);
+        expect(userWithPermissions).not.toBeNull();
+        const userSystemPermissions = await userWithPermissions?.getUserPermissionStrings();
+        expect(userSystemPermissions).toHaveLength(2);
+        expect(userSystemPermissions).toContain(SystemPermission.CREATE_DEPARTMENT);
+        expect(userSystemPermissions).toContain(SystemPermission.DELETE_DEPARTMENT);
+
+        const auditLog = await PermissionAuditService.getAuditHistory({
+          performedByUserId: adminUser.id
+        });
+        expect(auditLog).toHaveLength(1);
+        await PermissionAuditLog.destroy({ where: {} });
+      });
+
+      it("should update specific user department permission", async () => {
+        const response = await agent
+          .put(`${usersDepartmentPermissionsEndpoint}/${userToUpdatePermissions.id}`)
+          .send({
             departments: [
               {
                 departmentId: itDepartment.id,
@@ -112,14 +137,13 @@ describe("Manage user permissions endpoints", () => {
           })
           .expect(200);
 
-        expect(response.body).toHaveProperty("message", "Permissions updated successfully");
+        expect(response.body).toHaveProperty(
+          "message",
+          "Department permissions updated successfully"
+        );
 
         const userWithPermissions = await User.findByPk(userToUpdatePermissions.id);
         expect(userWithPermissions).not.toBeNull();
-        const userSystemPermissions = await userWithPermissions?.getUserPermissionStrings();
-        expect(userSystemPermissions).toHaveLength(2);
-        expect(userSystemPermissions).toContain(SystemPermission.CREATE_DEPARTMENT);
-        expect(userSystemPermissions).toContain(SystemPermission.DELETE_DEPARTMENT);
 
         if (itDepartment.id) {
           const userDepartmentPermissions =
@@ -137,17 +161,30 @@ describe("Manage user permissions endpoints", () => {
         const auditLog = await PermissionAuditService.getAuditHistory({
           performedByUserId: adminUser.id
         });
-        expect(auditLog).toHaveLength(3);
+        expect(auditLog).toHaveLength(2);
+        await PermissionAuditLog.destroy({ where: {} });
       });
 
       it("should not find user", async () => {
-        const response = await agent.put(`${usersBaseEndpoint}/100`).expect(404);
+        const response = await agent.put(`${usersSystemPermissionsEndpoint}/100`).expect(404);
 
         expect(response.body).toHaveProperty("error", "User not found");
       });
 
       it("should throw invalid id", async () => {
-        const response = await agent.put(`${usersBaseEndpoint}/abc`).expect(400);
+        const response = await agent.put(`${usersSystemPermissionsEndpoint}/abc`).expect(400);
+
+        expect(response.body).toHaveProperty("error", "Invalid user id");
+      });
+
+      it("should not find user", async () => {
+        const response = await agent.put(`${usersDepartmentPermissionsEndpoint}/100`).expect(404);
+
+        expect(response.body).toHaveProperty("error", "User not found");
+      });
+
+      it("should throw invalid id", async () => {
+        const response = await agent.put(`${usersDepartmentPermissionsEndpoint}/abc`).expect(400);
 
         expect(response.body).toHaveProperty("error", "Invalid user id");
       });
@@ -218,14 +255,22 @@ describe("Manage user permissions endpoints", () => {
     });
 
     describe("PUT /users", () => {
-      it("should update specific user permission", async () => {
-        const response = await agent
-          .put(`${usersBaseEndpoint}/${userToUpdatePermissions.id}`)
+      it("should not update specific user system permission", async () => {
+        await agent
+          .put(`${usersSystemPermissionsEndpoint}/${userToUpdatePermissions.id}`)
           .send({
             systemPermissions: [
               SystemPermission.CREATE_DEPARTMENT,
               SystemPermission.DELETE_DEPARTMENT
-            ],
+            ]
+          })
+          .expect(403);
+      });
+
+      it("should not update specific user system permission", async () => {
+        const response = await agent
+          .put(`${usersDepartmentPermissionsEndpoint}/${userToUpdatePermissions.id}`)
+          .send({
             departments: [
               {
                 departmentId: itDepartment.id,
@@ -241,14 +286,13 @@ describe("Manage user permissions endpoints", () => {
           })
           .expect(200);
 
-        expect(response.body).toHaveProperty("message", "Permissions updated successfully");
+        expect(response.body).toHaveProperty(
+          "message",
+          "Department permissions updated successfully"
+        );
 
         const userWithPermissions = await User.findByPk(userToUpdatePermissions.id);
         expect(userWithPermissions).not.toBeNull();
-        const userSystemPermissions = await userWithPermissions?.getUserPermissionStrings();
-        expect(userSystemPermissions).toHaveLength(2);
-        expect(userSystemPermissions).toContain(SystemPermission.CREATE_DEPARTMENT);
-        expect(userSystemPermissions).toContain(SystemPermission.DELETE_DEPARTMENT);
 
         if (itDepartment.id) {
           const userDepartmentPermissions =
@@ -266,19 +310,160 @@ describe("Manage user permissions endpoints", () => {
         const auditLog = await PermissionAuditService.getAuditHistory({
           performedByUserId: permissionsManagerUser.id
         });
-        expect(auditLog).toHaveLength(3);
+        expect(auditLog).toHaveLength(2);
+      });
+
+      it("should not have permissions", async () => {
+        await agent.put(`${usersSystemPermissionsEndpoint}/100`).expect(403);
+      });
+
+      it("should not throw invalid id due to forbidden", async () => {
+        await agent.put(`${usersSystemPermissionsEndpoint}/abc`).expect(403);
       });
 
       it("should not find user", async () => {
-        const response = await agent.put(`${usersBaseEndpoint}/100`).expect(404);
+        const response = await agent.put(`${usersDepartmentPermissionsEndpoint}/100`).expect(404);
 
         expect(response.body).toHaveProperty("error", "User not found");
       });
 
       it("should throw invalid id", async () => {
-        const response = await agent.put(`${usersBaseEndpoint}/abc`).expect(400);
+        const response = await agent.put(`${usersDepartmentPermissionsEndpoint}/abc`).expect(400);
 
         expect(response.body).toHaveProperty("error", "Invalid user id");
+      });
+    });
+  });
+
+  describe("Authenticated manage system permissions user", () => {
+    const permissionsManagerUserInfo = {
+      firstName: "Permissions",
+      lastName: "manager",
+      email: "permissions@manager.com",
+      password: "Password123!"
+    };
+
+    let permissionsManagerUser: User;
+    let userToUpdatePermissions: User;
+    let itDepartment: Department;
+    let financeDepartment: Department;
+
+    beforeAll(async () => {
+      permissionsManagerUser = await User.create(permissionsManagerUserInfo);
+      await permissionsManagerUser.addUserPermissionString(
+        SystemPermission.MANAGE_USER_SYSTEM_PERMISSIONS
+      );
+
+      userToUpdatePermissions = await User.create({
+        firstName: "Manage",
+        lastName: "Permissions",
+        email: "manage@permissions.com",
+        password: "Password123!"
+      });
+
+      itDepartment = await Department.create({
+        name: "IT",
+        description: "IT Department"
+      });
+
+      financeDepartment = await Department.create({
+        name: "Finance",
+        description: "Finance Department"
+      });
+
+      agent = request.agent(app);
+      await agent.post("/api/auth/login").send(permissionsManagerUserInfo).expect(200);
+    });
+
+    afterAll(async () => {
+      await PermissionAuditLog.destroy({ where: {} });
+      await User.destroy({ where: {}, cascade: true });
+      await Department.destroy({ where: {}, cascade: true });
+    });
+
+    describe("GET /users", () => {
+      it("should retrieve all users", async () => {
+        const response = await agent.get(usersBaseEndpoint).expect(200);
+
+        // User to manage permissions and admin
+        expect(response.body).toHaveLength(2);
+        const user: UserWithPermissionsDTO = response.body.find(
+          (u: User) => u.id == userToUpdatePermissions.id
+        );
+        expect(user).not.toBeNull();
+        expect(user.id).toBe(userToUpdatePermissions.id);
+        expect(user.email).toBe(userToUpdatePermissions.email);
+        expect(user.systemPermissions).toHaveLength(0);
+        expect(user.departments).toHaveLength(0);
+      });
+    });
+
+    describe("PUT /users", () => {
+      it("should update specific user system permission", async () => {
+        const response = await agent
+          .put(`${usersSystemPermissionsEndpoint}/${userToUpdatePermissions.id}`)
+          .send({
+            systemPermissions: [
+              SystemPermission.CREATE_DEPARTMENT,
+              SystemPermission.DELETE_DEPARTMENT
+            ]
+          })
+          .expect(200);
+
+        expect(response.body).toHaveProperty("message", "System permissions updated successfully");
+
+        const userWithPermissions = await User.findByPk(userToUpdatePermissions.id);
+        expect(userWithPermissions).not.toBeNull();
+        const userSystemPermissions = await userWithPermissions?.getUserPermissionStrings();
+        expect(userSystemPermissions).toHaveLength(2);
+        expect(userSystemPermissions).toContain(SystemPermission.CREATE_DEPARTMENT);
+        expect(userSystemPermissions).toContain(SystemPermission.DELETE_DEPARTMENT);
+
+        const auditLog = await PermissionAuditService.getAuditHistory({
+          performedByUserId: permissionsManagerUser.id
+        });
+        expect(auditLog).toHaveLength(1);
+        await PermissionAuditLog.destroy({ where: {} });
+      });
+
+      it("should not update specific user department permission", async () => {
+        await agent
+          .put(`${usersDepartmentPermissionsEndpoint}/${userToUpdatePermissions.id}`)
+          .send({
+            departments: [
+              {
+                departmentId: itDepartment.id,
+                departmentName: itDepartment.name,
+                permissions: [DepartmentPermission.APPROVE_EXPENSES]
+              },
+              {
+                departmentId: financeDepartment.id,
+                departmentName: financeDepartment.name,
+                permissions: [DepartmentPermission.VIEW_EXPENSES]
+              }
+            ]
+          })
+          .expect(403);
+      });
+
+      it("should not find user", async () => {
+        const response = await agent.put(`${usersSystemPermissionsEndpoint}/100`).expect(404);
+
+        expect(response.body).toHaveProperty("error", "User not found");
+      });
+
+      it("should throw invalid id", async () => {
+        const response = await agent.put(`${usersSystemPermissionsEndpoint}/abc`).expect(400);
+
+        expect(response.body).toHaveProperty("error", "Invalid user id");
+      });
+
+      it("should throw forbidden", async () => {
+        await agent.put(`${usersDepartmentPermissionsEndpoint}/100`).expect(403);
+      });
+
+      it("should not throw invalid id due to forbidden", async () => {
+        await agent.put(`${usersDepartmentPermissionsEndpoint}/abc`).expect(403);
       });
     });
   });
@@ -332,14 +517,22 @@ describe("Manage user permissions endpoints", () => {
     });
 
     describe("PUT /users", () => {
-      it("should not update specific user permission", async () => {
+      it("should not update specific user system permission", async () => {
         await agent
-          .put(`${usersBaseEndpoint}/${userToUpdatePermissions.id}`)
+          .put(`${usersSystemPermissionsEndpoint}/${userToUpdatePermissions.id}`)
           .send({
             systemPermissions: [
               SystemPermission.CREATE_DEPARTMENT,
               SystemPermission.DELETE_DEPARTMENT
-            ],
+            ]
+          })
+          .expect(403);
+      });
+
+      it("should not update specific user department permission", async () => {
+        await agent
+          .put(`${usersDepartmentPermissionsEndpoint}/${userToUpdatePermissions.id}`)
+          .send({
             departments: [
               {
                 departmentId: itDepartment.id,
@@ -357,7 +550,11 @@ describe("Manage user permissions endpoints", () => {
       });
 
       it("should not throw invalid id due to forbidden", async () => {
-        await agent.put(`${usersBaseEndpoint}/abc`).expect(403);
+        await agent.put(`${usersSystemPermissionsEndpoint}/abc`).expect(403);
+      });
+
+      it("should not throw invalid id due to forbidden", async () => {
+        await agent.put(`${usersDepartmentPermissionsEndpoint}/abc`).expect(403);
       });
     });
   });
@@ -401,14 +598,24 @@ describe("Manage user permissions endpoints", () => {
     });
 
     describe("PUT /users", () => {
-      it("should not update specific user permission", async () => {
+      it("should not update specific user system permission", async () => {
         await agent
-          .put(`${usersBaseEndpoint}/${userToUpdatePermissions.id}`)
+          .put(`${usersSystemPermissionsEndpoint}/${userToUpdatePermissions.id}`)
           .send({
             systemPermissions: [
               SystemPermission.CREATE_DEPARTMENT,
               SystemPermission.DELETE_DEPARTMENT
-            ],
+            ]
+          })
+          .expect(401);
+      });
+    });
+
+    describe("PUT /users", () => {
+      it("should not update specific user system permission", async () => {
+        await agent
+          .put(`${usersDepartmentPermissionsEndpoint}/${userToUpdatePermissions.id}`)
+          .send({
             departments: [
               {
                 departmentId: itDepartment.id,
@@ -426,7 +633,11 @@ describe("Manage user permissions endpoints", () => {
       });
 
       it("should not throw invalid id due to unauthorized", async () => {
-        await agent.put(`${usersBaseEndpoint}/abc`).expect(401);
+        await agent.put(`${usersSystemPermissionsEndpoint}/abc`).expect(401);
+      });
+
+      it("should not throw invalid id due to unauthorized", async () => {
+        await agent.put(`${usersDepartmentPermissionsEndpoint}/abc`).expect(401);
       });
     });
   });

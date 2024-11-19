@@ -831,4 +831,105 @@ describe("Departments Endpoints", () => {
       });
     });
   });
+
+  describe("Authenticated manage permissions user", () => {
+    const managePermissionsUserInfo = {
+      firstName: "Manage",
+      lastName: "Permissions",
+      email: "Manage@permissions.com",
+      password: "Password123!"
+    };
+
+    beforeAll(async () => {
+      const managePermissionsUser = await User.create(managePermissionsUserInfo);
+      await managePermissionsUser.addUserPermissionString(
+        SystemPermission.MANAGE_USER_SYSTEM_PERMISSIONS
+      );
+
+      agent = request.agent(app);
+      await agent.post("/api/auth/login").send(managePermissionsUserInfo).expect(200);
+    });
+
+    afterAll(async () => {
+      await User.destroy({ where: {}, cascade: true });
+    });
+
+    describe("GET /departments", () => {
+      const testDepartment = {
+        name: "Finance",
+        description: "Finance department"
+      };
+      let createdDepartment: Department;
+
+      beforeAll(async () => {
+        createdDepartment = await Department.create(testDepartment);
+      });
+
+      afterAll(async () => {
+        // Clear database before each test
+        await Department.destroy({ where: {}, cascade: true });
+      });
+
+      it("should retrieve all departments", async () => {
+        const response = await agent.get(departmentsBaseEndpoint).expect(200);
+
+        expect(response.body).toHaveLength(1);
+        const department: Department = response.body[0];
+        expect(department.id).toBe(createdDepartment.id);
+        expect(department.name).toBe(createdDepartment.name);
+        expect(department.description).toBe(createdDepartment.description);
+      });
+
+      it("should not retrieve specific department", async () => {
+        const response = await agent
+          .get(`${departmentsBaseEndpoint}/${createdDepartment.id}`)
+          .expect(403);
+
+        expect(response.body).toHaveProperty("error", "Insufficient permissions");
+      });
+    });
+
+    describe("POST /departments", () => {
+      it("should not create a new department due to forbidden", async () => {
+        const validDepartment = {
+          name: "Finance",
+          description: "Finance department"
+        };
+
+        await agent.post(departmentsBaseEndpoint).send(validDepartment).expect(403);
+      });
+    });
+
+    describe("PATCH /departments", () => {
+      it("should not update department due to forbidden", async () => {
+        const validDepartment = await Department.create({
+          name: "Finance",
+          description: "Finance department"
+        });
+
+        await agent
+          .patch(`${departmentsBaseEndpoint}/${validDepartment.id}`)
+          .send({
+            name: "Finance",
+            description: "New finance department"
+          })
+          .expect(403);
+
+        await Department.destroy({ where: {}, cascade: true });
+      });
+    });
+
+    describe("DELETE /departments", () => {
+      it("should not delete department due to unathorized", async () => {
+        const validDepartment = await Department.create({
+          name: "Finance",
+          description: "Finance department"
+        });
+
+        await agent.delete(`${departmentsBaseEndpoint}/${validDepartment.id}`).send().expect(403);
+
+        await Department.destroy({ where: {}, cascade: true });
+      });
+    });
+  });
 });

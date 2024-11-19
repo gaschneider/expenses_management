@@ -120,6 +120,10 @@ export const updateUserDepartmentPermissions = async (
       return null;
     }
 
+    if (oldPermissions == permissions) {
+      return;
+    }
+
     // Update or create permissions
     const [permission, created] = await UserDepartmentPermission.upsert(
       {
@@ -191,7 +195,11 @@ export const updateUserPermissions = async (
       );
 
       await transaction.commit();
-      return null;
+      return;
+    }
+
+    if (oldPermissions == permissions) {
+      return;
     }
 
     // Update or create permissions
