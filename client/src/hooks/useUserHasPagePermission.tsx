@@ -5,11 +5,17 @@ import { SystemPermission } from "../types/api";
 
 // Is a OR permission validation, it will return true if the user has at least one
 export const useUserHasPagePermission = (
-  permissionsToCheck: SystemPermission[],
+  propPermissionsToCheck: SystemPermission | SystemPermission[],
   autoNavigate = true
 ) => {
   const { userHasPermission } = useCurrentUser();
   const navigate = useNavigate();
+
+  const permissionsToCheck = useMemo(
+    () =>
+      Array.isArray(propPermissionsToCheck) ? propPermissionsToCheck : [propPermissionsToCheck],
+    [propPermissionsToCheck]
+  );
 
   const hasPermission = useMemo(
     () => permissionsToCheck.some((permission) => userHasPermission(permission)),

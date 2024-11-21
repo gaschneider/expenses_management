@@ -1,6 +1,7 @@
 import Department from "./Department";
 import Expense from "./Expense";
 import ExpenseStatus from "./ExpenseStatus";
+import PermissionAuditLog from "./PermissionAuditLog";
 import User from "./User";
 import UserDepartmentPermission from "./UserDepartmentPermission";
 import UserPermission from "./UserPermission";
@@ -80,5 +81,36 @@ export const defineAssociations = () => {
   ExpenseStatus.belongsTo(User, {
     foreignKey: "nextApproverId",
     as: "nextApprover"
+  });
+
+  // PermissionAuditLog - User Association
+  User.hasMany(PermissionAuditLog, {
+    foreignKey: "targetUserId",
+    as: "targetUser"
+  });
+
+  PermissionAuditLog.belongsTo(User, {
+    foreignKey: "targetUserId",
+    as: "targetUser"
+  });
+
+  User.hasMany(PermissionAuditLog, {
+    foreignKey: "performedByUserId",
+    as: "performedByUser"
+  });
+
+  PermissionAuditLog.belongsTo(User, {
+    foreignKey: "performedByUserId",
+    as: "performedByUser"
+  });
+
+  Department.hasMany(PermissionAuditLog, {
+    foreignKey: "departmentId",
+    as: "department"
+  });
+
+  PermissionAuditLog.belongsTo(Department, {
+    foreignKey: "departmentId",
+    as: "department"
   });
 };

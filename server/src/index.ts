@@ -1,9 +1,10 @@
 import express from "express";
 const app = express();
 import cors from "cors";
-import { createDatabaseIfNeeded } from "./scripts/createDb";
+import { createDatabaseIfNeeded } from "./helpers/createDatabaseIfNeeded";
 import authRoutes from "./routes/auth";
 import departmentRoutes from "./routes/department";
+import userRoutes from "./routes/user";
 import session from "express-session";
 import passport from "passport";
 import "./config/passport";
@@ -64,8 +65,8 @@ export const startServer = async () => {
 
   // Mount routes
   app.use("/api/auth", authRoutes);
-  // Mount routes
   app.use("/api/departments", departmentRoutes);
+  app.use("/api/users", userRoutes);
 
   const server = app.listen(8081, () => {
     console.log("Server listening on port 8081");
