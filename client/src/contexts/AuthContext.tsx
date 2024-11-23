@@ -1,7 +1,7 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api from "../api/axios.config";
-import { UserDTO } from "../types/api";
+import { UserAuthDTO } from "../types/api";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -9,7 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  user: UserDTO | null;
+  user: UserAuthDTO | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -17,7 +17,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<UserDTO | null>(null);
+  const [user, setUser] = useState<UserAuthDTO | null>(null);
 
   const checkAuthStatus = useCallback(async () => {
     try {
@@ -63,23 +63,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     []
   );
 
-  const login = useCallback(async (email: string, password: string) => {
-    try {
-      const response = await api.post(
-        "/auth/login",
-        { email, password },
-        { withCredentials: true }
-      );
-      setIsAuthenticated(true);
-      checkAuthStatus();
-      return response.data;
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      try {
+        const response = await api.post(
+          "/auth/login",
+          { email, password },
+          { withCredentials: true }
+        );
+        setIsAuthenticated(true);
+        checkAuthStatus();
+        return response.data;
+      } catch (error: any) {
+        if (error.response?.data?.message) {
+          throw new Error(error.response.data.message);
+        }
+        throw new Error("Login failed. Please try again.");
       }
-      throw new Error("Login failed. Please try again.");
-    }
-  }, []);
+    },
+    [checkAuthStatus]
+  );
 
   const logout = useCallback(async () => {
     try {
