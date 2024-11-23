@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import api from "../../../api/axios.config";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { DepartmentDTO, UserDTO } from "../../../types/api";
@@ -7,6 +7,7 @@ export const useEntities = () => {
   const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
   const [users, setUsers] = useState<UserDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitiallyLoaded, setIsInitiallyLoaded] = useState(false);
   const showSnackbar = useSnackbar();
 
   const fetchDepartments = useCallback(async () => {
@@ -35,10 +36,16 @@ export const useEntities = () => {
     setIsLoading(false);
   }, [fetchDepartments, fetchUsers]);
 
+  useEffect(() => {
+    fetchAll();
+    setIsInitiallyLoaded(true);
+  }, [fetchAll]);
+
   return {
     departments,
     users,
     isLoading,
+    isInitiallyLoaded,
     fetchAll
   };
 };

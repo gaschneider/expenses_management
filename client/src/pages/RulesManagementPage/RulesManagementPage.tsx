@@ -15,12 +15,14 @@ import {
   useTheme,
   DialogContentText
 } from "@mui/material";
+import { Add } from "@mui/icons-material";
 import { useRules } from "./hooks/useRules";
 import { useEntities } from "./hooks/useEntities";
 import { RulesTable } from "./components/RulesTable";
 import { useSnackbar } from "../../contexts/SnackbarContext";
 import { RuleDTO, RuleStepDTO, RuleToCreateDTO } from "../../types/api";
 import { RuleStepsTable } from "./components/RuleStepTable";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
 // Styled components
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
@@ -56,7 +58,7 @@ const RuleManagementPage = () => {
   });
 
   const { rules, fetchRules, createRule, updateRule, deleteRule } = useRules();
-  const { departments, users } = useEntities();
+  const { departments, users, isInitiallyLoaded } = useEntities();
 
   const handleOpenRuleModal = useCallback(
     (rule?: RuleDTO) => {
@@ -147,6 +149,23 @@ const RuleManagementPage = () => {
     });
   }, []);
 
+  const handleCreateStep = useCallback(
+    (newStep: RuleStepDTO) => {
+      setFormData((prev) => {
+        if (selectedRule) {
+          newStep.ruleId = selectedRule.id;
+        }
+        const newSteps = [...prev.steps, newStep];
+
+        return {
+          ...prev,
+          steps: newSteps
+        };
+      });
+    },
+    [selectedRule]
+  );
+
   const handleStepDelete = useCallback((index: number) => {
     setFormData((prev) => {
       const newSteps = [...prev.steps];
@@ -204,12 +223,28 @@ const RuleManagementPage = () => {
           Rule Management
         </Typography>
 
-        <RulesTable
-          rules={rules}
-          departments={departments}
-          onEdit={handleOpenRuleModal}
-          onDelete={handleOpenDeleteModal}
-        />
+        {!isInitiallyLoaded ? (
+          <LoadingSpinner />
+        ) : (
+          <>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<Add />}
+                onClick={() => handleOpenRuleModal()}
+              >
+                Create rule
+              </Button>
+            </div>
+            <RulesTable
+              rules={rules}
+              departments={departments}
+              onEdit={handleOpenRuleModal}
+              onDelete={handleOpenDeleteModal}
+            />
+          </>
+        )}
       </StyledPaper>
 
       {/* Rule Form Modal */}
@@ -279,6 +314,7 @@ const RuleManagementPage = () => {
               users={users}
               onStepChange={handleStepsChange}
               onDeleteStep={handleStepDelete}
+              onCreateStep={handleCreateStep}
             />
           </Box>
         </DialogContent>

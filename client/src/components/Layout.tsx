@@ -21,7 +21,8 @@ import {
   Receipt as ReceiptIcon,
   Business as BusinessIcon,
   Logout as LogoutIcon,
-  PermIdentity as UserManagementIcon
+  PermIdentity as UserManagementIcon,
+  Gavel as RuleManagementIcon
 } from "@mui/icons-material";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import InitialsAvatar from "./InitialsAvatar";
@@ -59,6 +60,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     SystemPermission.MANAGE_USER_DEPARTMENT_PERMISSIONS,
     false
   );
+  const ruleManagementPagePermission = useUserHasPagePermission(
+    SystemPermission.MANAGE_RULES,
+    false
+  );
 
   const navItems: NavItem[] = useMemo(() => {
     const navItems = [
@@ -75,8 +80,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         icon: <UserManagementIcon />
       });
     }
+    if (ruleManagementPagePermission) {
+      navItems.push({
+        text: "Rule management",
+        path: "/rule-management",
+        icon: <RuleManagementIcon />
+      });
+    }
     return navItems;
-  }, [departmentPagePermission, userManagementPagePermission]);
+  }, [departmentPagePermission, ruleManagementPagePermission, userManagementPagePermission]);
 
   return (
     <SnackbarProvider>
