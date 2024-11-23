@@ -20,9 +20,10 @@ import { useRules } from "./hooks/useRules";
 import { useEntities } from "./hooks/useEntities";
 import { RulesTable } from "./components/RulesTable";
 import { useSnackbar } from "../../contexts/SnackbarContext";
-import { RuleDTO, RuleStepDTO, RuleToCreateDTO } from "../../types/api";
+import { RuleDTO, RuleStepDTO, RuleToCreateDTO, SystemPermission } from "../../types/api";
 import { RuleStepsTable } from "./components/RuleStepTable";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import { useUserHasPagePermission } from "../../hooks/useUserHasPagePermission";
 
 // Styled components
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
@@ -44,6 +45,7 @@ interface RuleFormData {
 }
 
 const RuleManagementPage = () => {
+  useUserHasPagePermission([SystemPermission.MANAGE_RULES]);
   const theme = useTheme();
   const showSnackbar = useSnackbar();
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
