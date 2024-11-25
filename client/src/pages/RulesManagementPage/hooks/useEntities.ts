@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 import api from "../../../api/axios.config";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
-import { DepartmentDTO, UserDTO } from "../../../types/api";
+import { BaseUserDTO, DepartmentDTO, UserWithPermissionsDTO } from "../../../types/api";
 
-export const useEntities = () => {
+export const useEntities = (shouldInitiallyFetch?: { users?: boolean; departments?: boolean }) => {
   const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
-  const [users, setUsers] = useState<UserDTO[]>([]);
+  const [users, setUsers] = useState<UserWithPermissionsDTO[]>([]);
+  const [approvers, setApprovers] = useState<BaseUserDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitiallyLoaded, setIsInitiallyLoaded] = useState(false);
   const showSnackbar = useSnackbar();
@@ -30,22 +31,52 @@ export const useEntities = () => {
     }
   }, [showSnackbar]);
 
+  const fetchApprovers = useCallback(
+    async (departmentId: number) => {
+      try {
+        const response = await api.get(`/departments/${departmentId}/approvers`);
+        setApprovers(response.data);
+      } catch (error) {
+        showSnackbar("Error fetching approvers", { severity: "error" });
+        console.error("Error fetching approvers:", error);
+      }
+    },
+    [showSnackbar]
+  );
+
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     await Promise.all([fetchDepartments(), fetchUsers()]);
     setIsLoading(false);
   }, [fetchDepartments, fetchUsers]);
 
-  useEffect(() => {
-    fetchAll();
+  const initialFetch = useCallback(async () => {
+    setIsLoading(true);
+    const promisesToAwait: Promise<void>[] = [];
+    if (shouldInitiallyFetch) {
+      if (shouldInitiallyFetch.users) {
+        promisesToAwait.push(fetchUsers());
+      }
+      if (shouldInitiallyFetch.departments) {
+        promisesToAwait.push(fetchDepartments());
+      }
+    }
     setIsInitiallyLoaded(true);
-  }, [fetchAll]);
+    await Promise.all(promisesToAwait);
+    setIsLoading(false);
+  }, [fetchDepartments, fetchUsers, shouldInitiallyFetch]);
+
+  useEffect(() => {
+    initialFetch();
+  }, [initialFetch]);
 
   return {
     departments,
     users,
+    approvers,
     isLoading,
     isInitiallyLoaded,
+    fetchApprovers,
     fetchAll
   };
 };

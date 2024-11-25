@@ -14,12 +14,12 @@ import {
   Button
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { DepartmentDTO, RuleStepDTO, UserDTO } from "../../../types/api";
+import { DepartmentDTO, RuleStepDTO, BaseUserDTO } from "../../../types/api";
 
 interface RuleStepsTableProps {
   steps: RuleStepDTO[];
   departments: DepartmentDTO[];
-  users: UserDTO[];
+  users: BaseUserDTO[];
   onStepChange: (index: number, step: RuleStepDTO) => void;
   onDeleteStep: (index: number) => void;
   onCreateStep: (step: RuleStepDTO) => void;

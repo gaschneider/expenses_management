@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Department from "../models/Department";
 import { Op } from "sequelize";
+import { DepartmentPermission } from "../types/auth";
 
 const departmentToDTO = (department: Department) => {
   return {
@@ -158,4 +159,30 @@ export const deleteDepartment = async (req: Request, res: Response, next: NextFu
   } catch (error) {
     next(error);
   }
+};
+
+export const getApproversByDepartmentId = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (id == null || typeof id != "string" || !Number.isFinite(Number(id))) {
+    res.status(400).json({ error: "Invalid department id" });
+    return;
+  }
+
+  const department = await Department.findByPk(id);
+  if (!department) {
+    res.status(200).json([]);
+    return;
+  }
+
+  const users = await department.getUsersWithPermission(DepartmentPermission.APPROVE_EXPENSES);
+
+  const usersDTO = users.map((u) => ({
+    id: u.id,
+    firstName: u.firstName,
+    lastName: u.lastName,
+    email: u.email
+  }));
+
+  res.status(200).json(usersDTO);
 };

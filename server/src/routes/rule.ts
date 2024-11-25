@@ -8,10 +8,17 @@ import {
   getRuleById,
   getRules
 } from "../controllers/ruleController";
+import { validateRequest } from "../middlewares/validateRequest";
+import { createRuleSchema } from "../validation-schemas/rule.schema";
 
 const router = express.Router();
 
-router.post("/", checkPermission(SystemPermission.MANAGE_RULES), createRule);
+router.post(
+  "/",
+  checkPermission(SystemPermission.MANAGE_RULES),
+  validateRequest(createRuleSchema),
+  createRule
+);
 
 router.get("/", checkPermission(SystemPermission.MANAGE_RULES), getRules);
 

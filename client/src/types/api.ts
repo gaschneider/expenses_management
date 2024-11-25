@@ -13,14 +13,17 @@ export type DepartmentDTO = {
   description: string;
 };
 
-export interface UserDTO {
+export type BaseUserDTO = {
   id: number;
   firstName: string;
   lastName: string;
   email: string;
+};
+
+export type UserWithPermissionsDTO = BaseUserDTO & {
   systemPermissions: SystemPermission[];
   departments: UserDepartmentForPermissionManagementDTO[];
-}
+};
 
 export interface UserDepartmentForPermissionManagementDTO {
   departmentId: number;
@@ -76,5 +79,5 @@ export interface RuleStepDTO {
   approvingDepartmentId: number | null;
   approvingUserId: number | null;
   approvingDepartment?: DepartmentDTO;
-  approvingUser?: UserDTO;
+  approvingUser?: BaseUserDTO;
 }

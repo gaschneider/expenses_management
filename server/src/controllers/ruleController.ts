@@ -1,14 +1,96 @@
 import { Request, Response, NextFunction } from "express";
 import Department from "../models/Department";
 import { Op } from "sequelize";
-import { Rule } from "../models/Rule";
+import { Rule, RuleStep } from "../models/Rule";
+import User from "../models/User";
 
-const ruleToDTO = (rule: Rule) => {
+interface DepartmentDTO {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface UserDTO {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+interface RuleStepDTO {
+  id: number;
+  ruleId: number;
+  step: number;
+  approvingDepartmentId: number | null;
+  approvingUserId: number | null;
+  approvingDepartment?: DepartmentDTO;
+  approvingUser?: UserDTO;
+}
+
+interface RuleDTO {
+  id: number;
+  departmentId: number;
+  minValue: number;
+  maxValue: number;
+  canBeSingleApproved: boolean;
+  department?: DepartmentDTO;
+  ruleSteps: RuleStepDTO[];
+}
+
+const stepToDTO = (step: RuleStep) => {
   return {
-    // id: department.id,
-    // name: department.name,
-    // description: department.description
+    id: step.id,
+    ruleId: step.ruleId,
+    step: step.step,
+    approvingDepartmentId: step.approvingDepartmentId,
+    approvingUserId: step.approvingUserId,
+    approvingDepartment: departmentToDTO(step.approvingDepartment),
+    approvingUser: userToDTO(step.approvingUser)
   };
+};
+
+const departmentToDTO = (department?: Department) => {
+  return department
+    ? {
+        id: department.id!,
+        name: department.name,
+        description: department.description
+      }
+    : undefined;
+};
+
+const userToDTO = (user?: User) => {
+  return user
+    ? {
+        id: user.id!,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email
+      }
+    : undefined;
+};
+
+const ruleToDTO = (rule: Rule): RuleDTO => {
+  return {
+    id: rule.id,
+    departmentId: rule.departmentId,
+    minValue: rule.minValue,
+    maxValue: rule.maxValue,
+    canBeSingleApproved: rule.canBeSingleApproved,
+    department: departmentToDTO(rule.department),
+    ruleSteps: rule.ruleSteps?.map(stepToDTO) || []
+  };
+};
+
+type RuleToCreateDTO = {
+  departmentId: number;
+  minValue: number;
+  maxValue: number;
+  canBeSingleApproved: boolean;
+  steps: {
+    approvingDepartmentId: number | null;
+    approvingUserId: number | null;
+  }[];
 };
 
 export const createRule = async (req: Request, res: Response, next: NextFunction) => {
@@ -18,10 +100,11 @@ export const createRule = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    // const { name, description } = req.body;
+    const { departmentId, minValue, maxValue, canBeSingleApproved, steps } =
+      req.body as RuleToCreateDTO;
 
     // // Validate input
-    // if (!name) {
+    // if (!departmentId) {
     //   res.status(400).json({
     //     error: "Name is required"
     //   });

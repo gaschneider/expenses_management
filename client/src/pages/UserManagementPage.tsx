@@ -34,7 +34,7 @@ import {
   DepartmentPermission,
   UserDepartmentForPermissionManagementDTO,
   DepartmentDTO,
-  UserDTO
+  UserWithPermissionsDTO
 } from "../types/api";
 import api from "../api/axios.config";
 import { useUserHasPagePermission } from "../hooks/useUserHasPagePermission";
@@ -79,9 +79,9 @@ const UserManagementPage = () => {
     false
   );
   const theme = useTheme();
-  const [users, setUsers] = useState<UserDTO[]>([]);
+  const [users, setUsers] = useState<UserWithPermissionsDTO[]>([]);
   const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
-  const [selectedUser, setSelectedUser] = useState<UserDTO | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithPermissionsDTO | null>(null);
   const [isSystemPermissionModalOpen, setIsSystemPermissionModalOpen] = useState(false);
   const [isDepartmentPermissionModalOpen, setIsDepartmentPermissionModalOpen] = useState(false);
   const showSnackbar = useSnackbar();
@@ -112,12 +112,12 @@ const UserManagementPage = () => {
     canEditDepartmentPermissions && fetchDepartments();
   }, [canEditDepartmentPermissions, fetchDepartments, fetchUsers]);
 
-  const handleEditSystemPermissions = useCallback((user: UserDTO) => {
+  const handleEditSystemPermissions = useCallback((user: UserWithPermissionsDTO) => {
     setSelectedUser(user);
     setIsSystemPermissionModalOpen(true);
   }, []);
 
-  const handleEditDepartmentPermissions = useCallback((user: UserDTO) => {
+  const handleEditDepartmentPermissions = useCallback((user: UserWithPermissionsDTO) => {
     setSelectedUser(user);
     setIsDepartmentPermissionModalOpen(true);
   }, []);

@@ -60,7 +60,9 @@ const RuleManagementPage = () => {
   });
 
   const { rules, fetchRules, createRule, updateRule, deleteRule } = useRules();
-  const { departments, users, isInitiallyLoaded } = useEntities();
+  const { departments, approvers, fetchApprovers, isInitiallyLoaded } = useEntities({
+    departments: true
+  });
 
   const handleOpenRuleModal = useCallback(
     (rule?: RuleDTO) => {
@@ -73,19 +75,24 @@ const RuleManagementPage = () => {
           canBeSingleApproved: rule.canBeSingleApproved,
           steps: rule.ruleSteps || []
         });
+        fetchApprovers(rule.departmentId);
       } else {
         setSelectedRule(null);
+        const initialDepartment = departments[0]?.id;
         setFormData({
-          departmentId: departments[0]?.id || 0,
+          departmentId: initialDepartment || 0,
           minValue: 0,
           maxValue: 0,
           canBeSingleApproved: false,
           steps: []
         });
+        if (initialDepartment) {
+          fetchApprovers(initialDepartment);
+        }
       }
       setIsRuleModalOpen(true);
     },
-    [departments]
+    [departments, fetchApprovers]
   );
 
   const handleOpenDeleteModal = useCallback((rule: RuleDTO) => {
@@ -133,6 +140,11 @@ const RuleManagementPage = () => {
   const handleFormChange =
     (field: keyof Omit<RuleFormData, "steps">) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
+
+      if (field === "departmentId") {
+        fetchApprovers(Number(value));
+      }
+
       setFormData((prev) => ({
         ...prev,
         [field]: field === "departmentId" ? Number(value) : value
@@ -203,7 +215,7 @@ const RuleManagementPage = () => {
 
     formData.steps.forEach((s, i) => {
       const department = departments.find((d) => d.id === s.approvingDepartmentId);
-      const user = users.find((u) => u.id === s.approvingUserId);
+      const user = approvers.find((u) => u.id === s.approvingUserId);
       steps.push({
         id: 0,
         ruleId: 0,
@@ -216,7 +228,7 @@ const RuleManagementPage = () => {
     });
 
     return steps;
-  }, [departments, formData.steps, selectedRule, users]);
+  }, [approvers, departments, formData.steps, selectedRule]);
 
   return (
     <Box sx={{ padding: theme.spacing(3) }}>
@@ -313,7 +325,7 @@ const RuleManagementPage = () => {
             <RuleStepsTable
               steps={stepsForTable}
               departments={departments}
-              users={users}
+              users={approvers}
               onStepChange={handleStepsChange}
               onDeleteStep={handleStepDelete}
               onCreateStep={handleCreateStep}
