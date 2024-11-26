@@ -56,10 +56,7 @@ export interface RuleToCreateDTO {
   minValue: number;
   maxValue: number;
   canBeSingleApproved: boolean;
-  steps: {
-    approvingDepartmentId: number | null;
-    approvingUserId: number | null;
-  }[];
+  ruleSteps: RuleStepDTO[];
 }
 
 export interface RuleDTO {
@@ -73,9 +70,9 @@ export interface RuleDTO {
 }
 
 export interface RuleStepDTO {
-  id: number;
-  ruleId: number;
-  step: number;
+  id?: number;
+  ruleId?: number;
+  step?: number;
   approvingDepartmentId: number | null;
   approvingUserId: number | null;
   approvingDepartment?: DepartmentDTO;

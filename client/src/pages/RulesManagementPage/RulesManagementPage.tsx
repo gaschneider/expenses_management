@@ -41,7 +41,7 @@ interface RuleFormData {
   minValue: number;
   maxValue: number;
   canBeSingleApproved: boolean;
-  steps: RuleStepDTO[];
+  ruleSteps: RuleStepDTO[];
 }
 
 const RuleManagementPage = () => {
@@ -56,7 +56,7 @@ const RuleManagementPage = () => {
     minValue: 0,
     maxValue: 0,
     canBeSingleApproved: false,
-    steps: []
+    ruleSteps: []
   });
 
   const { rules, fetchRules, createRule, updateRule, deleteRule } = useRules();
@@ -70,10 +70,10 @@ const RuleManagementPage = () => {
         setSelectedRule(rule);
         setFormData({
           departmentId: rule.departmentId,
-          minValue: rule.minValue,
-          maxValue: rule.maxValue,
+          minValue: Number(rule.minValue),
+          maxValue: Number(rule.maxValue),
           canBeSingleApproved: rule.canBeSingleApproved,
-          steps: rule.ruleSteps || []
+          ruleSteps: [...(rule.ruleSteps || [])]
         });
         fetchApprovers(rule.departmentId);
       } else {
@@ -84,7 +84,7 @@ const RuleManagementPage = () => {
           minValue: 0,
           maxValue: 0,
           canBeSingleApproved: false,
-          steps: []
+          ruleSteps: []
         });
         if (initialDepartment) {
           fetchApprovers(initialDepartment);
@@ -110,10 +110,8 @@ const RuleManagementPage = () => {
     try {
       if (selectedRule) {
         await updateRule(selectedRule.id, formData);
-        showSnackbar("Rule updated successfully");
       } else {
         await createRule(formData);
-        showSnackbar("Rule created successfully");
       }
       handleCloseModals();
       fetchRules();
@@ -127,7 +125,6 @@ const RuleManagementPage = () => {
     if (selectedRule) {
       try {
         await deleteRule(selectedRule.id);
-        showSnackbar("Rule deleted successfully");
         handleCloseModals();
         fetchRules();
       } catch (error) {
@@ -138,27 +135,30 @@ const RuleManagementPage = () => {
   };
 
   const handleFormChange =
-    (field: keyof Omit<RuleFormData, "steps">) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    (field: keyof Omit<RuleFormData, "ruleSteps">) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
 
       if (field === "departmentId") {
         fetchApprovers(Number(value));
       }
 
+      const isNumber = field === "departmentId" || field === "minValue" || field === "maxValue";
+
       setFormData((prev) => ({
         ...prev,
-        [field]: field === "departmentId" ? Number(value) : value
+        [field]: isNumber ? Number(value) : value
       }));
     };
 
   const handleStepsChange = useCallback((index: number, newStep: RuleStepDTO) => {
     setFormData((prev) => {
-      const newSteps = [...prev.steps];
+      const newSteps = [...prev.ruleSteps];
       newSteps[index] = newStep;
 
       return {
         ...prev,
-        steps: newSteps
+        ruleSteps: newSteps
       };
     });
   }, []);
@@ -169,11 +169,11 @@ const RuleManagementPage = () => {
         if (selectedRule) {
           newStep.ruleId = selectedRule.id;
         }
-        const newSteps = [...prev.steps, newStep];
+        const newSteps = [...prev.ruleSteps, newStep];
 
         return {
           ...prev,
-          steps: newSteps
+          ruleSteps: newSteps
         };
       });
     },
@@ -182,12 +182,12 @@ const RuleManagementPage = () => {
 
   const handleStepDelete = useCallback((index: number) => {
     setFormData((prev) => {
-      const newSteps = [...prev.steps];
+      const newSteps = [...prev.ruleSteps];
       newSteps.splice(index, 1);
 
       return {
         ...prev,
-        steps: newSteps
+        ruleSteps: newSteps
       };
     });
   }, []);
@@ -201,24 +201,20 @@ const RuleManagementPage = () => {
       formData.departmentId > 0 &&
       formData.minValue >= 0 &&
       formData.maxValue > formData.minValue &&
-      (!formData.canBeSingleApproved || formData.steps.length === 1) &&
-      (formData.canBeSingleApproved || formData.steps.length > 1)
+      formData.ruleSteps.length > 0
     );
   }, [formData]);
 
   const stepsForTable = useMemo(() => {
-    if (selectedRule) {
-      return selectedRule.ruleSteps;
-    }
-
     const steps: RuleStepDTO[] = [];
 
-    formData.steps.forEach((s, i) => {
+    formData.ruleSteps.forEach((s, i) => {
       const department = departments.find((d) => d.id === s.approvingDepartmentId);
       const user = approvers.find((u) => u.id === s.approvingUserId);
+
       steps.push({
-        id: 0,
-        ruleId: 0,
+        id: s.id ?? 0,
+        ruleId: s.ruleId ?? 0,
         approvingDepartment: department,
         approvingDepartmentId: s.approvingDepartmentId,
         approvingUser: user,
@@ -228,7 +224,7 @@ const RuleManagementPage = () => {
     });
 
     return steps;
-  }, [approvers, departments, formData.steps, selectedRule]);
+  }, [approvers, departments, formData.ruleSteps]);
 
   return (
     <Box sx={{ padding: theme.spacing(3) }}>

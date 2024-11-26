@@ -6,7 +6,6 @@ import UserPermission from "./UserPermission";
 import UserDepartmentPermission from "./UserDepartmentPermission";
 import Department from "./Department";
 import Expense from "./Expense";
-import ExpenseStatus from "./ExpenseStatus";
 
 class User extends Model<UserAttributes, UserAttributes> implements UserInstance {
   declare id?: number;
@@ -214,7 +213,6 @@ User.init(
     },
     email: {
       type: DataTypes.STRING,
-      unique: true,
       allowNull: false,
       validate: {
         isEmail: true
@@ -229,6 +227,12 @@ User.init(
     sequelize,
     tableName: "Users",
     modelName: "User",
+    indexes: [
+      {
+        unique: true,
+        fields: ["email"] // Explicitly define index only once
+      }
+    ],
     hooks: {
       beforeCreate: async (user) => {
         user.password = await bcrypt.hash(user.password, 10);

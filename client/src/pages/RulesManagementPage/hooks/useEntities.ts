@@ -51,6 +51,7 @@ export const useEntities = (shouldInitiallyFetch?: { users?: boolean; department
   }, [fetchDepartments, fetchUsers]);
 
   const initialFetch = useCallback(async () => {
+    if (isInitiallyLoaded) return;
     setIsLoading(true);
     const promisesToAwait: Promise<void>[] = [];
     if (shouldInitiallyFetch) {
@@ -64,7 +65,7 @@ export const useEntities = (shouldInitiallyFetch?: { users?: boolean; department
     setIsInitiallyLoaded(true);
     await Promise.all(promisesToAwait);
     setIsLoading(false);
-  }, [fetchDepartments, fetchUsers, shouldInitiallyFetch]);
+  }, [fetchDepartments, fetchUsers, isInitiallyLoaded, shouldInitiallyFetch]);
 
   useEffect(() => {
     initialFetch();

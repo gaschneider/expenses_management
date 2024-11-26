@@ -12,6 +12,7 @@ import "./config/passport";
 import sequelize from "./config/database";
 import { seedUserPermission } from "./seeders/seedUserPermission";
 import { defineAssociations } from "./models/associations";
+import { setupSessionMiddleware } from "./middlewares/sessionStoreMiddleware";
 
 const initDatabase = async () => {
   try {
@@ -47,22 +48,13 @@ export const startServer = async () => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  app.use(
-    session({
-      secret: "your-secret-key",
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
-      }
-    })
-  );
+  await initDatabase();
 
+  const { sessionMiddleware } = setupSessionMiddleware();
+
+  app.use(sessionMiddleware);
   app.use(passport.initialize());
   app.use(passport.session());
-
-  await initDatabase();
 
   // Mount routes
   app.use("/api/auth", authRoutes);

@@ -63,8 +63,8 @@ export const RulesTable: React.FC<RulesTableProps> = ({ rules, departments, onEd
           {sortedRules.map((rule) => (
             <TableRow key={rule.id} hover>
               <TableCell>{departments.find((d) => d.id === rule.departmentId)?.name}</TableCell>
-              <TableCell>{rule.minValue.toFixed(2)}</TableCell>
-              <TableCell>{rule.maxValue.toFixed(2)}</TableCell>
+              <TableCell>{rule.minValue}</TableCell>
+              <TableCell>{rule.maxValue}</TableCell>
               <TableCell>{rule.canBeSingleApproved ? "Yes" : "No"}</TableCell>
               <TableCell>{rule.ruleSteps?.length || 0}</TableCell>
               <TableCell align="right">

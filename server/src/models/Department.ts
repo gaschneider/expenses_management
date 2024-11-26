@@ -161,8 +161,7 @@ Department.init(
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
+      allowNull: false
     },
     description: {
       type: DataTypes.STRING,
@@ -172,7 +171,13 @@ Department.init(
   {
     sequelize,
     modelName: "Department",
-    tableName: "Departments"
+    tableName: "Departments",
+    indexes: [
+      {
+        unique: true,
+        fields: ["name"] // Explicitly define index only once
+      }
+    ]
   }
 );
 

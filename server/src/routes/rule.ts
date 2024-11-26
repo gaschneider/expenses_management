@@ -9,7 +9,7 @@ import {
   getRules
 } from "../controllers/ruleController";
 import { validateRequest } from "../middlewares/validateRequest";
-import { createRuleSchema } from "../validation-schemas/rule.schema";
+import { createRuleSchema, editRuleSchema } from "../validation-schemas/rule.schema";
 
 const router = express.Router();
 
@@ -24,7 +24,12 @@ router.get("/", checkPermission(SystemPermission.MANAGE_RULES), getRules);
 
 router.get("/:id", checkPermission(SystemPermission.MANAGE_RULES), getRuleById);
 
-router.patch("/:id", checkPermission(SystemPermission.MANAGE_RULES), editRule);
+router.put(
+  "/:id",
+  checkPermission(SystemPermission.MANAGE_RULES),
+  validateRequest(editRuleSchema),
+  editRule
+);
 
 router.delete("/:id", checkPermission(SystemPermission.MANAGE_RULES), deleteRule);
 
