@@ -85,7 +85,7 @@ const ruleToDTO = (rule: Rule): RuleDTO => {
   };
 };
 
-type RuleToCreateDTO = {
+export type RuleToCreateDTO = {
   departmentId: number;
   minValue: number;
   maxValue: number;
@@ -238,7 +238,8 @@ export const createRule = async (req: Request, res: Response, next: NextFunction
     await transaction.commit();
 
     res.status(201).json({
-      message: "Rule created successfully"
+      message: "Rule created successfully",
+      ruleId: rule.id
     });
   } catch (error) {
     await transaction.rollback();
@@ -317,6 +318,7 @@ export const editRule = async (req: Request, res: Response, next: NextFunction) 
     const rangeConflict = await Rule.findOne({
       where: {
         id: { [Op.ne]: ruleId }, // Exclude current rule
+        departmentId: existingRule.departmentId,
         [Op.or]: [
           {
             minValue: { [Op.lte]: finalMinValue },
