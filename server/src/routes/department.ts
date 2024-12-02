@@ -4,7 +4,8 @@ import {
   getDepartments,
   editDepartment,
   deleteDepartment,
-  getDepartmentById
+  getDepartmentById,
+  getApproversByDepartmentId
 } from "../controllers/departmentController";
 import { checkPermission } from "../middlewares/checkPermission";
 import { SystemPermission } from "../types/auth";
@@ -20,7 +21,8 @@ router.get(
     SystemPermission.EDIT_DEPARTMENT,
     SystemPermission.DELETE_DEPARTMENT,
     SystemPermission.MANAGE_USER_SYSTEM_PERMISSIONS,
-    SystemPermission.MANAGE_USER_DEPARTMENT_PERMISSIONS
+    SystemPermission.MANAGE_USER_DEPARTMENT_PERMISSIONS,
+    SystemPermission.MANAGE_RULES
   ]),
   getDepartments
 );
@@ -33,6 +35,12 @@ router.get(
     SystemPermission.DELETE_DEPARTMENT
   ]),
   getDepartmentById
+);
+
+router.get(
+  "/:id/approvers",
+  checkPermission([SystemPermission.MANAGE_RULES]),
+  getApproversByDepartmentId
 );
 
 router.patch("/:id", checkPermission(SystemPermission.EDIT_DEPARTMENT), editDepartment);

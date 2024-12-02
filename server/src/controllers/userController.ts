@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import Department from "../models/Department";
 import User from "../models/User";
 import {
   updateUserDepartmentPermissions,

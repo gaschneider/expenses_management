@@ -29,30 +29,16 @@ import {
   Security as SecurityIcon,
   Group as GroupIcon
 } from "@mui/icons-material";
-import { SystemPermission, DepartmentPermission } from "../types/api";
+import {
+  SystemPermission,
+  DepartmentPermission,
+  UserDepartmentForPermissionManagementDTO,
+  DepartmentDTO,
+  UserWithPermissionsDTO
+} from "../types/api";
 import api from "../api/axios.config";
 import { useUserHasPagePermission } from "../hooks/useUserHasPagePermission";
 import { useSnackbar } from "../contexts/SnackbarContext";
-
-interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  systemPermissions: SystemPermission[];
-  departments: UserDepartment[];
-}
-
-interface Department {
-  id: number;
-  name: string;
-}
-
-interface UserDepartment {
-  departmentId: number;
-  departmentName: string;
-  permissions: DepartmentPermission[];
-}
 
 // Styled components
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
@@ -93,9 +79,9 @@ const UserManagementPage = () => {
     false
   );
   const theme = useTheme();
-  const [users, setUsers] = useState<User[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<UserWithPermissionsDTO[]>([]);
+  const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserWithPermissionsDTO | null>(null);
   const [isSystemPermissionModalOpen, setIsSystemPermissionModalOpen] = useState(false);
   const [isDepartmentPermissionModalOpen, setIsDepartmentPermissionModalOpen] = useState(false);
   const showSnackbar = useSnackbar();
@@ -105,7 +91,7 @@ const UserManagementPage = () => {
       const response = await api.get("/users");
       setUsers(response.data);
     } catch (error) {
-      showSnackbar("Error fetching users");
+      showSnackbar("Error fetching users", { severity: "error" });
       console.error("Error fetching users:", error);
     }
   }, [showSnackbar]);
@@ -115,7 +101,7 @@ const UserManagementPage = () => {
       const response = await api.get("/departments");
       setDepartments(response.data);
     } catch (error) {
-      showSnackbar("Error fetching departments");
+      showSnackbar("Error fetching departments", { severity: "error" });
       console.error("Error fetching departments:", error);
     }
   }, [showSnackbar]);
@@ -126,12 +112,12 @@ const UserManagementPage = () => {
     canEditDepartmentPermissions && fetchDepartments();
   }, [canEditDepartmentPermissions, fetchDepartments, fetchUsers]);
 
-  const handleEditSystemPermissions = useCallback((user: User) => {
+  const handleEditSystemPermissions = useCallback((user: UserWithPermissionsDTO) => {
     setSelectedUser(user);
     setIsSystemPermissionModalOpen(true);
   }, []);
 
-  const handleEditDepartmentPermissions = useCallback((user: User) => {
+  const handleEditDepartmentPermissions = useCallback((user: UserWithPermissionsDTO) => {
     setSelectedUser(user);
     setIsDepartmentPermissionModalOpen(true);
   }, []);
@@ -156,7 +142,7 @@ const UserManagementPage = () => {
         await fetchUsers();
         setIsSystemPermissionModalOpen(false);
       } catch (error) {
-        showSnackbar("Error saving system permissions");
+        showSnackbar("Error saving system permissions", { severity: "error" });
         console.error("Error saving system permissions:", error);
       }
     }
@@ -173,7 +159,7 @@ const UserManagementPage = () => {
         await fetchUsers();
         setIsDepartmentPermissionModalOpen(false);
       } catch (error) {
-        showSnackbar("Error saving department permissions");
+        showSnackbar("Error saving department permissions", { severity: "error" });
         console.error("Error saving department permissions:", error);
       }
     }
@@ -182,8 +168,8 @@ const UserManagementPage = () => {
   const handleAddDepartment = useCallback(() => {
     if (selectedUser) {
       if (availableDepartments.length > 0) {
-        const newUserDepartment: UserDepartment = {
-          departmentId: availableDepartments[0].id,
+        const newUserDepartment: UserDepartmentForPermissionManagementDTO = {
+          departmentId: availableDepartments[0].id!,
           departmentName: availableDepartments[0].name,
           permissions: []
         };
@@ -377,7 +363,7 @@ const UserManagementPage = () => {
                                   if (selectedDept) {
                                     newDepartments[index] = {
                                       ...dept,
-                                      departmentId: selectedDept.id,
+                                      departmentId: selectedDept.id!,
                                       departmentName: selectedDept.name
                                     };
                                     setSelectedUser({
