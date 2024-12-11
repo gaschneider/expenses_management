@@ -5,7 +5,7 @@ import { CategoryAttributes } from "../types/category";
 
 interface CategoryInstance extends Model<CategoryAttributes, CategoryAttributes> {
   id: number;
-  departmentId?: number;
+  departmentId?: number | null;
   name: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -17,7 +17,7 @@ interface CategoryInstance extends Model<CategoryAttributes, CategoryAttributes>
 // Category Model
 class Category extends Model<CategoryAttributes, CategoryAttributes> implements CategoryInstance {
   declare id: number;
-  declare departmentId?: number;
+  declare departmentId?: number | null;
   declare name: string;
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;

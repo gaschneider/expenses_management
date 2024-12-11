@@ -16,7 +16,7 @@ interface DepartmentDTO {
 
 interface CategoryDTO {
   id: number;
-  departmentId?: number;
+  departmentId?: number | null;
   name: string;
   department?: DepartmentDTO;
 }
@@ -51,6 +51,7 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
   try {
     if (!req.user) {
       res.status(401).json({ error: "User not found" });
+      await transaction.rollback();
       return;
     }
 
@@ -61,12 +62,31 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
       const department = await Department.findByPk(departmentId, { transaction });
       if (!department) {
         res.status(400).json({ error: "Invalid department" });
+        await transaction.rollback();
         return;
       }
 
-      const generalCategoryExist = await Category.findOne({ where: { name } });
+      const departmentCategoryExist = await Category.findOne({
+        where: {
+          departmentId,
+          name
+        }
+      });
+      if (departmentCategoryExist) {
+        res.status(404).json({ error: `Department category already exists with name ${name}` });
+        await transaction.rollback();
+        return;
+      }
+
+      const generalCategoryExist = await Category.findOne({
+        where: {
+          departmentId: null,
+          name
+        }
+      });
       if (generalCategoryExist) {
         res.status(404).json({ error: `General category already exists with name ${name}` });
+        await transaction.rollback();
         return;
       }
     }
@@ -134,6 +154,7 @@ export const editCategory = async (req: Request, res: Response, next: NextFuncti
   try {
     if (!req.user) {
       res.status(401).json({ error: "User not found" });
+      await transaction.rollback();
       return;
     }
 
@@ -148,6 +169,7 @@ export const editCategory = async (req: Request, res: Response, next: NextFuncti
 
     if (!existingCategory) {
       res.status(404).json({ error: "Category not found" });
+      await transaction.rollback();
       return;
     }
 
@@ -158,14 +180,30 @@ export const editCategory = async (req: Request, res: Response, next: NextFuncti
       const department = await Department.findByPk(existingCategory.departmentId, { transaction });
       if (!department) {
         res.status(400).json({ error: "Invalid department" });
+        await transaction.rollback();
         return;
       }
 
-      const generalCategoryExist = await Category.findOne({ where: { name: nameToUpdate } });
+      const departmentCategoryExist = await Category.findOne({
+        where: {
+          departmentId: existingCategory.departmentId,
+          name: nameToUpdate
+        }
+      });
+      if (departmentCategoryExist) {
+        res.status(404).json({ error: `Department category already exists with name ${name}` });
+        await transaction.rollback();
+        return;
+      }
+
+      const generalCategoryExist = await Category.findOne({
+        where: { departmentId: null, name: nameToUpdate }
+      });
       if (generalCategoryExist) {
         res
           .status(404)
           .json({ error: `General category already exists with name ${nameToUpdate}` });
+        await transaction.rollback();
         return;
       }
     }
