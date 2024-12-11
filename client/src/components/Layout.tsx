@@ -22,7 +22,8 @@ import {
   Business as BusinessIcon,
   Logout as LogoutIcon,
   PermIdentity as UserManagementIcon,
-  Gavel as RuleManagementIcon
+  Gavel as RuleManagementIcon,
+  Label as CategoryIcon
 } from "@mui/icons-material";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import InitialsAvatar from "./InitialsAvatar";
@@ -64,6 +65,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     SystemPermission.MANAGE_RULES,
     false
   );
+  const categoryPagePermission = useUserHasPagePermission(
+    SystemPermission.MANAGE_CATEGORIES,
+    false
+  );
 
   const navItems: NavItem[] = useMemo(() => {
     const navItems = [
@@ -72,6 +77,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     ];
     if (departmentPagePermission) {
       navItems.push({ text: "Departments", path: "/departments", icon: <BusinessIcon /> });
+    }
+    if (categoryPagePermission) {
+      navItems.push({ text: "Categories", path: "/categories", icon: <CategoryIcon /> });
     }
     if (userManagementPagePermission) {
       navItems.push({
@@ -88,7 +96,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       });
     }
     return navItems;
-  }, [departmentPagePermission, ruleManagementPagePermission, userManagementPagePermission]);
+  }, [
+    categoryPagePermission,
+    departmentPagePermission,
+    ruleManagementPagePermission,
+    userManagementPagePermission
+  ]);
 
   return (
     <SnackbarProvider>

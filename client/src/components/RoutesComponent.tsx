@@ -8,6 +8,7 @@ import DepartmentsPage from "../pages/DepartmentsPage";
 import DepartmentForm from "./DepartmentForm";
 import UserManagementPage from "../pages/UserManagementPage";
 import RuleManagementPage from "../pages/RulesManagementPage/RulesManagementPage";
+import CategoriesPage from "../pages/CategoriesPage";
 
 export const RoutesComponent = () => {
   return (
@@ -76,6 +77,15 @@ export const RoutesComponent = () => {
         element={
           <ProtectedRoute>
             <RuleManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/categories"
+        element={
+          <ProtectedRoute>
+            <CategoriesPage />
           </ProtectedRoute>
         }
       />
