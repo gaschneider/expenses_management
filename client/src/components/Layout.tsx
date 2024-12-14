@@ -22,7 +22,8 @@ import {
   Business as BusinessIcon,
   Logout as LogoutIcon,
   PermIdentity as UserManagementIcon,
-  Gavel as RuleManagementIcon
+  Gavel as RuleManagementIcon,
+  Leaderboard as DataVizIcon
 } from "@mui/icons-material";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import InitialsAvatar from "./InitialsAvatar";
@@ -85,6 +86,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         text: "Rule management",
         path: "/rule-management",
         icon: <RuleManagementIcon />
+      });
+    }
+    if (true) {
+      navItems.push({
+        text: "Data Visualization",
+        path: "/data-viz",
+        icon: <DataVizIcon />
       });
     }
     return navItems;
