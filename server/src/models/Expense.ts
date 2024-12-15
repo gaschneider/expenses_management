@@ -4,10 +4,11 @@ import { CurrencyEnum, ExpenseAttributes, ExpenseStatusEnum } from "../types/exp
 import User from "./User";
 import Department from "./Department";
 import ExpenseStatus from "./ExpenseStatus";
+import { Category } from "./Category";
 
 class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare id: number;
-  declare category: string;
+  declare categoryId: number;
   declare amount: number;
   declare date: Date;
   declare departmentId: number;
@@ -23,6 +24,7 @@ class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
 
   // Declare relationship properties
   declare requester?: User;
+  declare Category?: Category;
   declare department?: Department;
   declare expenseStatuses?: ExpenseStatus[];
 
@@ -31,6 +33,8 @@ class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare setRequester: (user: User) => Promise<void>;
   declare getDepartment: () => Promise<Department>;
   declare setDepartment: (department: Department) => Promise<void>;
+  declare getCategory: () => Promise<Category>;
+  declare setCategory: (department: Category) => Promise<void>;
 
   declare getExpenseStatuses: () => Promise<ExpenseStatus[]>;
   declare setExpenseStatuses: (users: ExpenseStatus[]) => Promise<void>;
@@ -45,8 +49,12 @@ Expense.init(
       autoIncrement: true,
       primaryKey: true
     },
-    category: {
-      type: DataTypes.STRING,
+    categoryId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: "Categories",
+        key: "id"
+      },
       allowNull: false,
       comment: "Expense category (e.g., travel, food)"
     },

@@ -1,6 +1,6 @@
 export interface ExpenseAttributes {
   id: number;
-  category: string;
+  categoryId: number;
   amount: number;
   date: Date;
   departmentId: number;

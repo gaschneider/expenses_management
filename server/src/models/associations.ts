@@ -60,6 +60,11 @@ export const defineAssociations = () => {
     as: "expenseStatuses"
   });
 
+  Expense.belongsTo(Category, {
+    foreignKey: "categoryId",
+    as: "category"
+  });
+
   Expense.belongsTo(Department, {
     foreignKey: "departmentId",
     as: "department"
