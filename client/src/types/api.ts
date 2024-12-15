@@ -91,3 +91,35 @@ export interface CategoryCreateDTO {
   departmentId?: number;
   name: string;
 }
+
+export interface ExpenseDTO {
+  id: number;
+  departmentId: number;
+  categoryId: number;
+  requesterId: number;
+  amount: number;
+  currency: CurrencyEnum;
+  title: string;
+  currentStatus: ExpenseStatusEnum;
+  date: Date;
+}
+
+export interface ExpenseFilterParams {
+  departmentId?: number;
+  categoryId?: number;
+  status?: ExpenseStatusEnum;
+  requesterId?: number;
+}
+
+export enum CurrencyEnum {
+  BRL = "BRL",
+  USD = "USD",
+  EUR = "EUR"
+}
+
+export enum ExpenseStatusEnum {
+  DRAFT = "DRAFT",
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED"
+}

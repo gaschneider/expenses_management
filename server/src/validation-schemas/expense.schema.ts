@@ -2,12 +2,11 @@ import { z } from "zod";
 import { CurrencyEnum } from "../types/expense";
 
 export const expenseDtoSchema = z.object({
-  // Category should be a non-empty string with reasonable length
-  category: z
-    .string()
-    .min(2, { message: "Category must be at least 2 characters long" })
-    .max(100, { message: "Category cannot exceed 100 characters" })
-    .trim(),
+  // Category ID should be a positive integer
+  categoryId: z
+    .number()
+    .int({ message: "Category ID must be an integer" })
+    .positive({ message: "Category ID must be a positive number" }),
 
   // Amount should be a positive number with up to 2 decimal places
   amount: z
@@ -25,6 +24,13 @@ export const expenseDtoSchema = z.object({
     .number()
     .int({ message: "Department ID must be an integer" })
     .positive({ message: "Department ID must be a positive number" }),
+
+  // title should be a non-empty string with reasonable length
+  title: z
+    .string()
+    .min(10, { message: "title must be at least 10 characters long" })
+    .max(50, { message: "title cannot exceed 50 characters" })
+    .trim(),
 
   // Justification should be a non-empty string with reasonable length
   justification: z

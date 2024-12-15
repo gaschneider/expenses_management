@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import Department from "../models/Department";
 import { Op } from "sequelize";
 import { DepartmentPermission } from "../types/auth";
+import { Category } from "../models/Category";
+import { categoryToDTO } from "./categoryController";
 
 const departmentToDTO = (department: Department) => {
   return {
@@ -185,4 +187,27 @@ export const getApproversByDepartmentId = async (req: Request, res: Response) =>
   }));
 
   res.status(200).json(usersDTO);
+};
+
+export const getCategoriesByDepartmentId = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (id == null || typeof id != "string" || !Number.isFinite(Number(id))) {
+    res.status(400).json({ error: "Invalid department id" });
+    return;
+  }
+
+  const categories = await Category.findAll({
+    where: {
+      departmentId: {
+        [Op.or]: [{ [Op.is]: null }, { [Op.eq]: id }]
+      }
+    },
+    include: {
+      model: Department,
+      as: "department"
+    }
+  });
+
+  res.status(200).json(categories.map(categoryToDTO));
 };

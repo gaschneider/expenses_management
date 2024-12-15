@@ -5,10 +5,11 @@ import {
   editDepartment,
   deleteDepartment,
   getDepartmentById,
-  getApproversByDepartmentId
+  getApproversByDepartmentId,
+  getCategoriesByDepartmentId
 } from "../controllers/departmentController";
-import { checkPermission } from "../middlewares/checkPermission";
-import { SystemPermission } from "../types/auth";
+import { checkPermission, checkPermissionDepartment } from "../middlewares/checkPermission";
+import { DepartmentPermission, SystemPermission } from "../types/auth";
 
 const router = express.Router();
 
@@ -41,6 +42,20 @@ router.get(
   "/:id/approvers",
   checkPermission([SystemPermission.MANAGE_RULES]),
   getApproversByDepartmentId
+);
+
+router.get(
+  "/:id/categories",
+  checkPermissionDepartment(
+    [
+      DepartmentPermission.VIEW_EXPENSES,
+      DepartmentPermission.APPROVE_EXPENSES,
+      DepartmentPermission.CREATE_EXPENSES,
+      DepartmentPermission.REJECT_EXPENSES
+    ],
+    "id"
+  ),
+  getCategoriesByDepartmentId
 );
 
 router.patch("/:id", checkPermission(SystemPermission.EDIT_DEPARTMENT), editDepartment);

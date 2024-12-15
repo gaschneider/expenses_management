@@ -8,12 +8,14 @@ import User from "../models/User";
 import { ExpenseStatusEnum, CurrencyEnum, ExpenseAttributes } from "../types/expense";
 import { DepartmentPermission } from "../types/auth";
 import { Rule } from "../models/Rule";
+import { Category } from "../models/Category";
 
 interface ExpenseCreateDTO {
-  category: string;
+  categoryId: number;
   amount: number;
   date: Date;
   departmentId: number;
+  title: string;
   justification: string;
   projectId?: number | null;
   costCenter: string;
@@ -32,13 +34,28 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
     const requesterId = (req.user as User).id!;
 
     // Extract expense data
-    const { category, amount, date, departmentId, justification, projectId, costCenter, currency } =
-      req.body as ExpenseCreateDTO;
+    const {
+      categoryId,
+      amount,
+      date,
+      departmentId,
+      title,
+      justification,
+      projectId,
+      costCenter,
+      currency
+    } = req.body as ExpenseCreateDTO;
 
     // Validate department
     const department = await Department.findByPk(departmentId, { transaction });
     if (!department) {
       res.status(400).json({ error: "Invalid department" });
+      return;
+    }
+
+    const category = await Category.findByPk(categoryId, { transaction });
+    if (!category || (category.departmentId && category.departmentId != departmentId)) {
+      res.status(400).json({ error: "Invalid category" });
       return;
     }
 
@@ -64,10 +81,11 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
     const expense = await Expense.create(
       {
         id: 0,
-        category,
+        categoryId,
         amount,
         date,
         departmentId,
+        title,
         justification,
         requesterId,
         projectId,
@@ -113,7 +131,7 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
       {
         id: 0,
         expenseId: expense.id,
-        status: ExpenseStatusEnum.DRAFT,
+        status: ExpenseStatusEnum.PENDING_APPROVAL,
         userId: requesterId,
         nextApproverId,
         comment: "Expense created and awaiting initial approval"

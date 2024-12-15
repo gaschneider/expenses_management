@@ -4,6 +4,7 @@ export interface ExpenseAttributes {
   amount: number;
   date: Date;
   departmentId: number;
+  title: string;
   justification: string;
   requesterId: number;
   projectId: number | null;

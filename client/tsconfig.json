@@ -5,7 +5,8 @@
     "jsx": "react-jsx",
     "allowJs": true,
     "outDir": "lib",
-    "lib": ["DOM", "ES2020"]
+    "lib": ["DOM", "ES2020"],
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

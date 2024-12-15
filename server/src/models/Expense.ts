@@ -12,6 +12,7 @@ class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare amount: number;
   declare date: Date;
   declare departmentId: number;
+  declare title: string;
   declare justification: string;
   declare requesterId: number;
   declare projectId: number | null;
@@ -76,6 +77,11 @@ Expense.init(
         key: "id"
       },
       comment: "Requesting department"
+    },
+    title: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      comment: "Expense title"
     },
     justification: {
       type: DataTypes.TEXT,
