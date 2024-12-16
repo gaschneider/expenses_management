@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -14,27 +14,34 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  SelectChangeEvent
+  SelectChangeEvent,
+  TablePagination
 } from "@mui/material";
-import { useExpenses } from "./hooks/useExpenses";
+import dayjs from "dayjs";
+import { ExpenseDatePicker } from "./components/ExpenseDatePicker"; // Adjust import path as needed
+import { useExpenses, ExpensePaginationParams } from "./hooks/useExpenses";
 import { useEntities } from "../RulesManagementPage/hooks/useEntities";
 import { CreateExpenseModal } from "./components/CreateExpenseModal";
 import { ExpenseDTO } from "../../types/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
 
 export const ExpensesPage: React.FC = () => {
-  const { expenses, isLoading, createExpense } = useExpenses();
-  const { departments, users } = useEntities({ departments: true, users: true });
+  const { expenses, isLoading, createExpense, fetchExpenses, pagination } = useExpenses();
+  const { users } = useEntities({ users: true });
+  const { expensesDepartments } = useExpenseDepartments();
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter states
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<ExpensePaginationParams>({
     departmentId: "",
-    categoryId: "",
     status: "",
-    requesterId: ""
+    page: 1,
+    pageSize: 10,
+    startDate: "",
+    endDate: ""
   });
 
   // Sorting state
@@ -43,35 +50,10 @@ export const ExpensesPage: React.FC = () => {
     direction: "asc" | "desc";
   }>({ key: "id", direction: "desc" });
 
-  // Filtered and sorted expenses
-  const processedExpenses = useMemo(() => {
-    let result = [...expenses];
-
-    // Apply filters
-    if (filters.departmentId) {
-      result = result.filter((exp) => exp.departmentId === Number(filters.departmentId));
-    }
-    if (filters.categoryId) {
-      result = result.filter((exp) => exp.categoryId === Number(filters.categoryId));
-    }
-    if (filters.status) {
-      result = result.filter((exp) => exp.currentStatus === filters.status);
-    }
-    if (filters.requesterId) {
-      result = result.filter((exp) => exp.requesterId === Number(filters.requesterId));
-    }
-
-    // Apply sorting
-    return result.sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
-      return 0;
-    });
-  }, [expenses, filters, sortConfig]);
+  // Fetch expenses when filters or pagination changes
+  useEffect(() => {
+    fetchExpenses(filters);
+  }, [filters, fetchExpenses]);
 
   const handleSort = (key: keyof ExpenseDTO) => {
     setSortConfig((prev) => ({
@@ -84,7 +66,31 @@ export const ExpensesPage: React.FC = () => {
     const { name, value } = e.target;
     setFilters((prev) => ({
       ...prev,
-      [name as string]: value
+      [name as string]: value,
+      page: 1 // Reset to first page when filter changes
+    }));
+  };
+
+  const handleDateChange = (type: "startDate" | "endDate", date: Date | null) => {
+    setFilters((prev) => ({
+      ...prev,
+      [type]: date ? dayjs(date).toISOString() : "",
+      page: 1 // Reset to first page when date changes
+    }));
+  };
+
+  const handlePageChange = (event: unknown, newPage: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      page: newPage + 1
+    }));
+  };
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters((prev) => ({
+      ...prev,
+      pageSize: parseInt(event.target.value, 10),
+      page: 1 // Reset to first page when page size changes
     }));
   };
 
@@ -97,17 +103,17 @@ export const ExpensesPage: React.FC = () => {
       {/* Filters */}
       <Grid item xs={12}>
         <Grid container spacing={2} display="flex" justifyContent="space-between">
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={2}>
             <FormControl fullWidth>
               <InputLabel>Department</InputLabel>
               <Select
                 name="departmentId"
-                value={filters.departmentId}
+                value={filters.departmentId?.toString() ?? undefined}
                 onChange={handleFilterChange}
                 label="Department"
               >
                 <MenuItem value="">All Departments</MenuItem>
-                {departments.map((dept) => (
+                {expensesDepartments.map((dept) => (
                   <MenuItem key={dept.id} value={dept.id}>
                     {dept.name}
                   </MenuItem>
@@ -115,9 +121,44 @@ export const ExpensesPage: React.FC = () => {
               </Select>
             </FormControl>
           </Grid>
-          {/* Similar filters for Category, Status, Requester */}
-          <Grid item xs={12} md={3}>
-            <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)}>
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                name="status"
+                value={filters.status}
+                onChange={handleFilterChange}
+                label="Status"
+              >
+                <MenuItem value="">All Statuses</MenuItem>
+                {/* Add your status options here */}
+                <MenuItem value="PENDING">Pending</MenuItem>
+                <MenuItem value="APPROVED">Approved</MenuItem>
+                <MenuItem value="REJECTED">Rejected</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <ExpenseDatePicker
+              label="Start Date"
+              value={filters.startDate ? new Date(filters.startDate) : new Date()}
+              onChange={(date) => handleDateChange("startDate", date)}
+            />
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <ExpenseDatePicker
+              label="End Date"
+              value={filters.endDate ? new Date(filters.endDate) : new Date()}
+              onChange={(date) => handleDateChange("endDate", date)}
+            />
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setIsModalOpen(true)}
+              fullWidth
+            >
               Create Expense
             </Button>
           </Grid>
@@ -150,6 +191,15 @@ export const ExpensesPage: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
+                    active={sortConfig.key === "title"}
+                    direction={sortConfig.direction}
+                    onClick={() => handleSort("title")}
+                  >
+                    Title
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
                     active={sortConfig.key === "requesterId"}
                     direction={sortConfig.direction}
                     onClick={() => handleSort("requesterId")}
@@ -175,25 +225,17 @@ export const ExpensesPage: React.FC = () => {
                     Status
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortConfig.key === "title"}
-                    direction={sortConfig.direction}
-                    onClick={() => handleSort("title")}
-                  >
-                    Title
-                  </TableSortLabel>
-                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {processedExpenses.map((expense) => {
+              {expenses.map((expense) => {
                 const user = users.find((u) => u.id === expense.requesterId);
                 const userName = `${user?.firstName} ${user?.lastName}`;
                 return (
                   <TableRow key={expense.id}>
                     <TableCell>
-                      {departments.find((d) => d.id === expense.departmentId)?.name || "N/A"}
+                      {expensesDepartments.find((d) => d.id === expense.departmentId)?.name ||
+                        "N/A"}
                     </TableCell>
                     <TableCell>
                       {expense.categoryId} {/* Replace with actual category name lookup */}
@@ -213,6 +255,15 @@ export const ExpensesPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          component="div"
+          count={pagination.total}
+          page={pagination.page - 1}
+          rowsPerPage={pagination.pageSize}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+        />
       </Grid>
 
       {/* Create Expense Modal */}

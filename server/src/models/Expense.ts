@@ -16,7 +16,7 @@ class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare justification: string;
   declare requesterId: number;
   declare projectId: number | null;
-  declare costCenter: string;
+  declare costCenter: string | null;
   declare currency: CurrencyEnum;
   declare paymentDate: Date | null;
   declare currentStatus: ExpenseStatusEnum;
@@ -108,7 +108,7 @@ Expense.init(
     },
     costCenter: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       comment: "Cost center (e.g., marketing, technology)"
     },
     currency: {

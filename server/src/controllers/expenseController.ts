@@ -5,10 +5,11 @@ import Expense from "../models/Expense";
 import ExpenseStatus from "../models/ExpenseStatus";
 import Department from "../models/Department";
 import User from "../models/User";
-import { ExpenseStatusEnum, CurrencyEnum, ExpenseAttributes } from "../types/expense";
-import { DepartmentPermission } from "../types/auth";
-import { Rule } from "../models/Rule";
+import { ExpenseStatusEnum, CurrencyEnum } from "../types/expense";
 import { Category } from "../models/Category";
+import { userHasPermission } from "../middlewares/checkPermission";
+import { DepartmentPermission } from "../types/auth";
+import { buildExpenseQuery } from "../helpers/expensesQueryHelper";
 
 interface ExpenseCreateDTO {
   categoryId: number;
@@ -17,9 +18,10 @@ interface ExpenseCreateDTO {
   departmentId: number;
   title: string;
   justification: string;
-  projectId?: number | null;
-  costCenter: string;
+  // projectId?: number | null;
+  // costCenter: string;
   currency: CurrencyEnum;
+  isDraft: boolean;
 }
 
 export const createExpense = async (req: Request, res: Response, next: NextFunction) => {
@@ -41,9 +43,10 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
       departmentId,
       title,
       justification,
-      projectId,
-      costCenter,
-      currency
+      // projectId,
+      // costCenter,
+      currency,
+      isDraft
     } = req.body as ExpenseCreateDTO;
 
     // Validate department
@@ -59,24 +62,6 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
-    // Find applicable approval rule
-    const applicableRule = await Rule.findOne({
-      where: {
-        departmentId,
-        minValue: { [Op.lte]: amount },
-        maxValue: { [Op.gte]: amount }
-      },
-      include: [{ model: Rule.associations.ruleSteps.target, as: "ruleSteps" }],
-      transaction
-    });
-
-    if (!applicableRule) {
-      res.status(400).json({
-        error: "No approval rule found for this expense amount in the department"
-      });
-      return;
-    }
-
     // Create expense
     const expense = await Expense.create(
       {
@@ -88,53 +73,8 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
         title,
         justification,
         requesterId,
-        projectId,
-        costCenter,
         currency,
-        currentStatus: ExpenseStatusEnum.PENDING_APPROVAL
-      },
-      { transaction }
-    );
-
-    // Determine first approval step
-    const firstStep = applicableRule.ruleSteps?.sort((a, b) => a.step - b.step)[0];
-    if (!firstStep) {
-      await transaction.rollback();
-      res.status(400).json({ error: "No approval steps defined for this rule" });
-      return;
-    }
-
-    // Determine first approver (department or user)
-    let nextApproverId: number | null = null;
-    if (firstStep.approvingUserId) {
-      nextApproverId = firstStep.approvingUserId;
-    } else if (firstStep.approvingDepartmentId) {
-      // If department is approving, find a user with approval permissions
-      const departmentApprovers = await department.getUsersWithPermission(
-        DepartmentPermission.APPROVE_EXPENSES
-      );
-
-      if (departmentApprovers.length === 0) {
-        await transaction.rollback();
-        res.status(400).json({
-          error: "No approvers found for the department"
-        });
-        return;
-      }
-
-      // Choose first approver (could implement round-robin or other selection logic)
-      nextApproverId = departmentApprovers[0].id!;
-    }
-
-    // Create initial expense status
-    await ExpenseStatus.create(
-      {
-        id: 0,
-        expenseId: expense.id,
-        status: ExpenseStatusEnum.PENDING_APPROVAL,
-        userId: requesterId,
-        nextApproverId,
-        comment: "Expense created and awaiting initial approval"
+        currentStatus: isDraft ? ExpenseStatusEnum.DRAFT : ExpenseStatusEnum.WAITING_WORKFLOW
       },
       { transaction }
     );
@@ -142,10 +82,11 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
     // Commit transaction
     await transaction.commit();
 
+    // fire service to define expense status
+
     res.status(201).json({
       message: "Expense created successfully",
-      expenseId: expense.id,
-      nextApproverId
+      expenseId: expense.id
     });
   } catch (error) {
     await transaction.rollback();
@@ -183,20 +124,21 @@ export const getExpenseById = async (req: Request, res: Response) => {
 };
 
 export const listExpenses = async (req: Request, res: Response) => {
-  const { page = 1, pageSize = 10, status, departmentId, startDate, endDate } = req.query;
-
-  const whereConditions: any = {};
-
-  if (status) whereConditions.currentStatus = status;
-  if (departmentId) whereConditions.departmentId = departmentId;
-  if (startDate && endDate) {
-    whereConditions.date = {
-      [Op.between]: [new Date(startDate as string), new Date(endDate as string)]
-    };
+  if (!req.user) {
+    res.status(401).json({ error: "User not authenticated" });
+    return;
   }
 
+  const authenticatedUser = await User.findByPk(req.user.id);
+  if (!authenticatedUser) {
+    res.status(401).json({ error: "User not authenticated" });
+    return;
+  }
+
+  const { page = 1, pageSize = 10, status, departmentId, startDate, endDate } = req.query;
+
   const expenses = await Expense.findAndCountAll({
-    where: whereConditions,
+    where: buildExpenseQuery(authenticatedUser, { status, startDate, endDate, departmentId }),
     include: [
       { model: User, as: "requester", attributes: ["id", "firstName", "lastName"] },
       { model: Department, as: "department", attributes: ["id", "name"] }

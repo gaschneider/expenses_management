@@ -119,24 +119,22 @@ export const checkPermissionDepartment = (
 
 // Helper function to check permissions programmatically
 export const userHasPermission = async (
-  user: UserInstance,
+  user: User,
   permission: string,
   departmentId?: number
 ): Promise<boolean> => {
-  const userRecord = await User.findByPk(user.id);
-
-  if (!userRecord) {
+  if (!user) {
     return false;
   }
 
-  if (await userRecord.hasPermissionString(SystemPermission.ADMIN)) {
+  if (await user.hasPermissionString(SystemPermission.ADMIN)) {
     return true;
   }
 
   // Check if user has the required permission
   if (departmentId) {
-    return await userRecord.hasDepartmentPermissionString(departmentId, permission);
+    return await user.hasDepartmentPermissionString(departmentId, permission);
   }
 
-  return await userRecord.hasPermissionString(permission);
+  return await user.hasPermissionString(permission);
 };

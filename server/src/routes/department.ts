@@ -6,7 +6,9 @@ import {
   deleteDepartment,
   getDepartmentById,
   getApproversByDepartmentId,
-  getCategoriesByDepartmentId
+  getCategoriesByDepartmentId,
+  getCreateExpenseDepartmentsByUser,
+  getExpenseDepartmentsByUser
 } from "../controllers/departmentController";
 import { checkPermission, checkPermissionDepartment } from "../middlewares/checkPermission";
 import { DepartmentPermission, SystemPermission } from "../types/auth";
@@ -27,6 +29,10 @@ router.get(
   ]),
   getDepartments
 );
+
+router.get("/create-expense-departments", getCreateExpenseDepartmentsByUser);
+
+router.get("/view-expenses-departments", getExpenseDepartmentsByUser);
 
 router.get(
   "/:id",
@@ -50,8 +56,7 @@ router.get(
     [
       DepartmentPermission.VIEW_EXPENSES,
       DepartmentPermission.APPROVE_EXPENSES,
-      DepartmentPermission.CREATE_EXPENSES,
-      DepartmentPermission.REJECT_EXPENSES
+      DepartmentPermission.CREATE_EXPENSES
     ],
     "id"
   ),

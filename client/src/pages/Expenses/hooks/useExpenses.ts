@@ -1,21 +1,49 @@
 import { useState, useCallback } from "react";
 import api from "../../../api/axios.config";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
-import { ExpenseDTO, ExpenseFilterParams } from "../../../types/api";
+import { CreateExpenseDTO, ExpenseDTO } from "../../../types/api";
+
+export interface ExpensePaginationParams {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  departmentId?: number | string;
+  startDate?: string;
+  endDate?: string;
+}
 
 export const useExpenses = () => {
   const [expenses, setExpenses] = useState<ExpenseDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    pageSize: 10
+  });
+
   const showSnackbar = useSnackbar();
 
   const fetchExpenses = useCallback(
-    async (filters?: ExpenseFilterParams) => {
+    async (params: ExpensePaginationParams = {}) => {
       try {
         setIsLoading(true);
         const response = await api.get("/expenses", {
-          params: filters
+          params: {
+            page: params.page || 1,
+            pageSize: params.pageSize || 10,
+            status: params.status,
+            departmentId: params.departmentId,
+            startDate: params.startDate,
+            endDate: params.endDate
+          }
         });
-        setExpenses(response.data);
+
+        setExpenses(response.data.data);
+        setPagination({
+          total: response.data.total,
+          page: response.data.page,
+          pageSize: response.data.pageSize
+        });
         setIsLoading(false);
       } catch (error) {
         showSnackbar("Error fetching expenses", { severity: "error" });
@@ -27,10 +55,10 @@ export const useExpenses = () => {
   );
 
   const createExpense = useCallback(
-    async (expenseData: any) => {
+    async (expenseData: CreateExpenseDTO) => {
       try {
         setIsLoading(true);
-        const response = await api.post("/expenses", expenseData);
+        const response = await api.post(`/expenses/${expenseData.departmentId}`, expenseData);
         showSnackbar("Expense created successfully", { severity: "success" });
         await fetchExpenses(); // Refresh the list
         setIsLoading(false);
@@ -48,6 +76,7 @@ export const useExpenses = () => {
   return {
     expenses,
     isLoading,
+    pagination,
     fetchExpenses,
     createExpense
   };

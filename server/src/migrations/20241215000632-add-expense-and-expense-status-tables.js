@@ -40,6 +40,11 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "RESTRICT"
       },
+      title: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+        comment: "Expense title"
+      },
       justification: {
         type: Sequelize.TEXT,
         allowNull: false,
@@ -62,7 +67,7 @@ module.exports = {
       },
       costCenter: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
         comment: "Cost center (e.g., marketing, technology)"
       },
       currency: {

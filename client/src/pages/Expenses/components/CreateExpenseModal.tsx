@@ -13,10 +13,10 @@ import {
   FormControl,
   SelectChangeEvent
 } from "@mui/material";
-import { useEntities } from "../../RulesManagementPage/hooks/useEntities";
 import { useCategories } from "../hooks/useCategories";
-import { CurrencyEnum } from "../../../types/api";
+import { CreateExpenseDTO, CurrencyEnum } from "../../../types/api";
 import { ExpenseDatePicker } from "./ExpenseDatePicker";
+import { useExpenseDepartments } from "../hooks/useExpenseDepartments";
 
 interface CreateExpenseModalProps {
   open: boolean;
@@ -29,10 +29,10 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
   onClose,
   onCreateExpense
 }) => {
-  const { departments } = useEntities({ departments: true });
+  const { departmentsExpenseCreate } = useExpenseDepartments();
   const { categories, fetchCategoriesForDepartment } = useCategories();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateExpenseDTO>({
     departmentId: "",
     categoryId: "",
     date: new Date(),
@@ -113,7 +113,7 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
                 onChange={handleSelectChange}
                 label="Department"
               >
-                {departments.map((dept) => (
+                {departmentsExpenseCreate.map((dept) => (
                   <MenuItem key={dept.id} value={dept.id}>
                     {dept.name}
                   </MenuItem>

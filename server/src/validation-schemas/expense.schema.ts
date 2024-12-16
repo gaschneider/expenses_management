@@ -52,8 +52,11 @@ export const expenseDtoSchema = z.object({
     .string()
     .min(2, { message: "Cost center must be at least 2 characters long" })
     .max(100, { message: "Cost center cannot exceed 100 characters" })
-    .trim(),
+    .trim()
+    .optional()
+    .nullable(),
 
   // Currency should be one of the defined enum values
-  currency: z.nativeEnum(CurrencyEnum).default(CurrencyEnum.BRL)
+  currency: z.nativeEnum(CurrencyEnum).default(CurrencyEnum.BRL),
+  isDraft: z.boolean()
 });

@@ -8,7 +8,7 @@ export interface ExpenseAttributes {
   justification: string;
   requesterId: number;
   projectId: number | null;
-  costCenter: string;
+  costCenter: string | null;
   currency: CurrencyEnum;
   paymentDate: Date | null;
   currentStatus: ExpenseStatusEnum;
@@ -31,6 +31,7 @@ export interface ExpenseStatusAttributes {
 
 export enum ExpenseStatusEnum {
   DRAFT = "DRAFT",
+  WAITING_WORKFLOW = "WAITING_WORKFLOW",
   PENDING_APPROVAL = "PENDING_APPROVAL",
   PENDING_ADDITIONAL_INFO = "PENDING_ADDITIONAL_INFO",
   APPROVED = "APPROVED",

@@ -123,3 +123,13 @@ export enum ExpenseStatusEnum {
   APPROVED = "APPROVED",
   REJECTED = "REJECTED"
 }
+
+export type CreateExpenseDTO = {
+  departmentId: string;
+  categoryId: string;
+  date: Date;
+  amount: string;
+  currency: CurrencyEnum;
+  title: string;
+  justification: string;
+};
