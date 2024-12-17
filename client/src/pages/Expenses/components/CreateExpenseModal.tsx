@@ -11,7 +11,9 @@ import {
   Select,
   InputLabel,
   FormControl,
-  SelectChangeEvent
+  SelectChangeEvent,
+  FormControlLabel,
+  Checkbox
 } from "@mui/material";
 import { useCategories } from "../hooks/useCategories";
 import { CreateExpenseDTO, CurrencyEnum } from "../../../types/api";
@@ -39,7 +41,8 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
     amount: "",
     currency: CurrencyEnum.BRL,
     title: "",
-    justification: ""
+    justification: "",
+    isDraft: false
   });
 
   // Reset form when modal opens
@@ -52,7 +55,8 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
         amount: "",
         currency: CurrencyEnum.BRL,
         title: "",
-        justification: ""
+        justification: "",
+        isDraft: false
       });
     }
   }, [open]);
@@ -77,6 +81,14 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
     setFormData((prev) => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  // New handler for checkbox
+  const handleDraftChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      isDraft: e.target.checked
     }));
   };
 
@@ -198,6 +210,14 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
               rows={4}
               value={formData.justification}
               onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Checkbox checked={formData.isDraft} onChange={handleDraftChange} name="isDraft" />
+              }
+              label="Save as Draft"
             />
           </Grid>
         </Grid>

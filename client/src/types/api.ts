@@ -95,11 +95,15 @@ export interface CategoryCreateDTO {
 export interface ExpenseDTO {
   id: number;
   departmentId: number;
+  department: DepartmentDTO;
   categoryId: number;
+  category: CategoryDTO;
   requesterId: number;
+  requester: Omit<BaseUserDTO, "email">;
   amount: number;
   currency: CurrencyEnum;
   title: string;
+  justification: string;
   currentStatus: ExpenseStatusEnum;
   date: Date;
 }
@@ -132,4 +136,5 @@ export type CreateExpenseDTO = {
   currency: CurrencyEnum;
   title: string;
   justification: string;
+  isDraft: boolean;
 };

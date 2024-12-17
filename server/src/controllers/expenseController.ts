@@ -141,6 +141,7 @@ export const listExpenses = async (req: Request, res: Response) => {
     where: buildExpenseQuery(authenticatedUser, { status, startDate, endDate, departmentId }),
     include: [
       { model: User, as: "requester", attributes: ["id", "firstName", "lastName"] },
+      { model: Category, as: "category", attributes: ["id", "name"] },
       { model: Department, as: "department", attributes: ["id", "name"] }
     ],
     limit: Number(pageSize),

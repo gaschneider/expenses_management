@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import api from "../../../api/axios.config";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { DepartmentDTO } from "../../../types/api";
@@ -8,6 +8,7 @@ export const useExpenseDepartments = () => {
   const [departmentsExpenseCreate, setDepartmentsExpenseCreate] = useState<DepartmentDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const showSnackbar = useSnackbar();
+  const initiallyFetched = useRef(false);
 
   const fetchExpenseDepartments = useCallback(async () => {
     try {
@@ -37,7 +38,10 @@ export const useExpenseDepartments = () => {
   }, [fetchDepartmentsExpenseCreate, fetchExpenseDepartments]);
 
   useEffect(() => {
-    initialFetch();
+    if (!initiallyFetched.current) {
+      initialFetch();
+      initiallyFetched.current = true;
+    }
   }, [initialFetch]);
 
   return {

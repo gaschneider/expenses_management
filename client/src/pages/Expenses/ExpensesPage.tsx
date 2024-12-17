@@ -20,19 +20,20 @@ import {
 import dayjs from "dayjs";
 import { ExpenseDatePicker } from "./components/ExpenseDatePicker"; // Adjust import path as needed
 import { useExpenses, ExpensePaginationParams } from "./hooks/useExpenses";
-import { useEntities } from "../RulesManagementPage/hooks/useEntities";
 import { CreateExpenseModal } from "./components/CreateExpenseModal";
 import { ExpenseDTO } from "../../types/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
+import { ViewExpenseModal } from "./components/ViewExpenseModal";
 
 export const ExpensesPage: React.FC = () => {
   const { expenses, isLoading, createExpense, fetchExpenses, pagination } = useExpenses();
-  const { users } = useEntities({ users: true });
   const { expensesDepartments } = useExpenseDepartments();
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseDTO | null>(null);
 
   // Filter states
   const [filters, setFilters] = useState<ExpensePaginationParams>({
@@ -60,6 +61,11 @@ export const ExpensesPage: React.FC = () => {
       key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc"
     }));
+  };
+
+  const handleRowClick = (expense: ExpenseDTO) => {
+    setSelectedExpense(expense);
+    setIsPreviewModalOpen(true);
   };
 
   const handleFilterChange = (e: SelectChangeEvent<string>) => {
@@ -102,7 +108,13 @@ export const ExpensesPage: React.FC = () => {
     <Grid container spacing={2}>
       {/* Filters */}
       <Grid item xs={12}>
-        <Grid container spacing={2} display="flex" justifyContent="space-between">
+        <Grid
+          container
+          spacing={2}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
               <InputLabel>Department</InputLabel>
@@ -131,7 +143,6 @@ export const ExpensesPage: React.FC = () => {
                 label="Status"
               >
                 <MenuItem value="">All Statuses</MenuItem>
-                {/* Add your status options here */}
                 <MenuItem value="PENDING">Pending</MenuItem>
                 <MenuItem value="APPROVED">Approved</MenuItem>
                 <MenuItem value="REJECTED">Rejected</MenuItem>
@@ -218,6 +229,15 @@ export const ExpensesPage: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <TableSortLabel
+                    active={sortConfig.key === "date"}
+                    direction={sortConfig.direction}
+                    onClick={() => handleSort("date")}
+                  >
+                    Date
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
                     active={sortConfig.key === "currentStatus"}
                     direction={sortConfig.direction}
                     onClick={() => handleSort("currentStatus")}
@@ -229,26 +249,28 @@ export const ExpensesPage: React.FC = () => {
             </TableHead>
             <TableBody>
               {expenses.map((expense) => {
-                const user = users.find((u) => u.id === expense.requesterId);
-                const userName = `${user?.firstName} ${user?.lastName}`;
+                const userName = `${expense.requester.firstName} ${expense.requester.lastName}`;
                 return (
-                  <TableRow key={expense.id}>
+                  <TableRow
+                    key={expense.id}
+                    hover
+                    onClick={() => handleRowClick(expense)}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    <TableCell>{expense.department.name || "N/A"}</TableCell>
                     <TableCell>
-                      {expensesDepartments.find((d) => d.id === expense.departmentId)?.name ||
-                        "N/A"}
+                      {expense.category.name} {/* Replace with actual category name lookup */}
                     </TableCell>
-                    <TableCell>
-                      {expense.categoryId} {/* Replace with actual category name lookup */}
-                    </TableCell>
-                    <TableCell>{user ? userName : "N/A"}</TableCell>
+                    <TableCell>{expense.title}</TableCell>
+                    <TableCell>{userName || "N/A"}</TableCell>
                     <TableCell>
                       {expense.amount.toLocaleString("en-US", {
                         style: "currency",
                         currency: expense.currency
                       })}
                     </TableCell>
+                    <TableCell>{dayjs(expense.date).format("YYYY-MM-DD")}</TableCell>
                     <TableCell>{expense.currentStatus}</TableCell>
-                    <TableCell>{expense.title}</TableCell>
                   </TableRow>
                 );
               })}
@@ -267,11 +289,22 @@ export const ExpensesPage: React.FC = () => {
       </Grid>
 
       {/* Create Expense Modal */}
-      <CreateExpenseModal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onCreateExpense={createExpense}
-      />
+      {isModalOpen && (
+        <CreateExpenseModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onCreateExpense={createExpense}
+        />
+      )}
+
+      {/* Expense Preview Modal */}
+      {isPreviewModalOpen && selectedExpense && (
+        <ViewExpenseModal
+          open={isPreviewModalOpen}
+          onClose={() => setIsPreviewModalOpen(false)}
+          expense={selectedExpense}
+        />
+      )}
     </Grid>
   );
 };

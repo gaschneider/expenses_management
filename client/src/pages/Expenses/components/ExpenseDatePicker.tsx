@@ -9,13 +9,15 @@ export const ExpenseDatePicker: React.FC<{
   value: Date;
   onChange: (date: Date | null) => void;
   label?: string;
-}> = ({ value, onChange, label }) => {
+  disabled?: boolean;
+}> = ({ value, onChange, label, disabled }) => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DatePicker
         label={label}
         value={dayjs(value)}
         onChange={(newValue) => onChange(newValue ? newValue.toDate() : null)}
+        disabled={disabled}
         slots={{
           textField: (params) => <TextField {...params} fullWidth margin="normal" />
         }}
