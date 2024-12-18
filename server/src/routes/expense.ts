@@ -3,20 +3,33 @@ import { checkPermissionDepartment } from "../middlewares/checkPermission";
 import { DepartmentPermission } from "../types/auth";
 import { validateRequest } from "../middlewares/validateRequest";
 import { expenseDtoSchema } from "../validation-schemas/expense.schema";
-import { createExpense, listExpenses } from "../controllers/expenseController";
+import { ExpenseController } from "../controllers/expenseController";
 
 const router = express.Router();
+const expenseController = new ExpenseController();
 
 router.post(
   "/:departmentId",
   checkPermissionDepartment(DepartmentPermission.CREATE_EXPENSES),
   validateRequest(expenseDtoSchema),
-  createExpense
+  expenseController.createExpense
 );
 
-router.get("/", listExpenses);
+router.put(
+  "/approve/:departmentId/:id",
+  checkPermissionDepartment(DepartmentPermission.APPROVE_EXPENSES),
+  expenseController.approveExpense
+);
 
-// router.get("/:id", checkPermission(SystemPermission.MANAGE_RULES), getRuleById);
+router.put(
+  "/reject/:departmentId/:id",
+  checkPermissionDepartment(DepartmentPermission.APPROVE_EXPENSES),
+  expenseController.rejectExpense
+);
+
+router.get("/", expenseController.listExpenses);
+
+router.get("/:id", expenseController.getExpenseById);
 
 // router.put(
 //   "/:id",

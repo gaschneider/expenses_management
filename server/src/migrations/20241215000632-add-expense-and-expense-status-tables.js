@@ -7,6 +7,7 @@ module.exports = {
     await queryInterface.createTable("Expenses", {
       id: {
         type: Sequelize.INTEGER,
+        allowNull: false,
         autoIncrement: true,
         primaryKey: true
       },
@@ -18,7 +19,8 @@ module.exports = {
           key: "id"
         },
         onUpdate: "CASCADE",
-        onDelete: "RESTRICT"
+        onDelete: "RESTRICT",
+        comment: "Expense category (e.g., travel, food)"
       },
       amount: {
         type: Sequelize.DECIMAL(10, 2),
@@ -38,7 +40,8 @@ module.exports = {
           key: "id"
         },
         onUpdate: "CASCADE",
-        onDelete: "RESTRICT"
+        onDelete: "RESTRICT",
+        comment: "Requesting department"
       },
       title: {
         type: Sequelize.TEXT,
@@ -58,7 +61,8 @@ module.exports = {
           key: "id"
         },
         onUpdate: "CASCADE",
-        onDelete: "RESTRICT"
+        onDelete: "RESTRICT",
+        comment: "ID of the requesting employee"
       },
       projectId: {
         type: Sequelize.INTEGER,
@@ -71,7 +75,7 @@ module.exports = {
         comment: "Cost center (e.g., marketing, technology)"
       },
       currency: {
-        type: Sequelize.ENUM("BRL", "USD", "EUR", "GBP", "JPY"), // Replace with actual CurrencyEnum values
+        type: Sequelize.ENUM("BRL", "USD", "EUR"), // Adjust based on your CurrencyEnum
         allowNull: false,
         defaultValue: "BRL",
         comment: "Expense currency"
@@ -82,19 +86,41 @@ module.exports = {
         comment: "Expense payment date"
       },
       currentStatus: {
-        type: Sequelize.ENUM("DRAFT", "PENDING", "APPROVED", "REJECTED", "PAID"), // Replace with actual ExpenseStatusEnum values
+        type: Sequelize.ENUM("DRAFT", "PENDING", "APPROVED", "REJECTED", "PAID"), // Adjust based on your ExpenseStatusEnum
         allowNull: false,
         defaultValue: "DRAFT",
         comment: "Current status of the expense"
       },
+      currentRuleStep: {
+        type: Sequelize.INTEGER,
+        allowNull: true
+      },
+      nextApproverType: {
+        type: Sequelize.ENUM("USER", "DEPARTMENT", "ROLE"), // Adjust based on your NextApproverType
+        allowNull: true
+      },
+      nextApproverId: {
+        type: Sequelize.INTEGER,
+        allowNull: true
+      },
+      ruleId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: "Rules",
+          key: "id"
+        },
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL"
+      },
       createdAt: {
-        type: Sequelize.DATE,
         allowNull: false,
+        type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       },
       updatedAt: {
-        type: Sequelize.DATE,
         allowNull: false,
+        type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       }
     });
@@ -103,6 +129,7 @@ module.exports = {
     await queryInterface.createTable("ExpenseStatuses", {
       id: {
         type: Sequelize.INTEGER,
+        allowNull: false,
         autoIncrement: true,
         primaryKey: true
       },
@@ -114,10 +141,11 @@ module.exports = {
           key: "id"
         },
         onUpdate: "CASCADE",
-        onDelete: "CASCADE"
+        onDelete: "CASCADE",
+        comment: "Reference to the expense"
       },
       status: {
-        type: Sequelize.ENUM("DRAFT", "PENDING", "APPROVED", "REJECTED", "PAID"), // Replace with actual ExpenseStatusEnum values
+        type: Sequelize.ENUM("DRAFT", "PENDING", "APPROVED", "REJECTED", "PAID"),
         allowNull: false,
         comment: "Status of the expense at this step"
       },
@@ -129,36 +157,22 @@ module.exports = {
           key: "id"
         },
         onUpdate: "CASCADE",
-        onDelete: "RESTRICT"
+        onDelete: "RESTRICT",
+        comment: "User who made the status change"
       },
       comment: {
         type: Sequelize.TEXT,
         allowNull: true,
         comment: "Optional comment for the status change"
       },
-      nextApproverId: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-        references: {
-          model: "Users",
-          key: "id"
-        },
-        onUpdate: "CASCADE",
-        onDelete: "SET NULL"
-      },
-      dueDate: {
-        type: Sequelize.DATE,
-        allowNull: true,
-        comment: "Due date for the current status (if applicable)"
-      },
       createdAt: {
-        type: Sequelize.DATE,
         allowNull: false,
+        type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       },
       updatedAt: {
-        type: Sequelize.DATE,
         allowNull: false,
+        type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       }
     });

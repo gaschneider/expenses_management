@@ -1,10 +1,16 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
-import { CurrencyEnum, ExpenseAttributes, ExpenseStatusEnum } from "../types/expense";
+import {
+  CurrencyEnum,
+  ExpenseAttributes,
+  ExpenseStatusEnum,
+  NextApproverType
+} from "../types/expense";
 import User from "./User";
 import Department from "./Department";
 import ExpenseStatus from "./ExpenseStatus";
 import { Category } from "./Category";
+import { Rule } from "./Rule";
 
 class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare id: number;
@@ -20,13 +26,19 @@ class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare currency: CurrencyEnum;
   declare paymentDate: Date | null;
   declare currentStatus: ExpenseStatusEnum;
+  declare ruleId: number | null;
+  declare currentRuleStep: number | null;
+  declare nextApproverType: NextApproverType | null;
+  declare nextApproverId: number | null;
+
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 
   // Declare relationship properties
   declare requester?: User;
-  declare Category?: Category;
+  declare category?: Category;
   declare department?: Department;
+  declare rule?: Rule;
   declare expenseStatuses?: ExpenseStatus[];
 
   // Declare association methods
@@ -35,7 +47,9 @@ class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare getDepartment: () => Promise<Department>;
   declare setDepartment: (department: Department) => Promise<void>;
   declare getCategory: () => Promise<Category>;
-  declare setCategory: (department: Category) => Promise<void>;
+  declare setCategory: (category: Category) => Promise<void>;
+  declare getRule: () => Promise<Rule>;
+  declare setRule: (rule: Rule) => Promise<void>;
 
   declare getExpenseStatuses: () => Promise<ExpenseStatus[]>;
   declare setExpenseStatuses: (users: ExpenseStatus[]) => Promise<void>;
@@ -127,6 +141,26 @@ Expense.init(
       allowNull: false,
       defaultValue: ExpenseStatusEnum.DRAFT,
       comment: "Current status of the expense"
+    },
+    currentRuleStep: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    nextApproverType: {
+      type: DataTypes.ENUM(...Object.values(NextApproverType)),
+      allowNull: true
+    },
+    nextApproverId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    ruleId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "Rules",
+        key: "id"
+      }
     }
   },
   {

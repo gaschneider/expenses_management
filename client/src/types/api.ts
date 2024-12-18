@@ -108,6 +108,33 @@ export interface ExpenseDTO {
   date: Date;
 }
 
+export interface ExpenseRuleDTO {
+  id: number;
+  ruleSteps: RuleStepDTO[];
+}
+
+export type ExpenseStatusDTO = {
+  id: number;
+  status: string;
+  comment: string | null;
+  user: Omit<BaseUserDTO, "email">;
+};
+
+export type ViewExpenseDTO = ExpenseDTO & {
+  ruleId: number | null;
+  currentRuleStep: number | null;
+  nextApproverType: NextApproverType | null;
+  nextApproverId: number | null;
+  nextApproverName?: string;
+
+  // Nested relationships
+  requester: Omit<BaseUserDTO, "email">;
+  category: CategoryDTO;
+  department: DepartmentDTO;
+  expenseStatuses: ExpenseStatusDTO[];
+  rule: ExpenseRuleDTO | null;
+};
+
 export interface ExpenseFilterParams {
   departmentId?: number;
   categoryId?: number;
@@ -123,9 +150,12 @@ export enum CurrencyEnum {
 
 export enum ExpenseStatusEnum {
   DRAFT = "DRAFT",
-  PENDING = "PENDING",
+  WAITING_WORKFLOW = "WAITING_WORKFLOW",
+  PENDING_APPROVAL = "PENDING_APPROVAL",
+  PENDING_ADDITIONAL_INFO = "PENDING_ADDITIONAL_INFO",
   APPROVED = "APPROVED",
-  REJECTED = "REJECTED"
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED"
 }
 
 export type CreateExpenseDTO = {
@@ -138,3 +168,8 @@ export type CreateExpenseDTO = {
   justification: string;
   isDraft: boolean;
 };
+
+export enum NextApproverType {
+  USER = "USER",
+  DEPARTMENT = "DEPARTMENT"
+}

@@ -302,7 +302,7 @@ export const ExpensesPage: React.FC = () => {
         <ViewExpenseModal
           open={isPreviewModalOpen}
           onClose={() => setIsPreviewModalOpen(false)}
-          expense={selectedExpense}
+          expenseId={selectedExpense.id}
         />
       )}
     </Grid>

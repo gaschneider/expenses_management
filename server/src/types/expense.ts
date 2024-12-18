@@ -12,6 +12,10 @@ export interface ExpenseAttributes {
   currency: CurrencyEnum;
   paymentDate: Date | null;
   currentStatus: ExpenseStatusEnum;
+  ruleId: number | null;
+  currentRuleStep: number | null;
+  nextApproverType: NextApproverType | null;
+  nextApproverId: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -22,9 +26,6 @@ export interface ExpenseStatusAttributes {
   status: ExpenseStatusEnum;
   userId: number;
   comment: string | null;
-  attachments?: string | null;
-  nextApproverId: number | null;
-  dueDate: Date | null;
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
@@ -43,4 +44,9 @@ export enum CurrencyEnum {
   BRL = "BRL",
   CAD = "CAD",
   USD = "USD"
+}
+
+export enum NextApproverType {
+  USER = "USER",
+  DEPARTMENT = "DEPARTMENT"
 }

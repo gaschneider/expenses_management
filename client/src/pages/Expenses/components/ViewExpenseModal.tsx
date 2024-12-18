@@ -10,25 +10,71 @@ import {
   Grid,
   Select,
   InputLabel,
-  FormControl
+  FormControl,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography
 } from "@mui/material";
-import { ExpenseDTO } from "../../../types/api";
 import { ExpenseDatePicker } from "./ExpenseDatePicker";
+import { useExpense } from "../hooks/useExpense";
+import LoadingSpinner from "../../../components/LoadingSpinner";
+import { ExpenseStatusEnum } from "../../../types/api";
 
 interface ViewExpenseModalProps {
   open: boolean;
   onClose: () => void;
-  expense: ExpenseDTO | null;
+  expenseId: number;
+  canApprove?: boolean;
+  canCancel?: boolean;
 }
 
-export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClose, expense }) => {
-  if (!expense) return null;
+export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
+  open,
+  onClose,
+  expenseId,
+  canApprove = false,
+  canCancel = false
+}) => {
+  const {
+    expense,
+    isLoading,
+    refetchExpense,
+    approveExpense: onApprove,
+    rejectExpense: onReject,
+    cancelExpense: onCancel,
+    setAsDraftExpense: onSetAsDraft
+  } = useExpense(expenseId);
+
+  if (!expenseId) return null;
+
+  if (isLoading || !expense) {
+    return (
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>Fetching expense</DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <Button onClick={refetchExpense} color="secondary">
+              Try again
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Expense Details</DialogTitle>
       <DialogContent>
         <Grid container spacing={2}>
+          {/* Existing Fields */}
           <Grid item xs={12} md={6}>
             <FormControl fullWidth margin="normal">
               <InputLabel>Department</InputLabel>
@@ -103,9 +149,90 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
               disabled
             />
           </Grid>
+
+          {/* Expense Status History Table */}
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom>
+              Expense Status History
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Status</TableCell>
+                    <TableCell>User</TableCell>
+                    <TableCell>Comment</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {expense.expenseStatuses.map((status, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{status.status}</TableCell>
+                      <TableCell>{`${status.user.firstName} ${status.user.lastName}`}</TableCell>
+                      <TableCell>{status.comment || "No comment"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+
+          {/* Next Approver Information */}
+          {expense.currentStatus === ExpenseStatusEnum.PENDING_APPROVAL &&
+            expense.nextApproverType && (
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  label="Next Approver"
+                  value={`${expense.nextApproverType}: ${expense.nextApproverName}`}
+                  disabled
+                />
+              </Grid>
+            )}
         </Grid>
       </DialogContent>
       <DialogActions>
+        {canApprove && (
+          <>
+            <Button
+              onClick={onApprove}
+              color="primary"
+              variant="contained"
+              style={{ backgroundColor: "green", color: "white" }}
+            >
+              Approve
+            </Button>
+            <Button
+              onClick={onReject}
+              color="secondary"
+              variant="contained"
+              style={{ backgroundColor: "red", color: "white" }}
+            >
+              Reject
+            </Button>
+          </>
+        )}
+        {canCancel && (
+          <>
+            <Button
+              onClick={onCancel}
+              color="secondary"
+              variant="contained"
+              style={{ backgroundColor: "red", color: "white" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={onSetAsDraft}
+              color="secondary"
+              variant="contained"
+              style={{ backgroundColor: "blue", color: "white" }}
+            >
+              Set as Draft
+            </Button>
+          </>
+        )}
         <Button onClick={onClose} color="secondary">
           Close
         </Button>
