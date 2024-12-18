@@ -23,7 +23,7 @@ export const useExpense = (expenseId: number) => {
       setIsLoading(true);
       const response = await api.get(`/expenses/${expenseId}`);
 
-      setExpense(response.data.data);
+      setExpense(response.data);
       setIsLoading(false);
     } catch (error) {
       showSnackbar("Error fetching expense", { severity: "error" });
