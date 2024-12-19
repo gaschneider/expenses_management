@@ -6,7 +6,7 @@ import { TextField } from "@mui/material";
 import dayjs from "dayjs";
 
 export const ExpenseDatePicker: React.FC<{
-  value: Date;
+  value?: Date;
   onChange: (date: Date | null) => void;
   label?: string;
   disabled?: boolean;
@@ -15,7 +15,7 @@ export const ExpenseDatePicker: React.FC<{
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DatePicker
         label={label}
-        value={dayjs(value)}
+        value={value ? dayjs(value) : value}
         onChange={(newValue) => onChange(newValue ? newValue.toDate() : null)}
         disabled={disabled}
         slots={{

@@ -148,7 +148,7 @@ export class RuleBasedWorkflowService {
           {
             model: Rule,
             as: "rule",
-            include: [{ model: RuleStep, order: [["step", "ASC"]] }]
+            include: [{ model: RuleStep, as: "ruleSteps", order: [["step", "ASC"]] }]
           }
         ]
       });

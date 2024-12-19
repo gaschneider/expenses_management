@@ -15,6 +15,14 @@ export const buildExpenseQuery = (
     whereConditions.date = {
       [Op.between]: [new Date(startDate), new Date(endDate)]
     };
+  } else if (startDate) {
+    whereConditions.date = {
+      [Op.gte]: new Date(startDate)
+    };
+  } else if (endDate) {
+    whereConditions.date = {
+      [Op.lte]: new Date(endDate)
+    };
   }
 
   // Get accessible department IDs with proper null checks
@@ -25,7 +33,7 @@ export const buildExpenseQuery = (
           userHasPermission(authenticatedUser, DepartmentPermission.APPROVE_EXPENSES, dept.id) ||
           userHasPermission(authenticatedUser, DepartmentPermission.VIEW_EXPENSES, dept.id)
       )
-      .map((dept) => dept.id) ?? [];
+      .map((dept) => dept.id?.toString()) ?? [];
 
   let departmentIdCondition = null;
 

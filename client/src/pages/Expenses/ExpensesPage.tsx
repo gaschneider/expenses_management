@@ -21,7 +21,7 @@ import dayjs from "dayjs";
 import { ExpenseDatePicker } from "./components/ExpenseDatePicker"; // Adjust import path as needed
 import { useExpenses, ExpensePaginationParams } from "./hooks/useExpenses";
 import { CreateExpenseModal } from "./components/CreateExpenseModal";
-import { ExpenseDTO } from "../../types/api";
+import { ExpenseDTO, ExpenseStatusEnum } from "../../types/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
 import { ViewExpenseModal } from "./components/ViewExpenseModal";
@@ -144,23 +144,25 @@ export const ExpensesPage: React.FC = () => {
                 label="Status"
               >
                 <MenuItem value="">All Statuses</MenuItem>
-                <MenuItem value="PENDING">Pending</MenuItem>
-                <MenuItem value="APPROVED">Approved</MenuItem>
-                <MenuItem value="REJECTED">Rejected</MenuItem>
+                {Object.values(ExpenseStatusEnum).map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {expenseStatusEnumToText(status)}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
           <Grid item xs={12} md={2}>
             <ExpenseDatePicker
               label="Start Date"
-              value={filters.startDate ? new Date(filters.startDate) : new Date()}
+              value={filters.startDate ? new Date(filters.startDate) : undefined}
               onChange={(date) => handleDateChange("startDate", date)}
             />
           </Grid>
           <Grid item xs={12} md={2}>
             <ExpenseDatePicker
               label="End Date"
-              value={filters.endDate ? new Date(filters.endDate) : new Date()}
+              value={filters.endDate ? new Date(filters.endDate) : undefined}
               onChange={(date) => handleDateChange("endDate", date)}
             />
           </Grid>
