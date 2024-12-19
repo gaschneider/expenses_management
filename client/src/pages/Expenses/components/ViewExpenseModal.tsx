@@ -24,6 +24,7 @@ import { ExpenseDatePicker } from "./ExpenseDatePicker";
 import { useExpense } from "../hooks/useExpense";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import { ExpenseStatusEnum } from "../../../types/api";
+import { expenseStatusEnumToText } from "../expensesHelper";
 
 interface ViewExpenseModalProps {
   open: boolean;
@@ -33,13 +34,7 @@ interface ViewExpenseModalProps {
   canCancel?: boolean;
 }
 
-export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
-  open,
-  onClose,
-  expenseId,
-  canApprove = false,
-  canCancel = false
-}) => {
+export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClose, expenseId }) => {
   const {
     expense,
     isLoading,
@@ -47,7 +42,8 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
     approveExpense: onApprove,
     rejectExpense: onReject,
     cancelExpense: onCancel,
-    setAsDraftExpense: onSetAsDraft
+    setAsDraftExpense: onSetAsDraft,
+    publishExpense: onPublish
   } = useExpense(expenseId);
 
   if (!expenseId) return null;
@@ -136,7 +132,7 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
               fullWidth
               margin="normal"
               label="Status"
-              value={expense.currentStatus}
+              value={expenseStatusEnumToText(expense.currentStatus)}
               disabled
             />
           </Grid>
@@ -149,6 +145,20 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
               disabled
             />
           </Grid>
+
+          {/* Next Approver Information */}
+          {expense.currentStatus === ExpenseStatusEnum.PENDING_APPROVAL &&
+            expense.nextApproverType && (
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  label="Next Approver"
+                  value={`${expense.nextApproverType}: ${expense.nextApproverName}`}
+                  disabled
+                />
+              </Grid>
+            )}
 
           {/* Expense Status History Table */}
           <Grid item xs={12}>
@@ -167,7 +177,7 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
                 <TableBody>
                   {expense.expenseStatuses.map((status, index) => (
                     <TableRow key={index}>
-                      <TableCell>{status.status}</TableCell>
+                      <TableCell>{expenseStatusEnumToText(status.status)}</TableCell>
                       <TableCell>{`${status.user.firstName} ${status.user.lastName}`}</TableCell>
                       <TableCell>{status.comment || "No comment"}</TableCell>
                     </TableRow>
@@ -176,24 +186,10 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
               </Table>
             </TableContainer>
           </Grid>
-
-          {/* Next Approver Information */}
-          {expense.currentStatus === ExpenseStatusEnum.PENDING_APPROVAL &&
-            expense.nextApproverType && (
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Next Approver"
-                  value={`${expense.nextApproverType}: ${expense.nextApproverName}`}
-                  disabled
-                />
-              </Grid>
-            )}
         </Grid>
       </DialogContent>
       <DialogActions>
-        {canApprove && (
+        {expense.canApprove && (
           <>
             <Button
               onClick={onApprove}
@@ -213,7 +209,7 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
             </Button>
           </>
         )}
-        {canCancel && (
+        {expense.canCancel && (
           <>
             <Button
               onClick={onCancel}
@@ -224,12 +220,12 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({
               Cancel
             </Button>
             <Button
-              onClick={onSetAsDraft}
+              onClick={expense.currentStatus === ExpenseStatusEnum.DRAFT ? onPublish : onSetAsDraft}
               color="secondary"
               variant="contained"
               style={{ backgroundColor: "blue", color: "white" }}
             >
-              Set as Draft
+              {expense.currentStatus === ExpenseStatusEnum.DRAFT ? "Publish" : "Set as Draft"}
             </Button>
           </>
         )}

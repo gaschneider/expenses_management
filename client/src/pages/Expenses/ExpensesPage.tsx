@@ -25,6 +25,7 @@ import { ExpenseDTO } from "../../types/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
 import { ViewExpenseModal } from "./components/ViewExpenseModal";
+import { expenseStatusEnumToText } from "./expensesHelper";
 
 export const ExpensesPage: React.FC = () => {
   const { expenses, isLoading, createExpense, fetchExpenses, pagination } = useExpenses();
@@ -270,7 +271,7 @@ export const ExpensesPage: React.FC = () => {
                       })}
                     </TableCell>
                     <TableCell>{dayjs(expense.date).format("YYYY-MM-DD")}</TableCell>
-                    <TableCell>{expense.currentStatus}</TableCell>
+                    <TableCell>{expenseStatusEnumToText(expense.currentStatus)}</TableCell>
                   </TableRow>
                 );
               })}

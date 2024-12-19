@@ -3,13 +3,6 @@ import User from "../models/User";
 import { userHasPermission } from "../middlewares/checkPermission";
 import { DepartmentPermission } from "../types/auth";
 
-interface WhereConditions {
-  currentStatus?: string;
-  date?: { [Op.between]: Date[] };
-  departmentId?: number | { [Op.or]: any[] };
-  requesterId?: number;
-}
-
 export const buildExpenseQuery = (
   authenticatedUser: User,
   { status, startDate, endDate, departmentId }: any
@@ -34,25 +27,25 @@ export const buildExpenseQuery = (
       )
       .map((dept) => dept.id) ?? [];
 
-  // Unified permission handling
-  const departmentFilter: { [Op.or]?: any[] } = {};
-
-  if (accessibleDepartmentIds.length > 0) {
-    departmentFilter[Op.or] = [{ departmentId: { [Op.in]: accessibleDepartmentIds } }];
-  }
+  let departmentIdCondition = null;
 
   // Add specific department filter if provided
-  if (departmentId) {
-    (departmentFilter[Op.or] ??= []).push({ departmentId });
+  if (departmentId && accessibleDepartmentIds.includes(departmentId)) {
+    departmentIdCondition = departmentId;
+  } else if (!departmentId && accessibleDepartmentIds.length > 0) {
+    departmentIdCondition = { [Op.in]: accessibleDepartmentIds };
   }
 
-  // Ensure user can always see their own requests
-  whereConditions.requesterId = authenticatedUser.id;
+  const orConditions = [];
 
-  // Combine department filters if they exist
-  if (Object.keys(departmentFilter).length > 0) {
-    whereConditions.departmentId = departmentFilter as any;
+  if (departmentIdCondition !== null) {
+    orConditions.push({ departmentId: departmentIdCondition });
   }
+
+  orConditions.push({ requesterId: authenticatedUser.id });
+
+  // Add the OR conditions to the where clause
+  whereConditions[Op.or as any] = orConditions;
 
   return whereConditions;
 };

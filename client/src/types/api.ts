@@ -115,7 +115,7 @@ export interface ExpenseRuleDTO {
 
 export type ExpenseStatusDTO = {
   id: number;
-  status: string;
+  status: ExpenseStatusEnum;
   comment: string | null;
   user: Omit<BaseUserDTO, "email">;
 };
@@ -126,6 +126,8 @@ export type ViewExpenseDTO = ExpenseDTO & {
   nextApproverType: NextApproverType | null;
   nextApproverId: number | null;
   nextApproverName?: string;
+  canApprove: boolean;
+  canCancel: boolean;
 
   // Nested relationships
   requester: Omit<BaseUserDTO, "email">;

@@ -16,15 +16,33 @@ router.post(
 );
 
 router.put(
-  "/approve/:departmentId/:id",
+  "/:departmentId/approve/:id",
   checkPermissionDepartment(DepartmentPermission.APPROVE_EXPENSES),
   expenseController.approveExpense
 );
 
 router.put(
-  "/reject/:departmentId/:id",
+  "/:departmentId/reject/:id",
   checkPermissionDepartment(DepartmentPermission.APPROVE_EXPENSES),
   expenseController.rejectExpense
+);
+
+router.put(
+  "/:departmentId/cancel/:id",
+  checkPermissionDepartment(DepartmentPermission.CREATE_EXPENSES),
+  expenseController.cancelExpense
+);
+
+router.put(
+  "/:departmentId/draft/:id",
+  checkPermissionDepartment(DepartmentPermission.CREATE_EXPENSES),
+  expenseController.setAsDraftExpense
+);
+
+router.put(
+  "/:departmentId/publish/:id",
+  checkPermissionDepartment(DepartmentPermission.CREATE_EXPENSES),
+  expenseController.publishExpense
 );
 
 router.get("/", expenseController.listExpenses);

@@ -6,12 +6,14 @@ import Department from "../models/Department";
 import User from "../models/User";
 import { ExpenseStatusEnum, NextApproverType } from "../types/expense";
 import { DepartmentPermission } from "../types/auth";
+import ExpenseStatus from "../models/ExpenseStatus";
 
 export interface ApprovalRoute {
+  ruleId: number;
   currentStep: number;
   totalSteps: number;
   nextApprover: {
-    type: "department" | "user";
+    type: NextApproverType;
     id: number;
   } | null;
 }
@@ -28,6 +30,7 @@ export class RuleBasedWorkflowService {
       include: [
         {
           model: RuleStep,
+          as: "ruleSteps",
           order: [["step", "ASC"]]
         }
       ]
@@ -53,16 +56,17 @@ export class RuleBasedWorkflowService {
     }
 
     return {
+      ruleId: rule.id,
       currentStep: 1,
       totalSteps: rule.ruleSteps?.length || 0,
       nextApprover: firstStep.approvingDepartmentId
         ? {
-            type: "department",
+            type: NextApproverType.DEPARTMENT,
             id: firstStep.approvingDepartmentId
           }
         : firstStep.approvingUserId
         ? {
-            type: "user",
+            type: NextApproverType.USER,
             id: firstStep.approvingUserId
           }
         : null
@@ -95,26 +99,28 @@ export class RuleBasedWorkflowService {
 
       if (!approvalRoute) {
         // No applicable rule - auto reject
-        await expense.update({ currentStatus: ExpenseStatusEnum.REJECTED }, { transaction });
+        await expense.update(
+          {
+            currentStatus: ExpenseStatusEnum.REJECTED,
+            currentRuleStep: null,
+            ruleId: null,
+            nextApproverType: null,
+            nextApproverId: null
+          },
+          { transaction }
+        );
         await transaction.commit();
         return ExpenseStatusEnum.REJECTED;
-      }
-
-      // Validate current user's ability to approve
-      const isValidApprover = await this.validateApprover(
-        currentUserId,
-        approvalRoute.nextApprover
-      );
-
-      if (!isValidApprover) {
-        throw new Error("Unauthorized approver");
       }
 
       // Update expense status and tracking
       await expense.update(
         {
           currentStatus: ExpenseStatusEnum.PENDING_APPROVAL,
-          currentRuleStep: approvalRoute.currentStep
+          currentRuleStep: approvalRoute.currentStep,
+          ruleId: approvalRoute.ruleId,
+          nextApproverType: approvalRoute.nextApprover?.type,
+          nextApproverId: approvalRoute.nextApprover?.id
         },
         { transaction }
       );
@@ -125,36 +131,6 @@ export class RuleBasedWorkflowService {
       await transaction.rollback();
       throw error;
     }
-  }
-
-  // Validate if current user can approve
-  private async validateApprover(
-    currentUserId: number,
-    nextApprover: ApprovalRoute["nextApprover"]
-  ): Promise<boolean> {
-    if (!nextApprover) return false;
-
-    if (nextApprover.type === "user") {
-      return currentUserId === nextApprover.id;
-    }
-
-    if (nextApprover.type === "department") {
-      // Check if user belongs to the approving department
-      const user = await User.findByPk(currentUserId, {
-        include: [{ model: Department, as: "departments" }]
-      });
-
-      if (!user) {
-        return false;
-      }
-
-      return await user.hasDepartmentPermissionString(
-        nextApprover.id,
-        DepartmentPermission.APPROVE_EXPENSES
-      );
-    }
-
-    return false;
   }
 
   // Move to next approval step
@@ -192,7 +168,20 @@ export class RuleBasedWorkflowService {
         await expense.update(
           {
             currentStatus: ExpenseStatusEnum.APPROVED,
-            currentRuleStep: null
+            currentRuleStep: null,
+            ruleId: null,
+            nextApproverType: null,
+            nextApproverId: null
+          },
+          { transaction }
+        );
+        await ExpenseStatus.create(
+          {
+            id: 0,
+            expenseId: expense.id,
+            status: ExpenseStatusEnum.APPROVED,
+            userId: currentUserId,
+            comment: null
           },
           { transaction }
         );
@@ -220,6 +209,17 @@ export class RuleBasedWorkflowService {
           currentRuleStep: nextRuleStep.step,
           nextApproverType: nextApprover?.type,
           nextApproverId: nextApprover?.id
+        },
+        { transaction }
+      );
+
+      await ExpenseStatus.create(
+        {
+          id: 0,
+          expenseId: expense.id,
+          status: ExpenseStatusEnum.APPROVED,
+          userId: currentUserId,
+          comment: null
         },
         { transaction }
       );

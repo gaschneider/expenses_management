@@ -12,6 +12,7 @@ import { WorkflowOrchestrator } from "../services/workflowOrchestrator";
 import { DepartmentPermission } from "../types/auth";
 import { Rule, RuleStep } from "../models/Rule";
 import { mapExpenseToDto } from "../helpers/expenseDTOHelper";
+import { userHasPermission } from "../middlewares/checkPermission";
 
 interface ExpenseCreateDTO {
   categoryId: number;
@@ -25,6 +26,12 @@ interface ExpenseCreateDTO {
   currency: CurrencyEnum;
   isDraft: boolean;
 }
+
+const STATUSES_NOT_ALLOWED_CANCEL = [
+  ExpenseStatusEnum.APPROVED,
+  ExpenseStatusEnum.CANCELLED,
+  ExpenseStatusEnum.REJECTED
+];
 export class ExpenseController {
   private workflowOrchestrator: WorkflowOrchestrator;
 
@@ -32,6 +39,15 @@ export class ExpenseController {
     // Get the singleton workflow configuration
     const workflowConfig = WorkflowConfig.getInstance();
     this.workflowOrchestrator = workflowConfig.orchestrator;
+
+    this.publishExpense = this.publishExpense.bind(this);
+    this.approveExpense = this.approveExpense.bind(this);
+    this.rejectExpense = this.rejectExpense.bind(this);
+    this.cancelExpense = this.cancelExpense.bind(this);
+    this.createExpense = this.createExpense.bind(this);
+    this.getExpenseById = this.getExpenseById.bind(this);
+    this.listExpenses = this.listExpenses.bind(this);
+    this.setAsDraftExpense = this.setAsDraftExpense.bind(this);
   }
 
   async createExpense(req: Request, res: Response, next: NextFunction) {
@@ -89,10 +105,23 @@ export class ExpenseController {
         { transaction }
       );
 
+      await ExpenseStatus.create(
+        {
+          id: 0,
+          expenseId: expense.id,
+          status: isDraft ? ExpenseStatusEnum.DRAFT : ExpenseStatusEnum.WAITING_WORKFLOW,
+          userId: requesterId,
+          comment: null
+        },
+        { transaction }
+      );
+
       // Commit transaction
       await transaction.commit();
 
-      await this.workflowOrchestrator.triggerWorkflow(expense.id);
+      if (!isDraft) {
+        await this.workflowOrchestrator.triggerWorkflow(expense.id);
+      }
 
       // fire service to define expense status
 
@@ -104,6 +133,48 @@ export class ExpenseController {
       await transaction.rollback();
       next(error);
     }
+  }
+
+  async publishExpense(req: Request, res: Response) {
+    const { id } = req.params;
+
+    if (id == null || typeof id !== "string" || !Number.isFinite(Number(id))) {
+      res.status(400).json({ error: "Invalid expense id" });
+      return;
+    }
+
+    const expense = await Expense.findByPk(id);
+
+    if (!expense) {
+      res.status(404).json({ error: "Expense not found" });
+      return;
+    }
+
+    const user = await User.findByPk(req.user?.id);
+    if (!user?.id) {
+      return;
+    }
+
+    if (expense.currentStatus !== ExpenseStatusEnum.DRAFT) {
+      res.status(400).json({ error: "Expense isn't in draft to be published" });
+      return;
+    }
+
+    await expense.update({
+      currentStatus: ExpenseStatusEnum.WAITING_WORKFLOW
+    });
+
+    await ExpenseStatus.create({
+      id: 0,
+      expenseId: expense.id,
+      status: ExpenseStatusEnum.WAITING_WORKFLOW,
+      userId: user.id,
+      comment: null
+    });
+
+    await this.workflowOrchestrator.triggerWorkflow(expense.id);
+
+    res.status(200).json({ message: "Expense published successfully" });
   }
 
   async approveExpense(req: Request, res: Response) {
@@ -134,11 +205,9 @@ export class ExpenseController {
 
     if (
       expense.nextApproverType === NextApproverType.DEPARTMENT &&
+      user.id !== expense.requesterId &&
       expense.nextApproverId &&
-      (await user.hasDepartmentPermissionString(
-        expense.nextApproverId,
-        DepartmentPermission.APPROVE_EXPENSES
-      ))
+      (await userHasPermission(user, DepartmentPermission.APPROVE_EXPENSES, expense.nextApproverId))
     ) {
       await this.workflowOrchestrator.approveExpense(expense.id, user.id);
       res.status(200).json({ message: "Expense approved successfully" });
@@ -172,26 +241,144 @@ export class ExpenseController {
       await expense.update({
         currentStatus: ExpenseStatusEnum.REJECTED
       });
+      await ExpenseStatus.create({
+        id: 0,
+        expenseId: expense.id,
+        status: ExpenseStatusEnum.REJECTED,
+        userId: user.id,
+        comment: null
+      });
       res.status(200).json({ message: "Expense rejected successfully" });
       return;
     }
 
     if (
       expense.nextApproverType === NextApproverType.DEPARTMENT &&
+      user.id !== expense.requesterId &&
       expense.nextApproverId &&
-      (await user.hasDepartmentPermissionString(
-        expense.nextApproverId,
-        DepartmentPermission.APPROVE_EXPENSES
-      ))
+      (await userHasPermission(user, DepartmentPermission.APPROVE_EXPENSES, expense.nextApproverId))
     ) {
       await expense.update({
         currentStatus: ExpenseStatusEnum.REJECTED
       });
+
+      await ExpenseStatus.create({
+        id: 0,
+        expenseId: expense.id,
+        status: ExpenseStatusEnum.REJECTED,
+        userId: user.id,
+        comment: null
+      });
+
       res.status(200).json({ message: "Expense rejected successfully" });
       return;
     }
 
     res.status(403).json({ error: "Not enough permissions to reject expense" });
+  }
+
+  async cancelExpense(req: Request, res: Response) {
+    const { id } = req.params;
+
+    if (id == null || typeof id !== "string" || !Number.isFinite(Number(id))) {
+      res.status(400).json({ error: "Invalid expense id" });
+      return;
+    }
+
+    const expense = await Expense.findByPk(id);
+
+    if (!expense) {
+      res.status(404).json({ error: "Expense not found" });
+      return;
+    }
+
+    const user = await User.findByPk(req.user?.id);
+    if (!user?.id) {
+      return;
+    }
+
+    if (expense.requesterId !== user.id) {
+      res.status(403).json({ error: "Not enough permissions to cancel expense" });
+      return;
+    }
+
+    if (STATUSES_NOT_ALLOWED_CANCEL.includes(expense.currentStatus)) {
+      res.status(400).json({ error: "Expense cannot be cancelled" });
+      return;
+    }
+
+    await expense.update({
+      currentStatus: ExpenseStatusEnum.CANCELLED,
+      ruleId: null,
+      currentRuleStep: null,
+      nextApproverType: null,
+      nextApproverId: null
+    });
+
+    await ExpenseStatus.create({
+      id: 0,
+      expenseId: expense.id,
+      status: ExpenseStatusEnum.CANCELLED,
+      userId: user.id,
+      comment: null
+    });
+
+    res.status(200).json({ message: "Expense cancelled successfully" });
+  }
+
+  async setAsDraftExpense(req: Request, res: Response) {
+    const { id } = req.params;
+
+    if (id == null || typeof id !== "string" || !Number.isFinite(Number(id))) {
+      res.status(400).json({ error: "Invalid expense id" });
+      return;
+    }
+
+    const expense = await Expense.findByPk(id);
+
+    if (!expense) {
+      res.status(404).json({ error: "Expense not found" });
+      return;
+    }
+
+    const user = await User.findByPk(req.user?.id);
+    if (!user?.id) {
+      return;
+    }
+
+    if (expense.requesterId !== user.id) {
+      res.status(403).json({ error: "Not enough permissions to set as draft expense" });
+      return;
+    }
+
+    if (
+      [
+        ExpenseStatusEnum.APPROVED,
+        ExpenseStatusEnum.CANCELLED,
+        ExpenseStatusEnum.REJECTED
+      ].includes(expense.currentStatus)
+    ) {
+      res.status(400).json({ error: "Expense cannot be set to draft" });
+      return;
+    }
+
+    await expense.update({
+      currentStatus: ExpenseStatusEnum.DRAFT,
+      ruleId: null,
+      currentRuleStep: null,
+      nextApproverType: null,
+      nextApproverId: null
+    });
+
+    await ExpenseStatus.create({
+      id: 0,
+      expenseId: expense.id,
+      status: ExpenseStatusEnum.DRAFT,
+      userId: user.id,
+      comment: null
+    });
+
+    res.status(200).json({ message: "Expense cancelled successfully" });
   }
 
   async getExpenseById(req: Request, res: Response) {
@@ -256,8 +443,13 @@ export class ExpenseController {
     }
 
     let nextApproverName: string | undefined = undefined;
+    let canApprove = false;
+    let canCancel =
+      expense.requesterId === authenticatedUser.id &&
+      !STATUSES_NOT_ALLOWED_CANCEL.includes(expense.currentStatus);
 
     if (expense.nextApproverType === NextApproverType.USER && expense.nextApproverId) {
+      canApprove = expense.nextApproverId === authenticatedUser.id;
       const nextApprover = await User.findByPk(expense.nextApproverId);
       if (nextApprover) {
         nextApproverName = `${nextApprover.firstName} ${nextApprover.lastName}`;
@@ -265,13 +457,20 @@ export class ExpenseController {
     }
 
     if (expense.nextApproverType === NextApproverType.DEPARTMENT && expense.nextApproverId) {
+      canApprove =
+        authenticatedUser.id !== expense.requesterId &&
+        (await userHasPermission(
+          authenticatedUser,
+          DepartmentPermission.APPROVE_EXPENSES,
+          expense.nextApproverId
+        ));
       const nextApprover = await Department.findByPk(expense.nextApproverId);
       if (nextApprover) {
         nextApproverName = nextApprover.name;
       }
     }
 
-    res.status(200).json(mapExpenseToDto(expense, nextApproverName));
+    res.status(200).json(mapExpenseToDto(expense, nextApproverName, canApprove, canCancel));
   }
 
   async listExpenses(req: Request, res: Response) {
@@ -280,7 +479,9 @@ export class ExpenseController {
       return;
     }
 
-    const authenticatedUser = await User.findByPk(req.user.id);
+    const authenticatedUser = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
     if (!authenticatedUser) {
       res.status(401).json({ error: "User not authenticated" });
       return;

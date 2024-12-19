@@ -58,6 +58,8 @@ interface ExpenseDto {
   nextApproverType: NextApproverType | null;
   nextApproverId: number | null;
   nextApproverName?: string;
+  canApprove: boolean;
+  canCancel: boolean;
 
   // Nested relationships
   requester: UserBaseDto;
@@ -68,7 +70,12 @@ interface ExpenseDto {
 }
 
 // Conversion function to map Sequelize model to DTO
-const mapExpenseToDto = (expense: Expense, nextApproverName?: string): ExpenseDto => {
+const mapExpenseToDto = (
+  expense: Expense,
+  nextApproverName?: string,
+  canApprove = false,
+  canCancel = false
+): ExpenseDto => {
   return {
     // Base fields
     id: expense.id,
@@ -89,6 +96,8 @@ const mapExpenseToDto = (expense: Expense, nextApproverName?: string): ExpenseDt
     nextApproverType: expense.nextApproverType,
     nextApproverId: expense.nextApproverId,
     nextApproverName,
+    canApprove,
+    canCancel,
 
     // Nested mappings
     requester: {

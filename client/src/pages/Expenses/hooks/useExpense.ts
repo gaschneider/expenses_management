@@ -36,10 +36,95 @@ export const useExpense = (expenseId: number) => {
     fetchExpense();
   }, [fetchExpense]);
 
-  const approveExpense = useCallback(async () => {}, []);
-  const rejectExpense = useCallback(async () => {}, []);
-  const cancelExpense = useCallback(async () => {}, []);
-  const setAsDraftExpense = useCallback(async () => {}, []);
+  const approveExpense = useCallback(async () => {
+    if (!expense) return;
+    try {
+      setIsLoading(true);
+      const response = await api.put(`/expenses/${expense.departmentId}/approve/${expenseId}`);
+
+      showSnackbar(response.data.message, { severity: "success" });
+      setIsLoading(false);
+      fetchExpense();
+      return true;
+    } catch (error) {
+      showSnackbar("Error approving expense", { severity: "error" });
+      console.error("Error approving expense:", error);
+      setIsLoading(false);
+      return false;
+    }
+  }, [expense, expenseId, fetchExpense, showSnackbar]);
+
+  const rejectExpense = useCallback(async () => {
+    if (!expense) return;
+    try {
+      setIsLoading(true);
+      const response = await api.put(`/expenses/${expense.departmentId}/reject/${expenseId}`);
+
+      showSnackbar(response.data.message, { severity: "success" });
+      setIsLoading(false);
+      fetchExpense();
+      return true;
+    } catch (error) {
+      showSnackbar("Error rejecting expense", { severity: "error" });
+      console.error("Error rejecting expense:", error);
+      setIsLoading(false);
+      return false;
+    }
+  }, [expense, expenseId, fetchExpense, showSnackbar]);
+
+  const cancelExpense = useCallback(async () => {
+    if (!expense) return;
+    try {
+      setIsLoading(true);
+      const response = await api.put(`/expenses/${expense.departmentId}/cancel/${expenseId}`);
+
+      showSnackbar(response.data.message, { severity: "success" });
+      setIsLoading(false);
+      fetchExpense();
+      return true;
+    } catch (error) {
+      showSnackbar("Error cancelling expense", { severity: "error" });
+      console.error("Error cancelling expense:", error);
+      setIsLoading(false);
+      return false;
+    }
+  }, [expense, expenseId, fetchExpense, showSnackbar]);
+
+  const setAsDraftExpense = useCallback(async () => {
+    if (!expense) return;
+    try {
+      setIsLoading(true);
+      const response = await api.put(`/expenses/${expense.departmentId}/draft/${expenseId}`);
+
+      showSnackbar(response.data.message, { severity: "success" });
+      setIsLoading(false);
+      fetchExpense();
+      return true;
+    } catch (error) {
+      showSnackbar("Error updating expense", { severity: "error" });
+      console.error("Error updating expense:", error);
+      setIsLoading(false);
+      return false;
+    }
+  }, [expense, expenseId, fetchExpense, showSnackbar]);
+
+  const publishExpense = useCallback(async () => {
+    if (!expense) return;
+    try {
+      setIsLoading(true);
+      const response = await api.put(`/expenses/${expense.departmentId}/publish/${expenseId}`);
+
+      showSnackbar(response.data.message, { severity: "success" });
+      setIsLoading(false);
+      fetchExpense();
+      return true;
+    } catch (error) {
+      showSnackbar("Error updating expense", { severity: "error" });
+      console.error("Error updating expense:", error);
+      setIsLoading(false);
+      return false;
+    }
+  }, [expense, expenseId, fetchExpense, showSnackbar]);
 
   return {
     expense,
@@ -48,6 +133,7 @@ export const useExpense = (expenseId: number) => {
     approveExpense,
     rejectExpense,
     cancelExpense,
-    setAsDraftExpense
+    setAsDraftExpense,
+    publishExpense
   };
 };
