@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import api from "../../../api/axios.config";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
-import { ViewExpenseDTO } from "../../../types/api";
+import { ExpenseUpdateDTO, ViewExpenseDTO } from "../../../types/api";
 
 export interface ExpensePaginationParams {
   page?: number;
@@ -108,23 +108,29 @@ export const useExpense = (expenseId: number) => {
     }
   }, [expense, expenseId, fetchExpense, showSnackbar]);
 
-  const publishExpense = useCallback(async () => {
-    if (!expense) return;
-    try {
-      setIsLoading(true);
-      const response = await api.put(`/expenses/${expense.departmentId}/publish/${expenseId}`);
+  const updateExpense = useCallback(
+    async (data: ExpenseUpdateDTO, publish = false) => {
+      if (!expense) return;
+      try {
+        setIsLoading(true);
+        const response = await api.put(`/expenses/${expense.departmentId}/update/${expenseId}`, {
+          ...data,
+          publish
+        });
 
-      showSnackbar(response.data.message, { severity: "success" });
-      setIsLoading(false);
-      fetchExpense();
-      return true;
-    } catch (error) {
-      showSnackbar("Error updating expense", { severity: "error" });
-      console.error("Error updating expense:", error);
-      setIsLoading(false);
-      return false;
-    }
-  }, [expense, expenseId, fetchExpense, showSnackbar]);
+        showSnackbar(response.data.message, { severity: "success" });
+        setIsLoading(false);
+        fetchExpense();
+        return true;
+      } catch (error) {
+        showSnackbar("Error updating expense", { severity: "error" });
+        console.error("Error updating expense:", error);
+        setIsLoading(false);
+        return false;
+      }
+    },
+    [expense, expenseId, fetchExpense, showSnackbar]
+  );
 
   return {
     expense,
@@ -134,6 +140,6 @@ export const useExpense = (expenseId: number) => {
     rejectExpense,
     cancelExpense,
     setAsDraftExpense,
-    publishExpense
+    updateExpense
   };
 };

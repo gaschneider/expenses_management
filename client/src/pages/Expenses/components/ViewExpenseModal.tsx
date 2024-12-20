@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -23,7 +23,7 @@ import {
 import { ExpenseDatePicker } from "./ExpenseDatePicker";
 import { useExpense } from "../hooks/useExpense";
 import LoadingSpinner from "../../../components/LoadingSpinner";
-import { ExpenseStatusEnum } from "../../../types/api";
+import { CurrencyEnum, ExpenseStatusEnum, ExpenseUpdateDTO } from "../../../types/api";
 import { expenseStatusEnumToText } from "../expensesHelper";
 
 interface ViewExpenseModalProps {
@@ -43,8 +43,28 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
     rejectExpense: onReject,
     cancelExpense: onCancel,
     setAsDraftExpense: onSetAsDraft,
-    publishExpense: onPublish
+    updateExpense: onUpdate
   } = useExpense(expenseId);
+
+  const canEdit = expense?.canCancel && expense.currentStatus === ExpenseStatusEnum.DRAFT;
+
+  const [updateForm, setUpdateForm] = React.useState<ExpenseUpdateDTO>({
+    amount: 0,
+    currency: CurrencyEnum.BRL,
+    date: new Date(),
+    justification: ""
+  });
+
+  useEffect(() => {
+    if (expense) {
+      setUpdateForm({
+        amount: parseFloat(expense.amount.toString()),
+        currency: expense.currency,
+        date: new Date(expense.date),
+        justification: expense.justification
+      });
+    }
+  }, [expense]);
 
   if (!expenseId) return null;
 
@@ -90,9 +110,11 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
           <Grid item xs={12} md={6}>
             <ExpenseDatePicker
               label="Expense Date"
-              value={new Date(expense.date)}
-              onChange={() => {}} // No-op since it's disabled
-              disabled
+              value={updateForm.date}
+              onChange={(date) => {
+                canEdit && date && setUpdateForm((prev) => ({ ...prev, date }));
+              }}
+              disabled={!canEdit}
             />
           </Grid>
           <Grid item xs={8} md={4}>
@@ -101,15 +123,36 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
               margin="normal"
               label="Amount"
               type="number"
-              value={expense.amount}
-              disabled
+              value={updateForm.amount}
+              onChange={(e) => {
+                canEdit &&
+                  setUpdateForm((prev) => ({ ...prev, amount: parseFloat(e.target.value) }));
+              }}
+              disabled={!canEdit}
             />
           </Grid>
           <Grid item xs={4} md={2}>
             <FormControl fullWidth margin="normal">
               <InputLabel>Currency</InputLabel>
-              <Select value={expense.currency} label="Currency" disabled>
-                <MenuItem value={expense.currency}>{expense.currency}</MenuItem>
+              <Select
+                value={updateForm.currency}
+                onChange={(e) => {
+                  if (!canEdit) return;
+
+                  const { value } = e.target;
+                  setUpdateForm((prev) => ({
+                    ...prev,
+                    currency: value as CurrencyEnum
+                  }));
+                }}
+                label="Currency"
+                disabled={!canEdit}
+              >
+                {Object.values(CurrencyEnum).map((currency) => (
+                  <MenuItem key={currency} value={currency}>
+                    {currency}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -123,8 +166,11 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
               label="Justification"
               multiline
               rows={4}
-              value={expense.justification}
-              disabled
+              value={updateForm.justification}
+              onChange={(e) => {
+                canEdit && setUpdateForm((prev) => ({ ...prev, justification: e.target.value }));
+              }}
+              disabled={!canEdit}
             />
           </Grid>
           <Grid item xs={12}>
@@ -220,12 +266,26 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
               Cancel
             </Button>
             <Button
-              onClick={expense.currentStatus === ExpenseStatusEnum.DRAFT ? onPublish : onSetAsDraft}
+              onClick={() => onUpdate(updateForm)}
               color="secondary"
               variant="contained"
               style={{ backgroundColor: "blue", color: "white" }}
             >
-              {expense.currentStatus === ExpenseStatusEnum.DRAFT ? "Publish" : "Set as Draft"}
+              Update
+            </Button>
+            <Button
+              onClick={
+                expense.currentStatus === ExpenseStatusEnum.DRAFT
+                  ? () => onUpdate(updateForm, true)
+                  : onSetAsDraft
+              }
+              color="secondary"
+              variant="contained"
+              style={{ backgroundColor: "blue", color: "white" }}
+            >
+              {expense.currentStatus === ExpenseStatusEnum.DRAFT
+                ? "Update and publish"
+                : "Set as Draft"}
             </Button>
           </>
         )}

@@ -50,3 +50,11 @@ export enum NextApproverType {
   USER = "USER",
   DEPARTMENT = "DEPARTMENT"
 }
+
+export interface ExpenseUpdateDTO {
+  amount: number;
+  currency: CurrencyEnum;
+  justification: string;
+  date: Date;
+  publish: boolean;
+}

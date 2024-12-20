@@ -108,6 +108,13 @@ export interface ExpenseDTO {
   date: Date;
 }
 
+export interface ExpenseUpdateDTO {
+  amount: number;
+  currency: CurrencyEnum;
+  justification: string;
+  date: Date;
+}
+
 export interface ExpenseRuleDTO {
   id: number;
   ruleSteps: RuleStepDTO[];

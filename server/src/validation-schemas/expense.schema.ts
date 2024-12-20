@@ -65,3 +65,31 @@ export const expenseDtoSchema = z.object({
     isDraft: z.boolean()
   })
 });
+
+export const expenseUpdateDtoSchema = z.object({
+  body: z.object({
+    // Amount should be a positive number with up to 2 decimal places
+    amount: z
+      .number()
+      .positive({ message: "Amount must be a positive number" })
+      .refine((val) => Number(val.toFixed(2)) === val, {
+        message: "Amount can have maximum 2 decimal places"
+      }),
+
+    // Date should be a valid date
+    date: z
+      .string()
+      .datetime()
+      .transform((val) => new Date(val)),
+
+    // Justification should be a non-empty string with reasonable length
+    justification: z
+      .string()
+      .min(2, { message: "Justification must be at least 10 characters long" })
+      .max(500, { message: "Justification cannot exceed 500 characters" })
+      .trim(),
+    // Currency should be one of the defined enum values
+    currency: z.nativeEnum(CurrencyEnum).default(CurrencyEnum.BRL),
+    publish: z.boolean()
+  })
+});

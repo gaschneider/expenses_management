@@ -4,7 +4,12 @@ import Expense from "../models/Expense";
 import ExpenseStatus from "../models/ExpenseStatus";
 import Department from "../models/Department";
 import User from "../models/User";
-import { ExpenseStatusEnum, CurrencyEnum, NextApproverType } from "../types/expense";
+import {
+  ExpenseStatusEnum,
+  CurrencyEnum,
+  NextApproverType,
+  ExpenseUpdateDTO
+} from "../types/expense";
 import { Category } from "../models/Category";
 import { buildExpenseQuery } from "../helpers/expensesQueryHelper";
 import { WorkflowConfig } from "../config/workflow";
@@ -40,7 +45,7 @@ export class ExpenseController {
     const workflowConfig = WorkflowConfig.getInstance();
     this.workflowOrchestrator = workflowConfig.orchestrator;
 
-    this.publishExpense = this.publishExpense.bind(this);
+    this.updateExpense = this.updateExpense.bind(this);
     this.approveExpense = this.approveExpense.bind(this);
     this.rejectExpense = this.rejectExpense.bind(this);
     this.cancelExpense = this.cancelExpense.bind(this);
@@ -135,7 +140,7 @@ export class ExpenseController {
     }
   }
 
-  async publishExpense(req: Request, res: Response) {
+  async updateExpense(req: Request, res: Response) {
     const { id } = req.params;
 
     if (id == null || typeof id !== "string" || !Number.isFinite(Number(id))) {
@@ -160,21 +165,40 @@ export class ExpenseController {
       return;
     }
 
-    await expense.update({
-      currentStatus: ExpenseStatusEnum.WAITING_WORKFLOW
-    });
+    const { amount, currency, justification, date, publish } = req.body as ExpenseUpdateDTO;
 
-    await ExpenseStatus.create({
-      id: 0,
-      expenseId: expense.id,
-      status: ExpenseStatusEnum.WAITING_WORKFLOW,
-      userId: user.id,
-      comment: null
-    });
+    const updatedExpense: {
+      amount: number;
+      currency: CurrencyEnum;
+      justification: string;
+      date: Date;
+      currentStatus?: ExpenseStatusEnum;
+    } = {
+      amount,
+      currency,
+      justification,
+      date
+    };
 
-    await this.workflowOrchestrator.triggerWorkflow(expense.id);
+    if (publish) {
+      updatedExpense.currentStatus = ExpenseStatusEnum.WAITING_WORKFLOW;
+    }
 
-    res.status(200).json({ message: "Expense published successfully" });
+    await expense.update(updatedExpense);
+
+    if (publish) {
+      await ExpenseStatus.create({
+        id: 0,
+        expenseId: expense.id,
+        status: ExpenseStatusEnum.WAITING_WORKFLOW,
+        userId: user.id,
+        comment: null
+      });
+
+      await this.workflowOrchestrator.triggerWorkflow(expense.id);
+    }
+
+    res.status(200).json({ message: "Expense updated successfully" });
   }
 
   async approveExpense(req: Request, res: Response) {

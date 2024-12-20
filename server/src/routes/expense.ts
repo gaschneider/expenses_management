@@ -2,7 +2,7 @@ import express from "express";
 import { checkPermissionDepartment } from "../middlewares/checkPermission";
 import { DepartmentPermission } from "../types/auth";
 import { validateRequest } from "../middlewares/validateRequest";
-import { expenseDtoSchema } from "../validation-schemas/expense.schema";
+import { expenseDtoSchema, expenseUpdateDtoSchema } from "../validation-schemas/expense.schema";
 import { ExpenseController } from "../controllers/expenseController";
 
 const router = express.Router();
@@ -40,22 +40,14 @@ router.put(
 );
 
 router.put(
-  "/:departmentId/publish/:id",
+  "/:departmentId/update/:id",
   checkPermissionDepartment(DepartmentPermission.CREATE_EXPENSES),
-  expenseController.publishExpense
+  validateRequest(expenseUpdateDtoSchema),
+  expenseController.updateExpense
 );
 
 router.get("/", expenseController.listExpenses);
 
 router.get("/:id", expenseController.getExpenseById);
-
-// router.put(
-//   "/:id",
-//   checkPermission(SystemPermission.MANAGE_RULES),
-//   validateRequest(editRuleSchema),
-//   editRule
-// );
-
-// router.delete("/:id", checkPermission(SystemPermission.MANAGE_RULES), deleteRule);
 
 export default router;
