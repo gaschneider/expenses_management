@@ -36,86 +36,131 @@ export const useExpense = (expenseId: number) => {
     fetchExpense();
   }, [fetchExpense]);
 
-  const approveExpense = useCallback(async () => {
-    if (!expense) return;
-    try {
-      setIsLoading(true);
-      const response = await api.put(`/expenses/${expense.departmentId}/approve/${expenseId}`);
+  const approveExpense = useCallback(
+    async (comment?: string) => {
+      if (!expense) return;
+      try {
+        setIsLoading(true);
+        const response = await api.put(`/expenses/${expense.departmentId}/approve/${expenseId}`, {
+          comment
+        });
 
-      showSnackbar(response.data.message, { severity: "success" });
-      setIsLoading(false);
-      fetchExpense();
-      return true;
-    } catch (error) {
-      showSnackbar("Error approving expense", { severity: "error" });
-      console.error("Error approving expense:", error);
-      setIsLoading(false);
-      return false;
-    }
-  }, [expense, expenseId, fetchExpense, showSnackbar]);
+        showSnackbar(response.data.message, { severity: "success" });
+        setIsLoading(false);
+        fetchExpense();
+        return true;
+      } catch (error) {
+        showSnackbar("Error approving expense", { severity: "error" });
+        console.error("Error approving expense:", error);
+        setIsLoading(false);
+        return false;
+      }
+    },
+    [expense, expenseId, fetchExpense, showSnackbar]
+  );
 
-  const rejectExpense = useCallback(async () => {
-    if (!expense) return;
-    try {
-      setIsLoading(true);
-      const response = await api.put(`/expenses/${expense.departmentId}/reject/${expenseId}`);
+  const rejectExpense = useCallback(
+    async (comment?: string) => {
+      if (!expense) return;
+      try {
+        setIsLoading(true);
+        const response = await api.put(`/expenses/${expense.departmentId}/reject/${expenseId}`, {
+          comment
+        });
 
-      showSnackbar(response.data.message, { severity: "success" });
-      setIsLoading(false);
-      fetchExpense();
-      return true;
-    } catch (error) {
-      showSnackbar("Error rejecting expense", { severity: "error" });
-      console.error("Error rejecting expense:", error);
-      setIsLoading(false);
-      return false;
-    }
-  }, [expense, expenseId, fetchExpense, showSnackbar]);
+        showSnackbar(response.data.message, { severity: "success" });
+        setIsLoading(false);
+        fetchExpense();
+        return true;
+      } catch (error) {
+        showSnackbar("Error rejecting expense", { severity: "error" });
+        console.error("Error rejecting expense:", error);
+        setIsLoading(false);
+        return false;
+      }
+    },
+    [expense, expenseId, fetchExpense, showSnackbar]
+  );
 
-  const cancelExpense = useCallback(async () => {
-    if (!expense) return;
-    try {
-      setIsLoading(true);
-      const response = await api.put(`/expenses/${expense.departmentId}/cancel/${expenseId}`);
+  const requestAdditionalInfoExpense = useCallback(
+    async (comment?: string) => {
+      if (!expense) return;
+      try {
+        setIsLoading(true);
+        const response = await api.put(
+          `/expenses/${expense.departmentId}/request-info/${expenseId}`,
+          { comment }
+        );
 
-      showSnackbar(response.data.message, { severity: "success" });
-      setIsLoading(false);
-      fetchExpense();
-      return true;
-    } catch (error) {
-      showSnackbar("Error cancelling expense", { severity: "error" });
-      console.error("Error cancelling expense:", error);
-      setIsLoading(false);
-      return false;
-    }
-  }, [expense, expenseId, fetchExpense, showSnackbar]);
+        showSnackbar(response.data.message, { severity: "success" });
+        setIsLoading(false);
+        fetchExpense();
+        return true;
+      } catch (error) {
+        showSnackbar("Error requesting additional info for expense", { severity: "error" });
+        console.error("Error requesting additional info for expense:", error);
+        setIsLoading(false);
+        return false;
+      }
+    },
+    [expense, expenseId, fetchExpense, showSnackbar]
+  );
 
-  const setAsDraftExpense = useCallback(async () => {
-    if (!expense) return;
-    try {
-      setIsLoading(true);
-      const response = await api.put(`/expenses/${expense.departmentId}/draft/${expenseId}`);
+  const cancelExpense = useCallback(
+    async (comment?: string) => {
+      if (!expense) return;
+      try {
+        setIsLoading(true);
+        const response = await api.put(`/expenses/${expense.departmentId}/cancel/${expenseId}`, {
+          comment
+        });
 
-      showSnackbar(response.data.message, { severity: "success" });
-      setIsLoading(false);
-      fetchExpense();
-      return true;
-    } catch (error) {
-      showSnackbar("Error updating expense", { severity: "error" });
-      console.error("Error updating expense:", error);
-      setIsLoading(false);
-      return false;
-    }
-  }, [expense, expenseId, fetchExpense, showSnackbar]);
+        showSnackbar(response.data.message, { severity: "success" });
+        setIsLoading(false);
+        fetchExpense();
+        return true;
+      } catch (error) {
+        showSnackbar("Error cancelling expense", { severity: "error" });
+        console.error("Error cancelling expense:", error);
+        setIsLoading(false);
+        return false;
+      }
+    },
+    [expense, expenseId, fetchExpense, showSnackbar]
+  );
+
+  const setAsDraftExpense = useCallback(
+    async (comment?: string) => {
+      if (!expense) return;
+      try {
+        setIsLoading(true);
+        const response = await api.put(`/expenses/${expense.departmentId}/draft/${expenseId}`, {
+          comment
+        });
+
+        showSnackbar(response.data.message, { severity: "success" });
+        setIsLoading(false);
+        fetchExpense();
+        return true;
+      } catch (error) {
+        showSnackbar("Error updating expense", { severity: "error" });
+        console.error("Error updating expense:", error);
+        setIsLoading(false);
+        return false;
+      }
+    },
+    [expense, expenseId, fetchExpense, showSnackbar]
+  );
 
   const updateExpense = useCallback(
-    async (data: ExpenseUpdateDTO, publish = false) => {
+    async (data: ExpenseUpdateDTO, publish = false, comment?: string) => {
       if (!expense) return;
       try {
         setIsLoading(true);
         const response = await api.put(`/expenses/${expense.departmentId}/update/${expenseId}`, {
           ...data,
-          publish
+          publish,
+          comment
         });
 
         showSnackbar(response.data.message, { severity: "success" });
@@ -140,6 +185,7 @@ export const useExpense = (expenseId: number) => {
     rejectExpense,
     cancelExpense,
     setAsDraftExpense,
+    requestAdditionalInfoExpense,
     updateExpense
   };
 };

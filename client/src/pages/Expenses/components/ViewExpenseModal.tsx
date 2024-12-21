@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -25,6 +25,7 @@ import { useExpense } from "../hooks/useExpense";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import { CurrencyEnum, ExpenseStatusEnum, ExpenseUpdateDTO } from "../../../types/api";
 import { expenseStatusEnumToText } from "../expensesHelper";
+import { AddCommentModal } from "./AddCommentModal";
 
 interface ViewExpenseModalProps {
   open: boolean;
@@ -43,10 +44,19 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
     rejectExpense: onReject,
     cancelExpense: onCancel,
     setAsDraftExpense: onSetAsDraft,
+    requestAdditionalInfoExpense: onRequestAdditionalInfo,
     updateExpense: onUpdate
   } = useExpense(expenseId);
 
+  const [isAddCommentModalOpen, setIsAddCommentModalOpen] = React.useState(false);
+  const [comment, setComment] = React.useState<string>("");
+  const actionToTriggerAfterComment = React.useRef<() => void>();
+
   const canEdit = expense?.canCancel && expense.currentStatus === ExpenseStatusEnum.DRAFT;
+  const canOnlyEditJustification =
+    expense?.canCancel && expense.currentStatus === ExpenseStatusEnum.PENDING_ADDITIONAL_INFO;
+
+  const canUpdate = canEdit || canOnlyEditJustification;
 
   const [updateForm, setUpdateForm] = React.useState<ExpenseUpdateDTO>({
     amount: 0,
@@ -65,6 +75,11 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
       });
     }
   }, [expense]);
+
+  const getCommentBeforeAction = useCallback((action: (comment?: string) => void) => {
+    setIsAddCommentModalOpen(true);
+    actionToTriggerAfterComment.current = action;
+  }, []);
 
   if (!expenseId) return null;
 
@@ -168,9 +183,10 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
               rows={4}
               value={updateForm.justification}
               onChange={(e) => {
-                canEdit && setUpdateForm((prev) => ({ ...prev, justification: e.target.value }));
+                (canEdit || canOnlyEditJustification) &&
+                  setUpdateForm((prev) => ({ ...prev, justification: e.target.value }));
               }}
-              disabled={!canEdit}
+              disabled={!canEdit && !canOnlyEditJustification}
             />
           </Grid>
           <Grid item xs={12}>
@@ -217,17 +233,32 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
                   <TableRow>
                     <TableCell>Status</TableCell>
                     <TableCell>User</TableCell>
+                    <TableCell>Date</TableCell>
                     <TableCell>Comment</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {expense.expenseStatuses.map((status, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{expenseStatusEnumToText(status.status)}</TableCell>
-                      <TableCell>{`${status.user.firstName} ${status.user.lastName}`}</TableCell>
-                      <TableCell>{status.comment || "No comment"}</TableCell>
-                    </TableRow>
-                  ))}
+                  {expense.expenseStatuses
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map((status, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{expenseStatusEnumToText(status.status)}</TableCell>
+                        <TableCell>{`${status.user.firstName} ${status.user.lastName}`}</TableCell>
+                        <TableCell>
+                          {status.date
+                            ? new Date(status.date).toLocaleString(undefined, {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit"
+                              })
+                            : ""}
+                        </TableCell>
+                        <TableCell>{status.comment || "No comment"}</TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -238,7 +269,7 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
         {expense.canApprove && (
           <>
             <Button
-              onClick={onApprove}
+              onClick={() => getCommentBeforeAction((comment?: string) => onApprove(comment))}
               color="primary"
               variant="contained"
               style={{ backgroundColor: "green", color: "white" }}
@@ -246,7 +277,17 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
               Approve
             </Button>
             <Button
-              onClick={onReject}
+              onClick={() =>
+                getCommentBeforeAction((comment?: string) => onRequestAdditionalInfo(comment))
+              }
+              color="secondary"
+              variant="contained"
+              style={{ backgroundColor: "blue", color: "white" }}
+            >
+              Request additional info
+            </Button>
+            <Button
+              onClick={() => getCommentBeforeAction((comment?: string) => onReject(comment))}
               color="secondary"
               variant="contained"
               style={{ backgroundColor: "red", color: "white" }}
@@ -258,34 +299,44 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
         {expense.canCancel && (
           <>
             <Button
-              onClick={onCancel}
+              onClick={() => getCommentBeforeAction((comment?: string) => onCancel(comment))}
               color="secondary"
               variant="contained"
               style={{ backgroundColor: "red", color: "white" }}
             >
               Cancel
             </Button>
+            {canUpdate && (
+              <Button
+                onClick={() => onUpdate(updateForm, false)}
+                color="secondary"
+                variant="contained"
+                style={{ backgroundColor: "blue", color: "white" }}
+              >
+                Update
+              </Button>
+            )}
             <Button
-              onClick={() => onUpdate(updateForm)}
+              onClick={() => {
+                if (
+                  expense.currentStatus === ExpenseStatusEnum.DRAFT ||
+                  expense.currentStatus === ExpenseStatusEnum.PENDING_ADDITIONAL_INFO
+                ) {
+                  getCommentBeforeAction((comment?: string) => onUpdate(updateForm, true, comment));
+                } else {
+                  getCommentBeforeAction((comment?: string) => onSetAsDraft(comment));
+                }
+              }}
               color="secondary"
               variant="contained"
               style={{ backgroundColor: "blue", color: "white" }}
             >
-              Update
-            </Button>
-            <Button
-              onClick={
-                expense.currentStatus === ExpenseStatusEnum.DRAFT
-                  ? () => onUpdate(updateForm, true)
-                  : onSetAsDraft
-              }
-              color="secondary"
-              variant="contained"
-              style={{ backgroundColor: "blue", color: "white" }}
-            >
-              {expense.currentStatus === ExpenseStatusEnum.DRAFT
-                ? "Update and publish"
-                : "Set as Draft"}
+              {expense.currentStatus === ExpenseStatusEnum.DRAFT && "Update and publish"}
+              {expense.currentStatus === ExpenseStatusEnum.PENDING_ADDITIONAL_INFO &&
+                "Update and send"}
+              {expense.currentStatus !== ExpenseStatusEnum.DRAFT &&
+                expense.currentStatus !== ExpenseStatusEnum.PENDING_ADDITIONAL_INFO &&
+                "Set as Draft"}
             </Button>
           </>
         )}
@@ -293,6 +344,15 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
           Close
         </Button>
       </DialogActions>
+      <AddCommentModal
+        {...{
+          open: isAddCommentModalOpen,
+          comment,
+          setComment,
+          actionToTriggerAfterComment,
+          setIsAddCommentModalOpen
+        }}
+      />
     </Dialog>
   );
 };

@@ -40,6 +40,12 @@ router.put(
 );
 
 router.put(
+  "/:departmentId/request-info/:id",
+  checkPermissionDepartment(DepartmentPermission.APPROVE_EXPENSES),
+  expenseController.requestInfoExpense
+);
+
+router.put(
   "/:departmentId/update/:id",
   checkPermissionDepartment(DepartmentPermission.CREATE_EXPENSES),
   validateRequest(expenseUpdateDtoSchema),

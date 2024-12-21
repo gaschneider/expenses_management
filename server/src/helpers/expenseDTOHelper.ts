@@ -20,6 +20,7 @@ interface ExpenseStatusDto {
   status: string;
   comment: string | null;
   user: UserBaseDto;
+  date?: Date;
 }
 
 // Rule Step DTO
@@ -125,7 +126,8 @@ const mapExpenseToDto = (
             id: status.user!.id!,
             firstName: status.user!.firstName,
             lastName: status.user!.lastName
-          }
+          },
+          date: status.createdAt
         }))
       : [],
 

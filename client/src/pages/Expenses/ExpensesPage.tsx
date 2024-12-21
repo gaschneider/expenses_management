@@ -304,7 +304,10 @@ export const ExpensesPage: React.FC = () => {
       {isPreviewModalOpen && selectedExpense && (
         <ViewExpenseModal
           open={isPreviewModalOpen}
-          onClose={() => setIsPreviewModalOpen(false)}
+          onClose={() => {
+            setIsPreviewModalOpen(false);
+            fetchExpenses(filters); // Refresh expenses after closing modal
+          }}
           expenseId={selectedExpense.id}
         />
       )}

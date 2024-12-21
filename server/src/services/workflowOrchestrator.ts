@@ -28,14 +28,21 @@ export class WorkflowOrchestrator {
     });
 
     // Expense approval event
-    this.eventBus.on("expense:approve", async (data: { expenseId: number; userId: number }) => {
-      try {
-        await this.workflowService.advanceToNextApprovalStep(data.expenseId, data.userId);
-        console.info(`Expense ${data.expenseId} approved by user ${data.userId}`);
-      } catch (error) {
-        console.error(`Expense approval failed for expense ${data.expenseId}`, error);
+    this.eventBus.on(
+      "expense:approve",
+      async (data: { expenseId: number; userId: number; comment?: string }) => {
+        try {
+          await this.workflowService.advanceToNextApprovalStep(
+            data.expenseId,
+            data.userId,
+            data.comment
+          );
+          console.info(`Expense ${data.expenseId} approved by user ${data.userId}`);
+        } catch (error) {
+          console.error(`Expense approval failed for expense ${data.expenseId}`, error);
+        }
       }
-    });
+    );
   }
 
   // Method to trigger workflow
@@ -44,8 +51,8 @@ export class WorkflowOrchestrator {
   }
 
   // Method to approve expense
-  async approveExpense(expenseId: number, userId: number) {
-    this.eventBus.emit("expense:approve", { expenseId, userId });
+  async approveExpense(expenseId: number, userId: number, comment?: string) {
+    this.eventBus.emit("expense:approve", { expenseId, userId, comment });
   }
 
   // Helper method to get system initiator user ID

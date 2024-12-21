@@ -125,6 +125,7 @@ export type ExpenseStatusDTO = {
   status: ExpenseStatusEnum;
   comment: string | null;
   user: Omit<BaseUserDTO, "email">;
+  date: string;
 };
 
 export type ViewExpenseDTO = ExpenseDTO & {

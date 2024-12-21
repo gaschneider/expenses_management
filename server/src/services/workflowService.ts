@@ -136,7 +136,8 @@ export class RuleBasedWorkflowService {
   // Move to next approval step
   async advanceToNextApprovalStep(
     expenseId: number,
-    currentUserId: number
+    currentUserId: number,
+    comment?: string
   ): Promise<ExpenseStatusEnum> {
     const transaction = await sequelize.transaction();
 
@@ -219,7 +220,7 @@ export class RuleBasedWorkflowService {
           expenseId: expense.id,
           status: ExpenseStatusEnum.APPROVED,
           userId: currentUserId,
-          comment: null
+          comment
         },
         { transaction }
       );

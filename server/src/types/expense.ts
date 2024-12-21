@@ -57,4 +57,5 @@ export interface ExpenseUpdateDTO {
   justification: string;
   date: Date;
   publish: boolean;
+  comment?: string;
 }
