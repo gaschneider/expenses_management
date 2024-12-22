@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Box,
   Grid,
   Card,
   CardContent,
@@ -10,29 +9,8 @@ import {
   Container,
   Button,
 } from '@mui/material';
-import { Bar, Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import { BarChart, LineChart } from '@mui/x-charts';
 
 const mockData = {
   summary: {
@@ -55,7 +33,6 @@ const mockData = {
     percentageOfStatusPerCategory: [
       { category: 'Accommodation', Approved: 40, Pending: 30, Declined: 30 },
       { category: 'Equipment', Approved: 50, Pending: 25, Declined: 25 },
-      // Add more categories
     ],
     amountPerCategory: [
       { category: 'Accommodation', Approved: 1200, Pending: 400, Declined: 800 },
@@ -68,16 +45,16 @@ const mockData = {
       { category: 'Travel', Approved: 900, Pending: 300, Declined: 600 },
     ],
     totalAmountPerMonth: [
-        { month: 'Jan', amount: 100 },
-        { month: 'Feb', amount: 1500 },
-        { month: 'Mar', amount: 3000 },
-        { month: 'Jun', amount: 5000 },
-        { month: 'Jul', amount: 4502 },
-        { month: 'Aug', amount: 6000 },
-        { month: 'Sep', amount: 3000 },
-        { month: 'Oct', amount: 2500 },
-        { month: 'Nov', amount: 4000 },
-        { month: 'Dec', amount: 5302 },
+      { month: 'Jan', amount: 100 },
+      { month: 'Feb', amount: 1500 },
+      { month: 'Mar', amount: 3000 },
+      { month: 'Jun', amount: 5000 },
+      { month: 'Jul', amount: 4502 },
+      { month: 'Aug', amount: 6000 },
+      { month: 'Sep', amount: 3000 },
+      { month: 'Oct', amount: 2500 },
+      { month: 'Nov', amount: 4000 },
+      { month: 'Dec', amount: 5302 },
     ],
     expensesPerCategory: [
       { category: 'Accommodation', count: 1 },
@@ -98,99 +75,37 @@ const Dataviz = () => {
 
   const total = charts.percentageCountPerStatus.reduce((sum, item) => sum + item.count, 0);
 
-  const percentageCountData = {
-    labels: charts.percentageCountPerStatus.map(item => item.status),
-    datasets: [
-      {
-        label: 'Status',
-        data: charts.percentageCountPerStatus.map(item => (item.count / total) * 100),
-        backgroundColor: ['#82ca9d', '#ffc658', '#FF5050'],
-      },
-    ],
-  };
+  // Expenses per Status
+  const percentageCountLabels = charts.percentageCountPerStatus.map(item => item.status);
+  const approvedPercent = (charts.percentageCountPerStatus.find(i => i.status === 'Approved')?.count || 0) / total * 100;
+  const pendingPercent = (charts.percentageCountPerStatus.find(i => i.status === 'Pending')?.count || 0) / total * 100;
+  const declinedPercent = (charts.percentageCountPerStatus.find(i => i.status === 'Declined')?.count || 0) / total * 100;
 
-  const totalAmountPerStatusData = {
-    labels: charts.totalAmountPerStatus.map(item => item.status),
-    datasets: [
-      {
-        data: charts.totalAmountPerStatus.map(item => item.amount),
-        backgroundColor: ['#82ca9d', '#ffc658', '#FF5050'],
-      },
-    ],
-  };
+  // Amount per Status
+  const totalAmountPerStatusLabels = charts.totalAmountPerStatus.map(item => item.status);
+  const approvedAmount = charts.totalAmountPerStatus.find(i => i.status === 'Approved')?.amount || 0;
+  const pendingAmount = charts.totalAmountPerStatus.find(i => i.status === 'Pending')?.amount || 0;
+  const declinedAmount = charts.totalAmountPerStatus.find(i => i.status === 'Declined')?.amount || 0;
 
-  const percentageOfStatusPerCategoryData = {
-    labels: charts.percentageOfStatusPerCategory.map(item => item.category),
-    datasets: [
-        {
-          label: 'Declined',
-          data: charts.percentageOfStatusPerCategory.map(item => item.Declined),
-          backgroundColor: '#FF5050',
-          stack: 'stack1',
-        },
-        {
-            label: 'Pending',
-            data: charts.percentageOfStatusPerCategory.map(item => item.Pending),
-            backgroundColor: '#ffc658',
-            stack: 'stack1',
-        },
-        {
-            label: 'Approved',
-            data: charts.percentageOfStatusPerCategory.map(item => item.Approved),
-            backgroundColor: '#82ca9d',
-            stack: 'stack1',
-        }
-    ],
-  };
+  // Percentage of Expenses per Status and Category
+  const percentageOfStatusPerCategoryLabels = charts.percentageOfStatusPerCategory.map(item => item.category);
+  const declinedData = charts.percentageOfStatusPerCategory.map(item => item.Declined);
+  const pendingData = charts.percentageOfStatusPerCategory.map(item => item.Pending);
+  const approvedData = charts.percentageOfStatusPerCategory.map(item => item.Approved);
 
-  const amountPerCategoryData = {
-    labels: charts.amountPerCategory.map(item => item.category),
-    datasets: [
-      {
-        label: 'Approved',
-        data: charts.amountPerCategory.map(item => item.Approved),
-        backgroundColor: '#82ca9d',
-        barPercentage: 0.6,
-        categoryPercentage: 0.4,
-      },
-      {
-        label: 'Pending',
-        data: charts.amountPerCategory.map(item => item.Pending),
-        backgroundColor: '#ffc658',
-        barPercentage: 0.6,
-        categoryPercentage: 0.4,
-      },
-      {
-        label: 'Declined',
-        data: charts.amountPerCategory.map(item => item.Declined),
-        backgroundColor: '#FF5050',
-        barPercentage: 0.6,
-        categoryPercentage: 0.4,
-      },
-    ],
-  };
+  // Amount per Category and Status
+  const amountPerCategoryLabels = charts.amountPerCategory.map(item => item.category);
+  const amountApprovedData = charts.amountPerCategory.map(item => item.Approved);
+  const amountPendingData = charts.amountPerCategory.map(item => item.Pending);
+  const amountDeclinedData = charts.amountPerCategory.map(item => item.Declined);
 
-  const totalAmountPerMonthData = {
-    labels: charts.totalAmountPerMonth.map(item => item.month),
-    datasets: [
-      {
-        data: charts.totalAmountPerMonth.map(item => item.amount),
-        borderColor: '#8884d8',
-        backgroundColor: 'rgba(136, 132, 216, 0.5)',
-        fill: false,
-      },
-    ],
-  };
+  // Total Amount per Month
+  const totalAmountPerMonthLabels = charts.totalAmountPerMonth.map(item => item.month);
+  const totalAmountPerMonthValues = charts.totalAmountPerMonth.map(item => item.amount);
 
-  const expensesPerCategoryData = {
-    labels: charts.expensesPerCategory.map(item => item.category),
-    datasets: [
-      {
-        data: charts.expensesPerCategory.map(item => item.count),
-        backgroundColor: '#8884d8',
-      },
-    ],
-  };
+  // Expenses per Category
+  const expensesPerCategoryLabels = charts.expensesPerCategory.map(item => item.category);
+  const expensesPerCategoryValues = charts.expensesPerCategory.map(item => item.count);
 
   return (
     <Container maxWidth="lg">
@@ -218,13 +133,16 @@ const Dataviz = () => {
           {isDrillDown ? (
             <>
               <Typography variant="h6">Percentage of Expenses per Status and Category</Typography>
-              <Bar
-                data={percentageOfStatusPerCategoryData}
-                options={{
-                  responsive: true,
-                  plugins: { legend: { position: 'top' } },
-                  scales: { x: { stacked: true }, y: { stacked: true } },
-                }}
+              <BarChart
+                xAxis={[{ scaleType: 'band', data: percentageOfStatusPerCategoryLabels }]}
+                yAxis={[{ min: 0, max: 100 }]}
+                series={[
+                  { label: 'Declined', data: declinedData, color: '#FF5050' },
+                  { label: 'Pending', data: pendingData, color: '#ffc658' },
+                  { label: 'Approved', data: approvedData, color: '#82ca9d' },
+                ]}
+                height={300}
+                stacked
               />
               <Button
                 variant="contained"
@@ -238,7 +156,21 @@ const Dataviz = () => {
           ) : (
             <>
               <Typography variant="h6">Expenses per Status</Typography>
-              <Bar data={percentageCountData} options={{ responsive: true, plugins: { legend: { display: false } }, scales: { x: { stacked: true }, y: { stacked: true } } }} />
+              <BarChart
+                xAxis={[{ scaleType: 'band', data: percentageCountLabels }]}
+                series={[
+                  {
+                    label: '',
+                    data: [approvedPercent, pendingPercent, declinedPercent],
+                  },
+                ]}
+                height={300}
+                sx={{
+                  '.MuiChartsLegend-root': {
+                    display: 'none',
+                  },
+                }}
+              />
               <Button
                 variant="contained"
                 color="primary"
@@ -251,42 +183,69 @@ const Dataviz = () => {
           )}
         </Grid>
 
-        
         <Grid item xs={6}>
           {isDrillDown ? (
             <>
-                <Typography variant="h6">Amount per Category and status ($ CAD)</Typography>
-                <Bar
-                    data={amountPerCategoryData}
-                    options={{
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { mode: 'index', intersect: false },
-                    },
-                    scales: {
-                        x: { stacked: false },
-                        y: { stacked: false },
-                    },
-                    }}
-                />
+              <Typography variant="h6">Amount per Category and status ($ CAD)</Typography>
+              <BarChart
+                xAxis={[{ scaleType: 'band', data: amountPerCategoryLabels }]}
+                series={[
+                  { label: 'Approved', data: amountApprovedData, color: '#82ca9d' },
+                  { label: 'Pending', data: amountPendingData, color: '#ffc658' },
+                  { label: 'Declined', data: amountDeclinedData, color: '#FF5050' },
+                ]}
+                height={300}
+              />
             </>
           ) : (
             <>
-                <Typography variant="h6">Amount per Status</Typography>
-                <Bar data={totalAmountPerStatusData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
+              <Typography variant="h6">Amount per Status</Typography>
+              <BarChart
+                xAxis={[{ scaleType: 'band', data: totalAmountPerStatusLabels }]}
+                series={[
+                  {
+                    label: '',
+                    data: [approvedAmount, pendingAmount, declinedAmount],
+                    getItemColor: (params) => {
+                      const { itemIndex } = params;
+                      if (itemIndex === 0) return '#82ca9d'; // Approved
+                      if (itemIndex === 1) return '#ffc658'; // Pending
+                      if (itemIndex === 2) return '#FF5050'; // Declined
+                      return '#000';
+                    },
+                  },
+                ]}
+                height={300}
+                sx={{
+                  '.MuiChartsLegend-root': {
+                    display: 'none',
+                  },
+                }}
+              />
             </>
           )}
         </Grid>
 
         <Grid item xs={6}>
           <Typography variant="h6">Total Amount per Month ($ CAD)</Typography>
-          <Line data={totalAmountPerMonthData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
+          <LineChart
+            xAxis={[{ scaleType: 'band', data: totalAmountPerMonthLabels }]}
+            series={[
+              { label: 'Amount', data: totalAmountPerMonthValues }
+            ]}
+            height={300}
+          />
         </Grid>
 
         <Grid item xs={6}>
           <Typography variant="h6">Expenses per Category</Typography>
-          <Bar data={expensesPerCategoryData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
+          <BarChart
+            xAxis={[{ scaleType: 'band', data: expensesPerCategoryLabels }]}
+            series={[
+              { data: expensesPerCategoryValues }
+            ]}
+            height={300}
+          />
         </Grid>
       </Grid>
     </Container>
