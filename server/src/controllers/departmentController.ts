@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import Department from "../models/Department";
 import { Op } from "sequelize";
 import { DepartmentPermission } from "../types/auth";
+import { Category } from "../models/Category";
+import { categoryToDTO } from "./categoryController";
+import User from "../models/User";
+import { checkPermission, userHasPermission } from "../middlewares/checkPermission";
 
 const departmentToDTO = (department: Department) => {
   return {
@@ -185,4 +189,90 @@ export const getApproversByDepartmentId = async (req: Request, res: Response) =>
   }));
 
   res.status(200).json(usersDTO);
+};
+
+export const getCategoriesByDepartmentId = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (id == null || typeof id != "string" || !Number.isFinite(Number(id))) {
+    res.status(400).json({ error: "Invalid department id" });
+    return;
+  }
+
+  const categories = await Category.findAll({
+    where: {
+      departmentId: {
+        [Op.or]: [{ [Op.is]: null }, { [Op.eq]: id }]
+      }
+    },
+    include: {
+      model: Department,
+      as: "department"
+    }
+  });
+
+  res.status(200).json(categories.map(categoryToDTO));
+};
+
+export const getCreateExpenseDepartmentsByUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Authenticated user not found" });
+      return;
+    }
+
+    const user = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+
+    if (!user) {
+      res.status(200).json([]);
+      return;
+    }
+    const departmentsAllowedToCreate =
+      user?.departments?.filter((d) =>
+        userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, d.id)
+      ) ?? [];
+
+    res.status(200).json(departmentsAllowedToCreate.map(departmentToDTO));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getExpenseDepartmentsByUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Authenticated user not found" });
+      return;
+    }
+
+    const user = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+
+    if (!user) {
+      res.status(200).json([]);
+      return;
+    }
+    const departmentsAllowedToCreate =
+      user?.departments?.filter(
+        (d) =>
+          userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, d.id) ||
+          userHasPermission(user, DepartmentPermission.VIEW_EXPENSES, d.id) ||
+          userHasPermission(user, DepartmentPermission.APPROVE_EXPENSES, d.id)
+      ) ?? [];
+
+    res.status(200).json(departmentsAllowedToCreate.map(departmentToDTO));
+  } catch (error) {
+    next(error);
+  }
 };

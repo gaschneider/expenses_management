@@ -1,16 +1,21 @@
 export interface ExpenseAttributes {
   id: number;
-  category: string;
+  categoryId: number;
   amount: number;
   date: Date;
   departmentId: number;
+  title: string;
   justification: string;
   requesterId: number;
   projectId: number | null;
-  costCenter: string;
+  costCenter: string | null;
   currency: CurrencyEnum;
   paymentDate: Date | null;
   currentStatus: ExpenseStatusEnum;
+  ruleId: number | null;
+  currentRuleStep: number | null;
+  nextApproverType: NextApproverType | null;
+  nextApproverId: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -21,15 +26,13 @@ export interface ExpenseStatusAttributes {
   status: ExpenseStatusEnum;
   userId: number;
   comment: string | null;
-  attachments?: string | null;
-  nextApproverId: number | null;
-  dueDate: Date | null;
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
 }
 
 export enum ExpenseStatusEnum {
   DRAFT = "DRAFT",
+  WAITING_WORKFLOW = "WAITING_WORKFLOW",
   PENDING_APPROVAL = "PENDING_APPROVAL",
   PENDING_ADDITIONAL_INFO = "PENDING_ADDITIONAL_INFO",
   APPROVED = "APPROVED",
@@ -41,4 +44,18 @@ export enum CurrencyEnum {
   BRL = "BRL",
   CAD = "CAD",
   USD = "USD"
+}
+
+export enum NextApproverType {
+  USER = "USER",
+  DEPARTMENT = "DEPARTMENT"
+}
+
+export interface ExpenseUpdateDTO {
+  amount: number;
+  currency: CurrencyEnum;
+  justification: string;
+  date: Date;
+  publish: boolean;
+  comment?: string;
 }

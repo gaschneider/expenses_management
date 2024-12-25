@@ -9,21 +9,15 @@ class ExpenseStatus extends Model<ExpenseStatusAttributes, ExpenseStatusAttribut
   declare status: ExpenseStatusEnum;
   declare userId: number;
   declare comment: string | null;
-  declare attachments?: string | null;
-  declare nextApproverId: number | null;
-  declare dueDate: Date | null;
   declare readonly createdAt?: Date;
   declare readonly updatedAt?: Date;
 
   // Declare relationship properties
   declare user?: User;
-  declare nextApprover?: User;
 
   // Declare association methods
   declare getUser: () => Promise<User>;
   declare setUser: (user: User) => Promise<void>;
-  declare getNextApprover: () => Promise<User>;
-  declare setNextApprover: (user: User) => Promise<void>;
 }
 
 ExpenseStatus.init(
@@ -60,20 +54,6 @@ ExpenseStatus.init(
       type: DataTypes.TEXT,
       allowNull: true,
       comment: "Optional comment for the status change"
-    },
-    nextApproverId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: "Users",
-        key: "id"
-      },
-      comment: "Next user in the approval flow"
-    },
-    dueDate: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      comment: "Due date for the current status (if applicable)"
     }
   },
   {

@@ -92,3 +92,95 @@ export interface CategoryCreateDTO {
   departmentId?: number;
   name: string;
 }
+
+export interface ExpenseDTO {
+  id: number;
+  departmentId: number;
+  department: DepartmentDTO;
+  categoryId: number;
+  category: CategoryDTO;
+  requesterId: number;
+  requester: Omit<BaseUserDTO, "email">;
+  amount: number;
+  currency: CurrencyEnum;
+  title: string;
+  justification: string;
+  currentStatus: ExpenseStatusEnum;
+  date: Date;
+}
+
+export interface ExpenseUpdateDTO {
+  amount: number;
+  currency: CurrencyEnum;
+  justification: string;
+  date: Date;
+}
+
+export interface ExpenseRuleDTO {
+  id: number;
+  ruleSteps: RuleStepDTO[];
+}
+
+export type ExpenseStatusDTO = {
+  id: number;
+  status: ExpenseStatusEnum;
+  comment: string | null;
+  user: Omit<BaseUserDTO, "email">;
+  date: string;
+};
+
+export type ViewExpenseDTO = ExpenseDTO & {
+  ruleId: number | null;
+  currentRuleStep: number | null;
+  nextApproverType: NextApproverType | null;
+  nextApproverId: number | null;
+  nextApproverName?: string;
+  canApprove: boolean;
+  canCancel: boolean;
+
+  // Nested relationships
+  requester: Omit<BaseUserDTO, "email">;
+  category: CategoryDTO;
+  department: DepartmentDTO;
+  expenseStatuses: ExpenseStatusDTO[];
+  rule: ExpenseRuleDTO | null;
+};
+
+export interface ExpenseFilterParams {
+  departmentId?: number;
+  categoryId?: number;
+  status?: ExpenseStatusEnum;
+  requesterId?: number;
+}
+
+export enum CurrencyEnum {
+  BRL = "BRL",
+  USD = "USD",
+  EUR = "EUR"
+}
+
+export enum ExpenseStatusEnum {
+  DRAFT = "DRAFT",
+  WAITING_WORKFLOW = "WAITING_WORKFLOW",
+  PENDING_APPROVAL = "PENDING_APPROVAL",
+  PENDING_ADDITIONAL_INFO = "PENDING_ADDITIONAL_INFO",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED"
+}
+
+export type CreateExpenseDTO = {
+  departmentId: string;
+  categoryId: string;
+  date: Date;
+  amount: string;
+  currency: CurrencyEnum;
+  title: string;
+  justification: string;
+  isDraft: boolean;
+};
+
+export enum NextApproverType {
+  USER = "USER",
+  DEPARTMENT = "DEPARTMENT"
+}

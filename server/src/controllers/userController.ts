@@ -9,6 +9,8 @@ import {
   UserWithPermissionsDTO
 } from "../helpers/userToWithPermissionsDTO";
 import UserDepartmentPermission from "../models/UserDepartmentPermission";
+import Department from "../models/Department";
+import { DepartmentPermission } from "../types/auth";
 
 export const putUserSystemPermissionsById = async (
   req: Request,
