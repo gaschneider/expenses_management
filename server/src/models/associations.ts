@@ -1,3 +1,4 @@
+import { Category } from "./Category";
 import Department from "./Department";
 import Expense from "./Expense";
 import ExpenseStatus from "./ExpenseStatus";
@@ -139,5 +140,11 @@ export const defineAssociations = () => {
   RuleStep.belongsTo(User, {
     foreignKey: "approvingUserId",
     as: "approvingUser"
+  });
+
+  // Categories
+  Category.belongsTo(Department, {
+    foreignKey: "departmentId",
+    as: "department"
   });
 };

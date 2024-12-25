@@ -49,6 +49,7 @@ export enum SystemPermission {
   MANAGE_USER_DEPARTMENT_PERMISSIONS = "MANAGE_USER_DEPARTMENT_PERMISSIONS",
   MANAGE_RULES = "MANAGE_RULES",
   VIEW_DATA_ANALYSIS = "VIEW_DATA_ANALYSIS",
+  MANAGE_CATEGORIES = "MANAGE_CATEGORIES",
   ADMIN = "ADMIN"
 }
 
@@ -78,4 +79,16 @@ export interface RuleStepDTO {
   approvingUserId: number | null;
   approvingDepartment?: DepartmentDTO;
   approvingUser?: BaseUserDTO;
+}
+
+export interface CategoryDTO {
+  id: number;
+  departmentId?: number;
+  name: string;
+  department?: DepartmentDTO;
+}
+
+export interface CategoryCreateDTO {
+  departmentId?: number;
+  name: string;
 }

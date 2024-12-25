@@ -9,6 +9,7 @@ import DepartmentForm from "./DepartmentForm";
 import UserManagementPage from "../pages/UserManagementPage";
 import RuleManagementPage from "../pages/RulesManagementPage/RulesManagementPage";
 import DataVizPage from "../pages/DataAnalysPage";
+import CategoriesPage from "../pages/CategoriesPage";
 
 export const RoutesComponent = () => {
   return (
@@ -86,6 +87,14 @@ export const RoutesComponent = () => {
         element={
           <ProtectedRoute>
             <DataVizPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/categories"
+        element={
+          <ProtectedRoute>
+            <CategoriesPage />
           </ProtectedRoute>
         }
       />
