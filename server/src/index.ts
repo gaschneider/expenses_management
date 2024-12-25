@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth";
 import departmentRoutes from "./routes/department";
 import userRoutes from "./routes/user";
 import ruleRoutes from "./routes/rule";
+import dataAnalysis from "./routes/dataAnalysis";
 import session from "express-session";
 import passport from "passport";
 import "./config/passport";
@@ -61,6 +62,7 @@ export const startServer = async () => {
   app.use("/api/departments", departmentRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/rules", ruleRoutes);
+  app.use("/api/dataAnalysis", dataAnalysis);
 
   const server = app.listen(8081, () => {
     console.log("Server listening on port 8081");
