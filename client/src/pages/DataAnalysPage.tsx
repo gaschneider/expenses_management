@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// Dataviz.tsx
+import React, { useState, useEffect } from 'react';
 import {
   Grid,
   Card,
@@ -11,25 +12,27 @@ import {
 } from '@mui/material';
 
 import { BarChart, LineChart } from '@mui/x-charts';
+import api from "../api/axios.config";
 
-const mockData = {
-  summary: {
-    totalAmount: 9302,
-    expenses: 10,
-    departments: 10,
-    pending: 10,
-  },
-  charts: {
-    percentageCountPerStatus: [
-      { status: 'Approved', count: 6 },
-      { status: 'Pending', count: 1 },
-      { status: 'Declined', count: 3 },
-    ],
-    totalAmountPerStatus: [
-      { status: 'Approved', amount: 4200 },
-      { status: 'Pending', amount: 1902 },
-      { status: 'Declined', amount: 3200 },
-    ],
+// 1. Importe seu hook de permissão e o enum que contém a VIEW_DATA_ANALYSIS
+import { useUserHasPagePermission } from "../hooks/useUserHasPagePermission";
+import { SystemPermission } from "../types/api";
+
+const Dataviz = () => {
+  // 2. Exija que o usuário possua a permissão VIEW_DATA_ANALYSIS
+  useUserHasPagePermission([SystemPermission.VIEW_DATA_ANALYSIS]);
+
+  // 3. Todos os seus Hooks de estado
+  const [isLoading, setIsLoading] = useState(true);
+  const [percentageCountPerStatus, setPercentageCountPerStatus] = useState([]);
+  const [totalAmountPerStatus, setTotalAmountPerStatus] = useState([]);
+  const [totalAmountPerMonth, setTotalAmountPerMonth] = useState([]);
+  const [summary, setSummary] = useState([]);
+  const [isDrillDown, setIsDrillDown] = useState(false);
+
+  const [charts, setCharts] = useState({
+    percentageCountPerStatus: [],
+    totalAmountPerStatus: [],
     percentageOfStatusPerCategory: [
       { category: 'Accommodation', Approved: 40, Pending: 30, Declined: 30 },
       { category: 'Equipment', Approved: 50, Pending: 25, Declined: 25 },
@@ -44,18 +47,7 @@ const mockData = {
       { category: 'Training', Approved: 700, Pending: 200, Declined: 500 },
       { category: 'Travel', Approved: 900, Pending: 300, Declined: 600 },
     ],
-    totalAmountPerMonth: [
-      { month: 'Jan', amount: 100 },
-      { month: 'Feb', amount: 1500 },
-      { month: 'Mar', amount: 3000 },
-      { month: 'Jun', amount: 5000 },
-      { month: 'Jul', amount: 4502 },
-      { month: 'Aug', amount: 6000 },
-      { month: 'Sep', amount: 3000 },
-      { month: 'Oct', amount: 2500 },
-      { month: 'Nov', amount: 4000 },
-      { month: 'Dec', amount: 5302 },
-    ],
+    totalAmountPerMonth: [],
     expensesPerCategory: [
       { category: 'Accommodation', count: 1 },
       { category: 'Equipment', count: 1 },
@@ -66,47 +58,90 @@ const mockData = {
       { category: 'Training', count: 2 },
       { category: 'Travel', count: 1 },
     ],
-  },
-};
+  });
 
-const Dataviz = () => {
-  const { summary, charts } = mockData;
-  const [isDrillDown, setIsDrillDown] = useState(false);
+  // 4. Chamada às APIs
+  useEffect(() => {
+    const fetchPercentageCountPerStatus = async () => {
+      try {
+        const response = await api.get("/dataAnalysis/statuses_count");
+        setCharts((prev) => ({
+          ...prev,
+          percentageCountPerStatus: response.data,
+        }));
+        setPercentageCountPerStatus(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar status counts:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const total = charts.percentageCountPerStatus.reduce((sum, item) => sum + item.count, 0);
+    const fetchTotalAmountPerStatus = async () => {
+      try {
+        const response = await api.get("/dataAnalysis/statuses_amount");
+        setCharts((prev) => ({
+          ...prev,
+          totalAmountPerStatus: response.data,
+        }));
+        setTotalAmountPerStatus(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar status amounts:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Expenses per Status
-  const percentageCountLabels = charts.percentageCountPerStatus.map(item => item.status);
-  const approvedPercent = (charts.percentageCountPerStatus.find(i => i.status === 'Approved')?.count || 0) / total * 100;
-  const pendingPercent = (charts.percentageCountPerStatus.find(i => i.status === 'Pending')?.count || 0) / total * 100;
-  const declinedPercent = (charts.percentageCountPerStatus.find(i => i.status === 'Declined')?.count || 0) / total * 100;
+    const fetchTotalAmountPerMonth = async () => {
+      try {
+        const response = await api.get("/dataAnalysis/amount_month");
+        setCharts((prev) => ({
+          ...prev,
+          totalAmountPerMonth: response.data,
+        }));
+        setTotalAmountPerMonth(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar amount per month:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Amount per Status
-  const totalAmountPerStatusLabels = charts.totalAmountPerStatus.map(item => item.status);
-  const approvedAmount = charts.totalAmountPerStatus.find(i => i.status === 'Approved')?.amount || 0;
-  const pendingAmount = charts.totalAmountPerStatus.find(i => i.status === 'Pending')?.amount || 0;
-  const declinedAmount = charts.totalAmountPerStatus.find(i => i.status === 'Declined')?.amount || 0;
+    const fetchSummary = async () => {
+      try {
+        const response = await api.get("/dataAnalysis/summary");
+        setSummary(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar summary:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Percentage of Expenses per Status and Category
-  const percentageOfStatusPerCategoryLabels = charts.percentageOfStatusPerCategory.map(item => item.category);
-  const declinedData = charts.percentageOfStatusPerCategory.map(item => item.Declined);
-  const pendingData = charts.percentageOfStatusPerCategory.map(item => item.Pending);
-  const approvedData = charts.percentageOfStatusPerCategory.map(item => item.Approved);
+    fetchPercentageCountPerStatus();
+    fetchTotalAmountPerStatus();
+    fetchTotalAmountPerMonth();
+    fetchSummary();
+  }, []);
 
-  // Amount per Category and Status
-  const amountPerCategoryLabels = charts.amountPerCategory.map(item => item.category);
-  const amountApprovedData = charts.amountPerCategory.map(item => item.Approved);
-  const amountPendingData = charts.amountPerCategory.map(item => item.Pending);
-  const amountDeclinedData = charts.amountPerCategory.map(item => item.Declined);
+  // 5. Exibe o loading enquanto espera
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg">
+        <AppBar position="static">
+          <Toolbar>
+            <Typography variant="h6">Expense Management - Data Visualization</Typography>
+          </Toolbar>
+        </AppBar>
+        <Typography>Carregando dados...</Typography>
+      </Container>
+    );
+  }
 
-  // Total Amount per Month
-  const totalAmountPerMonthLabels = charts.totalAmountPerMonth.map(item => item.month);
-  const totalAmountPerMonthValues = charts.totalAmountPerMonth.map(item => item.amount);
+  // Desestrutura dados do objeto charts
+  const { percentageOfStatusPerCategory, amountPerCategory, expensesPerCategory } = charts;
 
-  // Expenses per Category
-  const expensesPerCategoryLabels = charts.expensesPerCategory.map(item => item.category);
-  const expensesPerCategoryValues = charts.expensesPerCategory.map(item => item.count);
-
+  // 6. Retorno final da tela, apenas para quem tem a permissão (já checada pelo hook)
   return (
     <Container maxWidth="lg">
       <AppBar position="static">
@@ -132,14 +167,33 @@ const Dataviz = () => {
         <Grid item xs={6}>
           {isDrillDown ? (
             <>
-              <Typography variant="h6">Percentage of Expenses per Status and Category</Typography>
+              <Typography variant="h6">
+                Percentage of Expenses per Status and Category
+              </Typography>
               <BarChart
-                xAxis={[{ scaleType: 'band', data: percentageOfStatusPerCategoryLabels }]}
+                xAxis={[
+                  {
+                    scaleType: 'band',
+                    data: percentageOfStatusPerCategory.map(item => item.category),
+                  },
+                ]}
                 yAxis={[{ min: 0, max: 100 }]}
                 series={[
-                  { label: 'Declined', data: declinedData, color: '#FF5050' },
-                  { label: 'Pending', data: pendingData, color: '#ffc658' },
-                  { label: 'Approved', data: approvedData, color: '#82ca9d' },
+                  {
+                    label: 'Declined',
+                    data: percentageOfStatusPerCategory.map(item => item.Declined),
+                    color: '#FF5050',
+                  },
+                  {
+                    label: 'Pending',
+                    data: percentageOfStatusPerCategory.map(item => item.Pending),
+                    color: '#ffc658',
+                  },
+                  {
+                    label: 'Approved',
+                    data: percentageOfStatusPerCategory.map(item => item.Approved),
+                    color: '#82ca9d',
+                  },
                 ]}
                 height={300}
                 stacked
@@ -157,11 +211,16 @@ const Dataviz = () => {
             <>
               <Typography variant="h6">Expenses per Status</Typography>
               <BarChart
-                xAxis={[{ scaleType: 'band', data: percentageCountLabels }]}
+                xAxis={[
+                  {
+                    scaleType: 'band',
+                    data: charts.percentageCountPerStatus.map(item => item.status),
+                  },
+                ]}
                 series={[
                   {
                     label: '',
-                    data: [approvedPercent, pendingPercent, declinedPercent],
+                    data: charts.percentageCountPerStatus.map(item => item.count),
                   },
                 ]}
                 height={300}
@@ -188,11 +247,28 @@ const Dataviz = () => {
             <>
               <Typography variant="h6">Amount per Category and status ($ CAD)</Typography>
               <BarChart
-                xAxis={[{ scaleType: 'band', data: amountPerCategoryLabels }]}
+                xAxis={[
+                  {
+                    scaleType: 'band',
+                    data: amountPerCategory.map(item => item.category),
+                  },
+                ]}
                 series={[
-                  { label: 'Approved', data: amountApprovedData, color: '#82ca9d' },
-                  { label: 'Pending', data: amountPendingData, color: '#ffc658' },
-                  { label: 'Declined', data: amountDeclinedData, color: '#FF5050' },
+                  {
+                    label: 'Approved',
+                    data: amountPerCategory.map(item => item.Approved),
+                    color: '#82ca9d',
+                  },
+                  {
+                    label: 'Pending',
+                    data: amountPerCategory.map(item => item.Pending),
+                    color: '#ffc658',
+                  },
+                  {
+                    label: 'Declined',
+                    data: amountPerCategory.map(item => item.Declined),
+                    color: '#FF5050',
+                  },
                 ]}
                 height={300}
               />
@@ -201,11 +277,16 @@ const Dataviz = () => {
             <>
               <Typography variant="h6">Amount per Status</Typography>
               <BarChart
-                xAxis={[{ scaleType: 'band', data: totalAmountPerStatusLabels }]}
+                xAxis={[
+                  {
+                    scaleType: 'band',
+                    data: charts.totalAmountPerStatus.map(item => item.status),
+                  },
+                ]}
                 series={[
                   {
                     label: '',
-                    data: [approvedAmount, pendingAmount, declinedAmount],
+                    data: charts.totalAmountPerStatus.map(item => item.amount),
                     getItemColor: (params) => {
                       const { itemIndex } = params;
                       if (itemIndex === 0) return '#82ca9d'; // Approved
@@ -229,9 +310,17 @@ const Dataviz = () => {
         <Grid item xs={6}>
           <Typography variant="h6">Total Amount per Month ($ CAD)</Typography>
           <LineChart
-            xAxis={[{ scaleType: 'band', data: totalAmountPerMonthLabels }]}
+            xAxis={[
+              {
+                scaleType: 'band',
+                data: charts.totalAmountPerMonth.map(item => item.month),
+              },
+            ]}
             series={[
-              { label: 'Amount', data: totalAmountPerMonthValues }
+              {
+                label: 'Amount',
+                data: charts.totalAmountPerMonth.map(item => item.amount),
+              },
             ]}
             height={300}
           />
@@ -240,9 +329,16 @@ const Dataviz = () => {
         <Grid item xs={6}>
           <Typography variant="h6">Expenses per Category</Typography>
           <BarChart
-            xAxis={[{ scaleType: 'band', data: expensesPerCategoryLabels }]}
+            xAxis={[
+              {
+                scaleType: 'band',
+                data: charts.expensesPerCategory.map(item => item.category),
+              },
+            ]}
             series={[
-              { data: expensesPerCategoryValues }
+              {
+                data: charts.expensesPerCategory.map(item => item.count),
+              },
             ]}
             height={300}
           />

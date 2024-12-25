@@ -65,6 +65,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     SystemPermission.MANAGE_RULES,
     false
   );
+  const dataAnalysisPagePermission = useUserHasPagePermission(
+    SystemPermission.VIEW_DATA_ANALYSIS,
+    false
+  );
 
   const navItems: NavItem[] = useMemo(() => {
     const navItems = [
@@ -88,7 +92,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         icon: <RuleManagementIcon />
       });
     }
-    if (true) {
+    if (dataAnalysisPagePermission) {
       navItems.push({
         text: "Data Visualization",
         path: "/data-viz",
