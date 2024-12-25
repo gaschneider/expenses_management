@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Expense from "../models/Expense";
+import { Category } from "../models/Category";
 import { ExpenseStatusEnum } from "../types/expense";
 import sequelize from "../config/database";
 import { Op } from "sequelize";
@@ -20,7 +21,6 @@ export const getExpensesStatusCount = async (
     });
 
     const groupedData = {
-      DRAFT: 0,
       PENDING: 0,
       APPROVED: 0,
       REJECTED: 0,
@@ -31,9 +31,6 @@ export const getExpensesStatusCount = async (
       const count = Number(expense.getDataValue("count"));
 
       switch (status) {
-        case ExpenseStatusEnum.DRAFT:
-          groupedData.DRAFT += count;
-          break;
         case ExpenseStatusEnum.PENDING_APPROVAL:
         case ExpenseStatusEnum.PENDING_ADDITIONAL_INFO:
           groupedData.PENDING += count;
@@ -51,7 +48,6 @@ export const getExpensesStatusCount = async (
     });
 
     const responseData = [
-      { status: "DRAFT", count: groupedData.DRAFT },
       { status: "PENDING", count: groupedData.PENDING },
       { status: "APPROVED", count: groupedData.APPROVED },
       { status: "REJECTED", count: groupedData.REJECTED },
@@ -79,7 +75,6 @@ export const getExpensesAmountByStatus = async (
     });
 
     const groupedData = {
-      DRAFT: 0,
       PENDING: 0,
       APPROVED: 0,
       REJECTED: 0,
@@ -90,9 +85,6 @@ export const getExpensesAmountByStatus = async (
       const amount = Number(expense.getDataValue("amount"));
 
       switch (status) {
-        case ExpenseStatusEnum.DRAFT:
-          groupedData.DRAFT += amount;
-          break;
         case ExpenseStatusEnum.PENDING_APPROVAL:
         case ExpenseStatusEnum.PENDING_ADDITIONAL_INFO:
           groupedData.PENDING += amount;
@@ -102,9 +94,6 @@ export const getExpensesAmountByStatus = async (
           break;
         case ExpenseStatusEnum.REJECTED:
           groupedData.REJECTED += amount;
-          break;
-        case ExpenseStatusEnum.CANCELLED:
-        default:
           break;
       }
     });
@@ -186,6 +175,195 @@ export const getGlobalMetrics = async (
 
     res.status(200).json(responseData);
   } catch (error) {
+    next(error);
+  }
+};
+
+export const getCountExpensesByCategoryAndStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const expensesGrouped = await Expense.findAll({
+      attributes: [
+        [sequelize.col('category.name'), 'category_name'],
+        'currentStatus',
+        [sequelize.fn('COUNT', sequelize.col('Expense.id')), 'count'],
+      ],
+      include: [{ model: Category, as: "category" }],
+      where: {
+        [Op.or]: [
+          { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
+          { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
+          { currentStatus: ExpenseStatusEnum.APPROVED },
+          { currentStatus: ExpenseStatusEnum.REJECTED },
+        ],
+      },
+      group: [
+        'category.id',
+        'category.name',
+        'Expense.currentStatus',
+      ],
+    });
+    const groupedData: Record<string, Record<string, number>> = {};
+    expensesGrouped.forEach((expense) => {
+      const category = expense.get("category_name") || "Uncategorized"; // Nome da categoria
+      const status = expense.get("currentStatus") as string;
+      const count = Number(expense.get("count"));
+
+      if (!groupedData[category]) {
+        groupedData[category] = {
+          APPROVED: 0,
+          PENDING: 0,
+          REJECTED: 0,
+        };
+      }
+
+      switch (status) {
+        case "APPROVED":
+          groupedData[category].APPROVED += count;
+          break;
+        case "PENDING_APPROVAL":
+        case "PENDING_ADDITIONAL_INFO":
+          groupedData[category].PENDING += count;
+          break;
+        case "REJECTED":
+          groupedData[category].REJECTED += count;
+          break;
+        default:
+          break;
+      }
+    });
+
+    const responseData = Object.entries(groupedData).map(
+      ([category, statuses]) => ({
+        category,
+        APPROVED: statuses.APPROVED,
+        PENDING: statuses.PENDING,
+        REJECTED: statuses.REJECTED,
+      })
+    );
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("Error fetching expenses by category and status:", error);
+    next(error);
+  }
+};
+
+export const getAmountExpensesByCategoryAndStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const expensesGrouped = await Expense.findAll({
+      attributes: [
+        [sequelize.col('category.name'), 'category_name'],
+        'currentStatus',
+        [sequelize.fn('SUM', sequelize.col('Expense.amount')), 'sum'],
+      ],
+      include: [{ model: Category, as: "category" }],
+      where: {
+        [Op.or]: [
+          { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
+          { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
+          { currentStatus: ExpenseStatusEnum.APPROVED },
+          { currentStatus: ExpenseStatusEnum.REJECTED },
+        ],
+      },
+      group: [
+        'category.id',
+        'category.name',
+        'Expense.currentStatus',
+      ],
+    });
+    const groupedData: Record<string, Record<string, number>> = {};
+    expensesGrouped.forEach((expense) => {
+      const category = expense.get("category_name") || "Uncategorized"; // Nome da categoria
+      const status = expense.get("currentStatus") as string;
+      const sum = Number(expense.get("sum"));
+
+      if (!groupedData[category]) {
+        groupedData[category] = {
+          APPROVED: 0,
+          PENDING: 0,
+          REJECTED: 0,
+        };
+      }
+
+      switch (status) {
+        case "APPROVED":
+          groupedData[category].APPROVED += sum;
+          break;
+        case "PENDING_APPROVAL":
+        case "PENDING_ADDITIONAL_INFO":
+          groupedData[category].PENDING += sum;
+          break;
+        case "REJECTED":
+          groupedData[category].REJECTED += sum;
+          break;
+        default:
+          break;
+      }
+    });
+
+    const responseData = Object.entries(groupedData).map(
+      ([category, statuses]) => ({
+        category,
+        APPROVED: statuses.APPROVED,
+        PENDING: statuses.PENDING,
+        REJECTED: statuses.REJECTED,
+      })
+    );
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("Error fetching expenses by category and status:", error);
+    next(error);
+  }
+};
+
+export const getTotalExpensesByCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    // Se quiser a contagem de registros
+    const expensesGrouped = await Expense.findAll({
+      attributes: [
+        [sequelize.col("category.name"), "category_name"],
+        [sequelize.fn("COUNT", sequelize.col("Expense.id")), "count"],
+      ],
+      where: {
+        [Op.or]: [
+          { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
+          { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
+          { currentStatus: ExpenseStatusEnum.APPROVED },
+          { currentStatus: ExpenseStatusEnum.REJECTED },
+        ],
+      },
+      include: [
+        {
+          model: Category,
+          as: "category",
+          attributes: [], // Não retorna atributos extras, só precisa do JOIN
+        },
+      ],
+      group: ["category.id", "category.name"], // Removemos a parte do currentStatus
+    });
+
+    // Mapeia o resultado do Sequelize (que é um array de Expenses)
+    const responseData = expensesGrouped.map((expense) => ({
+      category: expense.get("category_name"),
+      count: Number(expense.get("count")),
+    }));
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error("Error fetching total expenses by category:", error);
     next(error);
   }
 };

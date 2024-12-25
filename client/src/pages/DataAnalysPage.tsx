@@ -24,6 +24,9 @@ const Dataviz: React.FC = () => {
   const [percentageCountPerStatus, setPercentageCountPerStatus] = useState([]);
   const [totalAmountPerStatus, setTotalAmountPerStatus] = useState([]);
   const [totalAmountPerMonth, setTotalAmountPerMonth] = useState([]);
+  const [totalPerCategoryStatus, setTotalPerCategoryStatus] = useState([]);
+  const [amountPerCategoryStatus, setAmountPerCategoryStatus] = useState([]);
+  const [totalPerCategory, setTotalPerCategory] = useState([]);
   const [summary, setSummary] = useState([]);
   const [isDrillDown, setIsDrillDown] = useState(false);
 
@@ -31,31 +34,10 @@ const Dataviz: React.FC = () => {
   const [charts, setCharts] = useState({
     percentageCountPerStatus: [],
     totalAmountPerStatus: [],
-    percentageOfStatusPerCategory: [
-      { category: "Accommodation", Approved: 40, Pending: 30, Declined: 30 },
-      { category: "Equipment", Approved: 50, Pending: 25, Declined: 25 },
-    ],
-    amountPerCategory: [
-      { category: "Accommodation", Approved: 1200, Pending: 400, Declined: 800 },
-      { category: "Equipment", Approved: 1500, Pending: 500, Declined: 1000 },
-      { category: "Hospitality", Approved: 3000, Pending: 500, Declined: 2000 },
-      { category: "Maintenance", Approved: 800, Pending: 200, Declined: 600 },
-      { category: "Marketing", Approved: 1000, Pending: 300, Declined: 700 },
-      { category: "Supplies", Approved: 500, Pending: 100, Declined: 300 },
-      { category: "Training", Approved: 700, Pending: 200, Declined: 500 },
-      { category: "Travel", Approved: 900, Pending: 300, Declined: 600 },
-    ],
+    totalPerCategoryStatus: [],
+    amountPerCategoryStatus: [],
     totalAmountPerMonth: [],
-    expensesPerCategory: [
-      { category: "Accommodation", count: 1 },
-      { category: "Equipment", count: 1 },
-      { category: "Hospitality", count: 1 },
-      { category: "Maintenance", count: 1 },
-      { category: "Marketing", count: 1 },
-      { category: "Supplies", count: 2 },
-      { category: "Training", count: 2 },
-      { category: "Travel", count: 1 },
-    ],
+    totalPerCategory: [],
   });
 
   // Fetches summary data
@@ -103,6 +85,54 @@ const Dataviz: React.FC = () => {
   };
 
   // Fetches the total amount per month
+  const fetchAmountPerCategoryStatus = async () => {
+    try {
+      const response = await api.get("/dataAnalysis/amount_expenses_category_status");
+      setCharts((prev) => ({
+        ...prev,
+        amountPerCategoryStatus: response.data,
+      }));
+      setAmountPerCategoryStatus(response.data);
+    } catch (error) {
+      console.error("Error fetching amount per caategory and status:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetches the total amount per month
+  const fetchTotalPerCategoryStatus = async () => {
+    try {
+      const response = await api.get("/dataAnalysis/total_expenses_category_status");
+      setCharts((prev) => ({
+        ...prev,
+        totalPerCategoryStatus: response.data,
+      }));
+      setTotalPerCategoryStatus(response.data);
+    } catch (error) {
+      console.error("Error fetching total per category:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetches the total amount per month
+  const fetchTotalPerCategory = async () => {
+    try {
+      const response = await api.get("/dataAnalysis/amount_expenses_category");
+      setCharts((prev) => ({
+        ...prev,
+        totalPerCategory: response.data,
+      }));
+      setTotalPerCategory(response.data);
+    } catch (error) {
+      console.error("Error fetching total per category:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetches the total amount per month
   const fetchTotalAmountPerMonth = async () => {
     try {
       const response = await api.get("/dataAnalysis/amount_month");
@@ -123,6 +153,9 @@ const Dataviz: React.FC = () => {
     fetchSummary();
     fetchPercentageCountPerStatus();
     fetchTotalAmountPerStatus();
+    fetchAmountPerCategoryStatus();
+    fetchTotalPerCategoryStatus();
+    fetchTotalPerCategory();
     fetchTotalAmountPerMonth();
   }, []);
 
@@ -139,9 +172,6 @@ const Dataviz: React.FC = () => {
       </Container>
     );
   }
-
-  // Destructures chart properties
-  const { percentageOfStatusPerCategory, amountPerCategory, expensesPerCategory } = charts;
 
   // Renders final layout
   return (
@@ -169,29 +199,29 @@ const Dataviz: React.FC = () => {
         <Grid item xs={6}>
           {isDrillDown ? (
             <>
-              <Typography variant="h6">Percentage of Expenses per Status and Category</Typography>
+              <Typography variant="h6">Total of Expenses per Status and Category</Typography>
               <BarChart
                 xAxis={[
                   {
                     scaleType: "band",
-                    data: percentageOfStatusPerCategory.map((item) => item.category),
+                    data: totalPerCategoryStatus.map((item) => item.category),
                   },
                 ]}
-                yAxis={[{ min: 0, max: 100 }]}
+                yAxis={[{ min: 0 }]}
                 series={[
                   {
-                    label: "Declined",
-                    data: percentageOfStatusPerCategory.map((item) => item.Declined),
+                    label: "REJECTED",
+                    data: totalPerCategoryStatus.map((item) => item.REJECTED),
                     color: "#FF5050",
                   },
                   {
-                    label: "Pending",
-                    data: percentageOfStatusPerCategory.map((item) => item.Pending),
+                    label: "PENDING",
+                    data: totalPerCategoryStatus.map((item) => item.PENDING),
                     color: "#ffc658",
                   },
                   {
-                    label: "Approved",
-                    data: percentageOfStatusPerCategory.map((item) => item.Approved),
+                    label: "APPROVED",
+                    data: totalPerCategoryStatus.map((item) => item.APPROVED),
                     color: "#82ca9d",
                   },
                 ]}
@@ -250,24 +280,24 @@ const Dataviz: React.FC = () => {
                 xAxis={[
                   {
                     scaleType: "band",
-                    data: amountPerCategory.map((item) => item.category),
+                    data: amountPerCategoryStatus.map((item) => item.category),
                   },
                 ]}
                 series={[
                   {
-                    label: "Approved",
-                    data: amountPerCategory.map((item) => item.Approved),
-                    color: "#82ca9d",
+                    label: "REJECTED",
+                    data: amountPerCategoryStatus.map((item) => item.REJECTED),
+                    color: "#FF5050",
                   },
                   {
-                    label: "Pending",
-                    data: amountPerCategory.map((item) => item.Pending),
+                    label: "PENDING",
+                    data: amountPerCategoryStatus.map((item) => item.PENDING),
                     color: "#ffc658",
                   },
                   {
-                    label: "Declined",
-                    data: amountPerCategory.map((item) => item.Declined),
-                    color: "#FF5050",
+                    label: "APPROVED",
+                    data: amountPerCategoryStatus.map((item) => item.APPROVED),
+                    color: "#82ca9d",
                   },
                 ]}
                 height={300}
@@ -301,7 +331,7 @@ const Dataviz: React.FC = () => {
         </Grid>
 
         <Grid item xs={6}>
-          <Typography variant="h6">Total Amount per Month ($ CAD)</Typography>
+          <Typography variant="h6">Total Amount Approved per Month ($ CAD)</Typography>
           <LineChart
             xAxis={[
               {
@@ -325,12 +355,12 @@ const Dataviz: React.FC = () => {
             xAxis={[
               {
                 scaleType: "band",
-                data: charts.expensesPerCategory.map((item) => item.category),
+                data: charts.totalPerCategory.map((item) => item.category),
               },
             ]}
             series={[
               {
-                data: charts.expensesPerCategory.map((item) => item.count),
+                data: charts.totalPerCategory.map((item) => item.count),
               },
             ]}
             height={300}

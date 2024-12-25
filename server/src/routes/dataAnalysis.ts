@@ -3,8 +3,11 @@ import {
     getExpensesStatusCount,
     getExpensesAmountByStatus,
     getExpensesByMonth,
-    getGlobalMetrics
-} from "../controllers/DataAnalysisController";
+    getGlobalMetrics,
+    getCountExpensesByCategoryAndStatus,
+    getAmountExpensesByCategoryAndStatus,
+    getTotalExpensesByCategory
+} from "../controllers/dataAnalysisController";
 import { checkPermission } from "../middlewares/checkPermission";
 import { SystemPermission } from "../types/auth";
 
@@ -40,6 +43,30 @@ router.get(
     SystemPermission.VIEW_DATA_ANALYSIS
   ]),
   getGlobalMetrics
+);
+
+router.get(
+  "/total_expenses_category_status",
+  checkPermission([
+    SystemPermission.VIEW_DATA_ANALYSIS
+  ]),
+  getCountExpensesByCategoryAndStatus
+);
+
+router.get(
+  "/amount_expenses_category_status",
+  checkPermission([
+    SystemPermission.VIEW_DATA_ANALYSIS
+  ]),
+  getAmountExpensesByCategoryAndStatus
+);
+
+router.get(
+  "/amount_expenses_category",
+  checkPermission([
+    SystemPermission.VIEW_DATA_ANALYSIS
+  ]),
+  getTotalExpensesByCategory
 );
 
 export default router;
