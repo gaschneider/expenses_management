@@ -153,9 +153,10 @@ export interface ExpenseFilterParams {
 }
 
 export enum CurrencyEnum {
-  BRL = "BRL",
-  USD = "USD",
-  EUR = "EUR"
+  // BRL = "BRL",
+  // USD = "USD",
+  // EUR = "EUR"
+  CAD = "CAD"
 }
 
 export enum ExpenseStatusEnum {

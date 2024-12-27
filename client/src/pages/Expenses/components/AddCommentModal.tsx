@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,7 +12,9 @@ interface AddCommentModalProps {
   open: boolean;
   comment: string;
   setComment: (comment: string) => void;
-  actionToTriggerAfterComment: React.MutableRefObject<((comment?: string) => void) | undefined>;
+  actionToTriggerAfterComment: React.MutableRefObject<
+    ((comment?: string) => Promise<void>) | undefined
+  >;
   setIsAddCommentModalOpen: (isOpen: boolean) => void;
 }
 
@@ -23,18 +25,18 @@ export const AddCommentModal: React.FC<AddCommentModalProps> = ({
   actionToTriggerAfterComment,
   setIsAddCommentModalOpen
 }) => {
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsAddCommentModalOpen(false);
     actionToTriggerAfterComment.current = undefined;
     setComment("");
-  };
+  }, [actionToTriggerAfterComment, setComment, setIsAddCommentModalOpen]);
 
-  const handleProceed = () => {
+  const handleProceed = useCallback(async () => {
     if (actionToTriggerAfterComment.current) {
-      actionToTriggerAfterComment.current(comment);
+      await actionToTriggerAfterComment.current(comment);
     }
     handleClose();
-  };
+  }, [actionToTriggerAfterComment, comment, handleClose]);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>

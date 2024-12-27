@@ -54,8 +54,8 @@ export const ExpensesPage: React.FC = () => {
 
   // Fetch expenses when filters or pagination changes
   useEffect(() => {
-    fetchExpenses(filters);
-  }, [filters, fetchExpenses]);
+    fetchExpenses(filters, sortConfig);
+  }, [filters, fetchExpenses, sortConfig]);
 
   const handleSort = (key: keyof ExpenseDTO) => {
     setSortConfig((prev) => ({

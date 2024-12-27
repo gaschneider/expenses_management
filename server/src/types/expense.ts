@@ -41,9 +41,10 @@ export enum ExpenseStatusEnum {
 }
 
 export enum CurrencyEnum {
-  BRL = "BRL",
-  CAD = "CAD",
-  USD = "USD"
+  // BRL = "BRL",
+  // USD = "USD",
+  // EUR = "EUR"
+  CAD = "CAD"
 }
 
 export enum NextApproverType {

@@ -233,8 +233,11 @@ export const getCreateExpenseDepartmentsByUser = async (
       res.status(200).json([]);
       return;
     }
+
+    const departments = await Department.findAll();
+
     const departmentsAllowedToCreate =
-      user?.departments?.filter((d) =>
+      departments?.filter((d) =>
         userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, d.id)
       ) ?? [];
 
@@ -263,8 +266,11 @@ export const getExpenseDepartmentsByUser = async (
       res.status(200).json([]);
       return;
     }
+
+    const departments = await Department.findAll();
+
     const departmentsAllowedToCreate =
-      user?.departments?.filter(
+      departments?.filter(
         (d) =>
           userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, d.id) ||
           userHasPermission(user, DepartmentPermission.VIEW_EXPENSES, d.id) ||

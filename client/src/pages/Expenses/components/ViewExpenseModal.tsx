@@ -50,7 +50,7 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
 
   const [isAddCommentModalOpen, setIsAddCommentModalOpen] = React.useState(false);
   const [comment, setComment] = React.useState<string>("");
-  const actionToTriggerAfterComment = React.useRef<() => void>();
+  const actionToTriggerAfterComment = React.useRef<() => Promise<void>>();
 
   const canEdit = expense?.canCancel && expense.currentStatus === ExpenseStatusEnum.DRAFT;
   const canOnlyEditJustification =
@@ -60,7 +60,7 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
 
   const [updateForm, setUpdateForm] = React.useState<ExpenseUpdateDTO>({
     amount: 0,
-    currency: CurrencyEnum.BRL,
+    currency: CurrencyEnum.CAD,
     date: new Date(),
     justification: ""
   });
@@ -76,7 +76,7 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
     }
   }, [expense]);
 
-  const getCommentBeforeAction = useCallback((action: (comment?: string) => void) => {
+  const getCommentBeforeAction = useCallback((action: (comment?: string) => Promise<void>) => {
     setIsAddCommentModalOpen(true);
     actionToTriggerAfterComment.current = action;
   }, []);
@@ -269,7 +269,11 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
         {expense.canApprove && (
           <>
             <Button
-              onClick={() => getCommentBeforeAction((comment?: string) => onApprove(comment))}
+              onClick={() =>
+                getCommentBeforeAction(async (comment?: string) => {
+                  await onApprove(comment);
+                })
+              }
               color="primary"
               variant="contained"
               style={{ backgroundColor: "green", color: "white" }}
@@ -278,7 +282,9 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
             </Button>
             <Button
               onClick={() =>
-                getCommentBeforeAction((comment?: string) => onRequestAdditionalInfo(comment))
+                getCommentBeforeAction(async (comment?: string) => {
+                  await onRequestAdditionalInfo(comment);
+                })
               }
               color="secondary"
               variant="contained"
@@ -287,7 +293,11 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
               Request additional info
             </Button>
             <Button
-              onClick={() => getCommentBeforeAction((comment?: string) => onReject(comment))}
+              onClick={() =>
+                getCommentBeforeAction(async (comment?: string) => {
+                  await onReject(comment);
+                })
+              }
               color="secondary"
               variant="contained"
               style={{ backgroundColor: "red", color: "white" }}
@@ -299,7 +309,11 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
         {expense.canCancel && (
           <>
             <Button
-              onClick={() => getCommentBeforeAction((comment?: string) => onCancel(comment))}
+              onClick={() =>
+                getCommentBeforeAction(async (comment?: string) => {
+                  await onCancel(comment);
+                })
+              }
               color="secondary"
               variant="contained"
               style={{ backgroundColor: "red", color: "white" }}
@@ -322,9 +336,13 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
                   expense.currentStatus === ExpenseStatusEnum.DRAFT ||
                   expense.currentStatus === ExpenseStatusEnum.PENDING_ADDITIONAL_INFO
                 ) {
-                  getCommentBeforeAction((comment?: string) => onUpdate(updateForm, true, comment));
+                  getCommentBeforeAction(async (comment?: string) => {
+                    onUpdate(updateForm, true, comment);
+                  });
                 } else {
-                  getCommentBeforeAction((comment?: string) => onSetAsDraft(comment));
+                  getCommentBeforeAction(async (comment?: string) => {
+                    onSetAsDraft(comment);
+                  });
                 }
               }}
               color="secondary"

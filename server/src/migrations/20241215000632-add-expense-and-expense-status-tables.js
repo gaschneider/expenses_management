@@ -75,7 +75,7 @@ module.exports = {
         comment: "Cost center (e.g., marketing, technology)"
       },
       currency: {
-        type: Sequelize.ENUM("BRL", "USD", "EUR"), // Adjust based on your CurrencyEnum
+        type: Sequelize.ENUM("BRL", "USD", "EUR", "CAD"),
         allowNull: false,
         defaultValue: "BRL",
         comment: "Expense currency"
@@ -86,7 +86,15 @@ module.exports = {
         comment: "Expense payment date"
       },
       currentStatus: {
-        type: Sequelize.ENUM("DRAFT", "PENDING", "APPROVED", "REJECTED", "PAID"), // Adjust based on your ExpenseStatusEnum
+        type: Sequelize.ENUM(
+          "DRAFT",
+          "WAITING_WORKFLOW",
+          "PENDING_APPROVAL",
+          "PENDING_ADDITIONAL_INFO",
+          "APPROVED",
+          "REJECTED",
+          "CANCELLED"
+        ),
         allowNull: false,
         defaultValue: "DRAFT",
         comment: "Current status of the expense"
@@ -96,7 +104,7 @@ module.exports = {
         allowNull: true
       },
       nextApproverType: {
-        type: Sequelize.ENUM("USER", "DEPARTMENT", "ROLE"), // Adjust based on your NextApproverType
+        type: Sequelize.ENUM("USER", "DEPARTMENT"),
         allowNull: true
       },
       nextApproverId: {
@@ -145,7 +153,15 @@ module.exports = {
         comment: "Reference to the expense"
       },
       status: {
-        type: Sequelize.ENUM("DRAFT", "PENDING", "APPROVED", "REJECTED", "PAID"),
+        type: Sequelize.ENUM(
+          "DRAFT",
+          "WAITING_WORKFLOW",
+          "PENDING_APPROVAL",
+          "PENDING_ADDITIONAL_INFO",
+          "APPROVED",
+          "REJECTED",
+          "CANCELLED"
+        ),
         allowNull: false,
         comment: "Status of the expense at this step"
       },

@@ -128,7 +128,7 @@ Expense.init(
     currency: {
       type: DataTypes.ENUM(...Object.values(CurrencyEnum)),
       allowNull: false,
-      defaultValue: CurrencyEnum.BRL,
+      defaultValue: CurrencyEnum.CAD,
       comment: "Expense currency"
     },
     paymentDate: {
