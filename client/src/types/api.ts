@@ -4,6 +4,7 @@ export type UserAuthDTO = {
   lastName: string;
   email: string;
   permissions: string;
+  departmentPermissions: Record<number, string>;
   departments: Record<number, string>;
 };
 
@@ -35,7 +36,6 @@ export enum DepartmentPermission {
   VIEW_EXPENSES = "VIEW_EXPENSES",
   CREATE_EXPENSES = "CREATE_EXPENSES",
   APPROVE_EXPENSES = "APPROVE_EXPENSES",
-  REJECT_EXPENSES = "REJECT_EXPENSES",
   CREATE_WORKFLOW_RULES = "CREATE_WORKFLOW_RULES",
   EDIT_WORKFLOW_RULES = "EDIT_WORKFLOW_RULES",
   DELETE_WORKFLOW_RULES = "DELETE_WORKFLOW_RULES",
@@ -155,9 +155,10 @@ export interface ExpenseFilterParams {
 }
 
 export enum CurrencyEnum {
-  BRL = "BRL",
-  USD = "USD",
-  EUR = "EUR"
+  // BRL = "BRL",
+  // USD = "USD",
+  // EUR = "EUR"
+  CAD = "CAD"
 }
 
 export enum ExpenseStatusEnum {

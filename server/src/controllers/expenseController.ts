@@ -597,10 +597,35 @@ export class ExpenseController {
       return;
     }
 
-    const { page = 1, pageSize = 10, status, departmentId, startDate, endDate } = req.query;
+    const {
+      page = 1,
+      pageSize = 10,
+      status,
+      departmentId,
+      startDate,
+      endDate,
+      orderBy,
+      orderDirection
+    } = req.query as {
+      page?: string;
+      pageSize?: string;
+      status?: string;
+      departmentId?: string;
+      startDate?: string;
+      endDate?: string;
+      orderBy?: string;
+      orderDirection?: string;
+    };
+
+    let validOrderDirection = orderBy && orderDirection?.toLowerCase() === "asc" ? "asc" : "desc";
 
     const expenses = await Expense.findAndCountAll({
-      where: buildExpenseQuery(authenticatedUser, { status, startDate, endDate, departmentId }),
+      where: await buildExpenseQuery(authenticatedUser, {
+        status,
+        startDate,
+        endDate,
+        departmentId
+      }),
       include: [
         { model: User, as: "requester", attributes: ["id", "firstName", "lastName"] },
         { model: Category, as: "category", attributes: ["id", "name"] },
@@ -608,7 +633,7 @@ export class ExpenseController {
       ],
       limit: Number(pageSize),
       offset: (Number(page) - 1) * Number(pageSize),
-      order: [["createdAt", "DESC"]]
+      order: [[orderBy ?? "createdAt", validOrderDirection]]
     });
 
     res.status(200).json({

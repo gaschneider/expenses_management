@@ -3,10 +3,10 @@ import User from "../models/User";
 import { userHasPermission } from "../middlewares/checkPermission";
 import { DepartmentPermission } from "../types/auth";
 
-export const buildExpenseQuery = (
+export const buildExpenseQuery = async (
   authenticatedUser: User,
   { status, startDate, endDate, departmentId }: any
-): WhereOptions => {
+): Promise<WhereOptions> => {
   const whereConditions: WhereOptions = {};
 
   // Status and date filtering
@@ -26,21 +26,33 @@ export const buildExpenseQuery = (
   }
 
   // Get accessible department IDs with proper null checks
-  const accessibleDepartmentIds =
-    authenticatedUser.departments
-      ?.filter(
-        (dept) =>
-          userHasPermission(authenticatedUser, DepartmentPermission.APPROVE_EXPENSES, dept.id) ||
+  const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
+
+  if (authenticatedUser.departments) {
+    for (let index = 0; index < authenticatedUser.departments?.length; index++) {
+      const dept = authenticatedUser.departments[index];
+      accessibleDepartmentIdsPromises.set(
+        dept.id?.toString() ?? "",
+        userHasPermission(authenticatedUser, DepartmentPermission.APPROVE_EXPENSES, dept.id) ||
           userHasPermission(authenticatedUser, DepartmentPermission.VIEW_EXPENSES, dept.id)
-      )
-      .map((dept) => dept.id?.toString()) ?? [];
+      );
+    }
+  }
+
+  const accessibleDepartmentIds: string[] = [];
+
+  await Promise.all(
+    Array.from(accessibleDepartmentIdsPromises).map(async ([deptId, promise]) => {
+      if (await promise) accessibleDepartmentIds.push(deptId);
+    })
+  );
 
   let departmentIdCondition = null;
 
   // Add specific department filter if provided
   if (departmentId && accessibleDepartmentIds.includes(departmentId)) {
     departmentIdCondition = departmentId;
-  } else if (!departmentId && accessibleDepartmentIds.length > 0) {
+  } else {
     departmentIdCondition = { [Op.in]: accessibleDepartmentIds };
   }
 

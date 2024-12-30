@@ -24,7 +24,13 @@ export const useExpenses = () => {
   const showSnackbar = useSnackbar();
 
   const fetchExpenses = useCallback(
-    async (params: ExpensePaginationParams = {}) => {
+    async (
+      params: ExpensePaginationParams = {},
+      sortConfig: {
+        key?: keyof ExpenseDTO;
+        direction?: "asc" | "desc";
+      } = {}
+    ) => {
       try {
         setIsLoading(true);
         const response = await api.get("/expenses", {
@@ -34,7 +40,9 @@ export const useExpenses = () => {
             status: params.status,
             departmentId: params.departmentId,
             startDate: params.startDate,
-            endDate: params.endDate
+            endDate: params.endDate,
+            orderBy: sortConfig.key,
+            orderDirection: sortConfig.direction
           }
         });
 

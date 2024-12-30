@@ -61,7 +61,7 @@ export const expenseDtoSchema = z.object({
       .nullable(),
 
     // Currency should be one of the defined enum values
-    currency: z.nativeEnum(CurrencyEnum).default(CurrencyEnum.BRL),
+    currency: z.nativeEnum(CurrencyEnum).default(CurrencyEnum.CAD),
     isDraft: z.boolean()
   })
 });
@@ -89,7 +89,7 @@ export const expenseUpdateDtoSchema = z.object({
       .max(500, { message: "Justification cannot exceed 500 characters" })
       .trim(),
     // Currency should be one of the defined enum values
-    currency: z.nativeEnum(CurrencyEnum).default(CurrencyEnum.BRL),
+    currency: z.nativeEnum(CurrencyEnum).default(CurrencyEnum.CAD),
     publish: z.boolean()
   })
 });

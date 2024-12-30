@@ -29,8 +29,11 @@ import {
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import InitialsAvatar from "./InitialsAvatar";
 import { useAuth } from "../contexts/AuthContext";
-import { useUserHasPagePermission } from "../hooks/useUserHasPagePermission";
-import { SystemPermission } from "../types/api";
+import {
+  useUserHasDepartmentPagePermission,
+  useUserHasPagePermission
+} from "../hooks/useUserHasPagePermission";
+import { DepartmentPermission, SystemPermission } from "../types/api";
 import SnackbarProvider from "../contexts/SnackbarContext";
 
 const drawerWidth = 240;
@@ -58,6 +61,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     ],
     false
   );
+  const expensePagePermission = useUserHasDepartmentPagePermission(
+    [
+      DepartmentPermission.CREATE_EXPENSES,
+      DepartmentPermission.VIEW_EXPENSES,
+      DepartmentPermission.APPROVE_EXPENSES
+    ],
+    false
+  );
   const userManagementPagePermission = useUserHasPagePermission(
     SystemPermission.MANAGE_USER_DEPARTMENT_PERMISSIONS,
     false
@@ -76,10 +87,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 
   const navItems: NavItem[] = useMemo(() => {
-    const navItems = [
-      { text: "Home", path: "/", icon: <HomeIcon /> },
-      { text: "Expenses", path: "/expenses", icon: <ReceiptIcon /> }
-    ];
+    const navItems = [{ text: "Home", path: "/", icon: <HomeIcon /> }];
+    if (expensePagePermission) {
+      navItems.push({ text: "Expenses", path: "/expenses", icon: <ReceiptIcon /> });
+    }
     if (departmentPagePermission) {
       navItems.push({ text: "Departments", path: "/departments", icon: <BusinessIcon /> });
     }
@@ -111,6 +122,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [
     categoryPagePermission,
     departmentPagePermission,
+    expensePagePermission,
     ruleManagementPagePermission,
     userManagementPagePermission
   ]);

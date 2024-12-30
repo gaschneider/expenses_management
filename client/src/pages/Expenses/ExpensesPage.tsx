@@ -21,13 +21,19 @@ import dayjs from "dayjs";
 import { ExpenseDatePicker } from "./components/ExpenseDatePicker"; // Adjust import path as needed
 import { useExpenses, ExpensePaginationParams } from "./hooks/useExpenses";
 import { CreateExpenseModal } from "./components/CreateExpenseModal";
-import { ExpenseDTO, ExpenseStatusEnum } from "../../types/api";
+import { DepartmentPermission, ExpenseDTO, ExpenseStatusEnum } from "../../types/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
 import { ViewExpenseModal } from "./components/ViewExpenseModal";
 import { expenseStatusEnumToText } from "./expensesHelper";
+import { useUserHasDepartmentPagePermission } from "../../hooks/useUserHasPagePermission";
 
 export const ExpensesPage: React.FC = () => {
+  useUserHasDepartmentPagePermission([
+    DepartmentPermission.CREATE_EXPENSES,
+    DepartmentPermission.VIEW_EXPENSES,
+    DepartmentPermission.APPROVE_EXPENSES
+  ]);
   const { expenses, isLoading, createExpense, fetchExpenses, pagination } = useExpenses();
   const { expensesDepartments } = useExpenseDepartments();
 
@@ -54,8 +60,8 @@ export const ExpensesPage: React.FC = () => {
 
   // Fetch expenses when filters or pagination changes
   useEffect(() => {
-    fetchExpenses(filters);
-  }, [filters, fetchExpenses]);
+    fetchExpenses(filters, sortConfig);
+  }, [filters, fetchExpenses, sortConfig]);
 
   const handleSort = (key: keyof ExpenseDTO) => {
     setSortConfig((prev) => ({

@@ -39,7 +39,7 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
     categoryId: "",
     date: new Date(),
     amount: "",
-    currency: CurrencyEnum.BRL,
+    currency: CurrencyEnum.CAD,
     title: "",
     justification: "",
     isDraft: false
@@ -53,7 +53,7 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
         categoryId: "",
         date: new Date(),
         amount: "",
-        currency: CurrencyEnum.BRL,
+        currency: CurrencyEnum.CAD,
         title: "",
         justification: "",
         isDraft: false
@@ -98,7 +98,8 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
       !formData.departmentId ||
       !formData.categoryId ||
       !formData.title ||
-      !formData.justification
+      !formData.justification ||
+      !formData.amount
     ) {
       alert("Please fill in all required fields");
       return;

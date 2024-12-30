@@ -11,9 +11,9 @@ export const useCurrentUser = () => {
       return true;
     }
 
-    // if (departmentId) {
-    //   return user.departmentPermissions?.[departmentId]?.includes(permission);
-    // }
+    if (departmentId) {
+      return user.departmentPermissions?.[departmentId]?.includes(permission);
+    }
     return user.permissions?.includes(permission);
   };
 
