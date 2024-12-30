@@ -620,7 +620,12 @@ export class ExpenseController {
     let validOrderDirection = orderBy && orderDirection?.toLowerCase() === "asc" ? "asc" : "desc";
 
     const expenses = await Expense.findAndCountAll({
-      where: buildExpenseQuery(authenticatedUser, { status, startDate, endDate, departmentId }),
+      where: await buildExpenseQuery(authenticatedUser, {
+        status,
+        startDate,
+        endDate,
+        departmentId
+      }),
       include: [
         { model: User, as: "requester", attributes: ["id", "firstName", "lastName"] },
         { model: Category, as: "category", attributes: ["id", "name"] },
