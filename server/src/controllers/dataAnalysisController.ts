@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import Expense from "../models/Expense";
 import { Category } from "../models/Category";
+import Department from "../models/Department";
+import User from "../models/User";
 import { ExpenseStatusEnum } from "../types/expense";
 import sequelize from "../config/database";
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
+import { buildDataAnalysisQuery } from "../helpers/dataAnalysisQueryHelper"
 
 // Returns the count of expenses grouped by status (merging pending statuses into one).
 export const getExpensesStatusCount = async (
@@ -12,7 +15,20 @@ export const getExpensesStatusCount = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const authenticatedUser = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+    if (!authenticatedUser) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
     const expensesGrouped = await Expense.findAll({
+      where: buildDataAnalysisQuery(authenticatedUser),
       attributes: [
         "currentStatus",
         [sequelize.fn("COUNT", sequelize.col("id")), "count"],
@@ -66,7 +82,20 @@ export const getExpensesAmountByStatus = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const authenticatedUser = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+    if (!authenticatedUser) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
     const expensesGrouped = await Expense.findAll({
+      where: buildDataAnalysisQuery(authenticatedUser),
       attributes: [
         "currentStatus",
         [sequelize.fn("SUM", sequelize.col("amount")), "amount"],
@@ -116,12 +145,30 @@ export const getExpensesByMonth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const authenticatedUser = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+    if (!authenticatedUser) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     const expensesByMonth = await Expense.findAll({
       attributes: [
         [sequelize.fn("MONTHNAME", sequelize.col("date")), "month"],
         [sequelize.fn("SUM", sequelize.col("amount")), "amount"],
       ],
-      where: { currentStatus: ExpenseStatusEnum.APPROVED },
+      where: {
+        [Op.and]: [
+          { currentStatus: ExpenseStatusEnum.APPROVED },
+          buildDataAnalysisQuery(authenticatedUser),
+        ]
+      },
       group: [
         sequelize.fn("MONTH", sequelize.col("date")),
         sequelize.fn("MONTHNAME", sequelize.col("date")),
@@ -147,21 +194,41 @@ export const getGlobalMetrics = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const authenticatedUser = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+    if (!authenticatedUser) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
     const [totalAmount, totalExpenses, totalDepartments, pendingExpenses] =
       await Promise.all([
         Expense.sum("amount", {
           where: {
-            currentStatus: ExpenseStatusEnum.APPROVED
+            [Op.and]: [
+              { currentStatus: ExpenseStatusEnum.APPROVED },
+              buildDataAnalysisQuery(authenticatedUser)
+            ]
           }
         }),
-        Expense.count(),
-        Expense.aggregate("departmentId", "COUNT", { distinct: true }),
+        Expense.count({ where: buildDataAnalysisQuery(authenticatedUser) }),
+        Expense.aggregate("departmentId", "COUNT", { distinct: true, where: buildDataAnalysisQuery(authenticatedUser) }),
         Expense.count({
           where: {
-            [Op.or]: [
-              { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
-              { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
-            ],
+            [Op.and]: [
+              {
+                [Op.or]: [
+                  { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
+                  { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
+                ]
+              },
+              buildDataAnalysisQuery(authenticatedUser)
+            ]
           },
         }),
       ]);
@@ -185,6 +252,18 @@ export const getCountExpensesByCategoryAndStatus = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const authenticatedUser = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+    if (!authenticatedUser) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
     const expensesGrouped = await Expense.findAll({
       attributes: [
         [sequelize.col('category.name'), 'category_name'],
@@ -193,11 +272,15 @@ export const getCountExpensesByCategoryAndStatus = async (
       ],
       include: [{ model: Category, as: "category" }],
       where: {
-        [Op.or]: [
-          { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
-          { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
-          { currentStatus: ExpenseStatusEnum.APPROVED },
-          { currentStatus: ExpenseStatusEnum.REJECTED },
+        [Op.and]: [{
+          [Op.or]: [
+            { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
+            { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
+            { currentStatus: ExpenseStatusEnum.APPROVED },
+            { currentStatus: ExpenseStatusEnum.REJECTED },
+          ]
+        },
+        buildDataAnalysisQuery(authenticatedUser),
         ],
       },
       group: [
@@ -258,6 +341,18 @@ export const getAmountExpensesByCategoryAndStatus = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const authenticatedUser = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+    if (!authenticatedUser) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
     const expensesGrouped = await Expense.findAll({
       attributes: [
         [sequelize.col('category.name'), 'category_name'],
@@ -266,12 +361,17 @@ export const getAmountExpensesByCategoryAndStatus = async (
       ],
       include: [{ model: Category, as: "category" }],
       where: {
-        [Op.or]: [
-          { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
-          { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
-          { currentStatus: ExpenseStatusEnum.APPROVED },
-          { currentStatus: ExpenseStatusEnum.REJECTED },
-        ],
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
+              { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
+              { currentStatus: ExpenseStatusEnum.APPROVED },
+              { currentStatus: ExpenseStatusEnum.REJECTED },
+            ]
+          },
+          buildDataAnalysisQuery(authenticatedUser),
+        ]
       },
       group: [
         'category.id',
@@ -331,6 +431,18 @@ export const getTotalExpensesByCategory = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const authenticatedUser = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+    if (!authenticatedUser) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
     // Se quiser a contagem de registros
     const expensesGrouped = await Expense.findAll({
       attributes: [
@@ -338,12 +450,17 @@ export const getTotalExpensesByCategory = async (
         [sequelize.fn("COUNT", sequelize.col("Expense.id")), "count"],
       ],
       where: {
-        [Op.or]: [
-          { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
-          { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
-          { currentStatus: ExpenseStatusEnum.APPROVED },
-          { currentStatus: ExpenseStatusEnum.REJECTED },
-        ],
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { currentStatus: ExpenseStatusEnum.PENDING_APPROVAL },
+              { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
+              { currentStatus: ExpenseStatusEnum.APPROVED },
+              { currentStatus: ExpenseStatusEnum.REJECTED },
+            ]
+          },
+          buildDataAnalysisQuery(authenticatedUser),
+        ]
       },
       include: [
         {

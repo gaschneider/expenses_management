@@ -9,11 +9,19 @@ import {
   Toolbar,
   Container,
   Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
 } from "@mui/material";
+import dayjs from "dayjs";
+import { DataAnalysisDatePicker } from "./components/DataAnalysisDatePicker";
 import { BarChart, LineChart } from "@mui/x-charts";
-import api from "../api/axios.config";
-import { useUserHasPagePermission } from "../hooks/useUserHasPagePermission";
-import { SystemPermission } from "../types/api";
+import api from "../../api/axios.config";
+import { useUserHasPagePermission } from "../../hooks/useUserHasPagePermission";
+import { SystemPermission } from "../../types/api";
+import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
 
 // Checks if the user has the VIEW_DATA_ANALYSIS permission
 const Dataviz: React.FC = () => {
@@ -29,6 +37,16 @@ const Dataviz: React.FC = () => {
   const [totalPerCategory, setTotalPerCategory] = useState([]);
   const [summary, setSummary] = useState([]);
   const [isDrillDown, setIsDrillDown] = useState(false);
+  const { expensesDepartments } = useExpenseDepartments();
+  // Filter states
+  const [filters, setFilters] = useState({
+    departmentId: "",
+    status: "",
+    page: 1,
+    pageSize: 10,
+    startDate: "",
+    endDate: ""
+  });
 
   // Stores various chart data
   const [charts, setCharts] = useState({
@@ -39,6 +57,22 @@ const Dataviz: React.FC = () => {
     totalAmountPerMonth: [],
     totalPerCategory: [],
   });
+
+  const handleFilterChange = (e: SelectChangeEvent<string>) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name as string]: value,
+      page: 1 // Reset to first page when filter changes
+    }));
+  };
+
+  const handleDateChange = (type: "startDate" | "endDate", date: Date | null) => {
+    setFilters((prev) => ({
+      ...prev,
+      [type]: date ? dayjs(date).toISOString() : "",
+    }));
+  };
 
   // Fetches summary data
   const fetchSummary = async () => {
@@ -181,6 +215,52 @@ const Dataviz: React.FC = () => {
           <Typography variant="h6">Expense Management - Data Visualization</Typography>
         </Toolbar>
       </AppBar>
+
+      <Grid container spacing={2}>
+        {/* Filters */}
+        <Grid item xs={12}>
+          <Grid
+            container
+            spacing={2}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Grid item xs={12} md={2}>
+              <FormControl fullWidth>
+                <InputLabel>Department</InputLabel>
+                <Select
+                  name="departmentId"
+                  value={filters.departmentId?.toString() ?? undefined}
+                  onChange={handleFilterChange}
+                  label="Department"
+                >
+                  <MenuItem value="">All Departments</MenuItem>
+                  {expensesDepartments.map((dept) => (
+                    <MenuItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <DataAnalysisDatePicker
+                label="Start Date"
+                value={filters.startDate ? new Date(filters.startDate) : undefined}
+                onChange={(date) => handleDateChange("startDate", date)}
+              />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <DataAnalysisDatePicker
+                label="End Date"
+                value={filters.endDate ? new Date(filters.endDate) : undefined}
+                onChange={(date) => handleDateChange("endDate", date)}
+              />
+            </Grid>
+          </Grid>
+        </Grid>
+      </Grid>
 
       <Grid container spacing={3} marginTop={2}>
         {/* Summary cards */}

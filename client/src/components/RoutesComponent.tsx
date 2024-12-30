@@ -7,7 +7,7 @@ import DepartmentsPage from "../pages/DepartmentsPage";
 import DepartmentForm from "./DepartmentForm";
 import UserManagementPage from "../pages/UserManagementPage";
 import RuleManagementPage from "../pages/RulesManagementPage/RulesManagementPage";
-import DataVizPage from "../pages/DataAnalysPage";
+import DataVizPage from "../pages/DataAnalysis/DataAnalysPage";
 import CategoriesPage from "../pages/CategoriesPage";
 import ExpensesPage from "../pages/Expenses/ExpensesPage";
 
