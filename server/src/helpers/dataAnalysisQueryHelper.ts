@@ -1,5 +1,6 @@
 import { Op, WhereOptions } from "sequelize";
 import User from "../models/User";
+import Department from "../models/Department";
 import { userHasPermission } from "../middlewares/checkPermission";
 import { DepartmentPermission } from "../types/auth";
 
@@ -27,8 +28,9 @@ export const buildDataAnalysisQuery = async (
   const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
 
   if (authenticatedUser.departments) {
-    for (let index = 0; index < authenticatedUser.departments?.length; index++) {
-      const dept = authenticatedUser.departments[index];
+    const departments = await Department.findAll();
+    for (let index = 0; index < departments?.length; index++) {
+      const dept = departments[index];
       accessibleDepartmentIdsPromises.set(
         dept.id?.toString() ?? "",
         userHasPermission(authenticatedUser, DepartmentPermission.VIEW_DEPARTMENT_DATA_ANALYSIS, dept.id)
@@ -45,7 +47,6 @@ export const buildDataAnalysisQuery = async (
   );
 
   let departmentIdCondition = null;
-
   // Add specific department filter if provided
   if (departmentId && accessibleDepartmentIds.includes(departmentId)) {
     departmentIdCondition = departmentId;

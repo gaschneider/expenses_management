@@ -12,7 +12,7 @@ export const useExpenseDepartments = () => {
 
   const fetchExpenseDepartments = useCallback(async () => {
     try {
-      const response = await api.get("/departments/view-expenses-departments");
+      const response = await api.get("/departments/view-data-analysis-departments");
       setExpensesDepartments(response.data);
     } catch (error) {
       showSnackbar("Error fetching departments", { severity: "error" });

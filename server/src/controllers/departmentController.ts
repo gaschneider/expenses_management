@@ -282,3 +282,49 @@ export const getExpenseDepartmentsByUser = async (
     next(error);
   }
 };
+
+export const getDataAnalysisDepartmentsByUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Authenticated user not found" });
+      return;
+    }
+
+    const user = await User.findByPk(req.user.id, {
+      include: { model: Department, as: "departments" }
+    });
+
+    if (!user) {
+      res.status(200).json([]);
+      return;
+    }
+
+    const departments = await Department.findAll();
+
+    // Mapeia cada departamento para uma Promise de verificação de permissão
+    const results = await Promise.all(
+      departments.map(async (dept) => {
+        const hasPermission = await userHasPermission(
+          user,
+          DepartmentPermission.VIEW_DEPARTMENT_DATA_ANALYSIS,
+          dept.id
+        );
+        return { dept, hasPermission };
+      })
+    );
+    
+    // Filtra apenas os departamentos onde o usuário tem permissão
+    const departmentsAllowedToCreate = results
+      .filter(({ hasPermission }) => hasPermission)
+      .map(({ dept }) => dept);
+    
+    // Mapeia para DTO, conforme necessário
+    res.status(200).json(departmentsAllowedToCreate.map(departmentToDTO));    
+  } catch (error) {
+    next(error);
+  }
+};

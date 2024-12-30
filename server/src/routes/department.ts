@@ -8,7 +8,8 @@ import {
   getApproversByDepartmentId,
   getCategoriesByDepartmentId,
   getCreateExpenseDepartmentsByUser,
-  getExpenseDepartmentsByUser
+  getExpenseDepartmentsByUser,
+  getDataAnalysisDepartmentsByUser
 } from "../controllers/departmentController";
 import { checkPermission, checkPermissionDepartment } from "../middlewares/checkPermission";
 import { DepartmentPermission, SystemPermission } from "../types/auth";
@@ -33,6 +34,8 @@ router.get(
 router.get("/create-expense-departments", getCreateExpenseDepartmentsByUser);
 
 router.get("/view-expenses-departments", getExpenseDepartmentsByUser);
+
+router.get("/view-data-analysis-departments", getDataAnalysisDepartmentsByUser);
 
 router.get(
   "/:id",
