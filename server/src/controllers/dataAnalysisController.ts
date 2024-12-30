@@ -27,8 +27,23 @@ export const getExpensesStatusCount = async (
       res.status(401).json({ error: "User not authenticated" });
       return;
     }
+
+    const {
+      departmentId,
+      startDate,
+      endDate,
+    } = req.query as {
+      departmentId?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+
     const expensesGrouped = await Expense.findAll({
-      where: buildDataAnalysisQuery(authenticatedUser),
+      where: await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      }),
       attributes: [
         "currentStatus",
         [sequelize.fn("COUNT", sequelize.col("id")), "count"],
@@ -94,8 +109,23 @@ export const getExpensesAmountByStatus = async (
       res.status(401).json({ error: "User not authenticated" });
       return;
     }
+
+    const {
+      departmentId,
+      startDate,
+      endDate,
+    } = req.query as {
+      departmentId?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+
     const expensesGrouped = await Expense.findAll({
-      where: buildDataAnalysisQuery(authenticatedUser),
+      where: await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      }),
       attributes: [
         "currentStatus",
         [sequelize.fn("SUM", sequelize.col("amount")), "amount"],
@@ -158,6 +188,16 @@ export const getExpensesByMonth = async (
       return;
     }
 
+    const {
+      departmentId,
+      startDate,
+      endDate,
+    } = req.query as {
+      departmentId?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+
     const expensesByMonth = await Expense.findAll({
       attributes: [
         [sequelize.fn("MONTHNAME", sequelize.col("date")), "month"],
@@ -166,7 +206,11 @@ export const getExpensesByMonth = async (
       where: {
         [Op.and]: [
           { currentStatus: ExpenseStatusEnum.APPROVED },
-          buildDataAnalysisQuery(authenticatedUser),
+          await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      }),
         ]
       },
       group: [
@@ -206,18 +250,41 @@ export const getGlobalMetrics = async (
       res.status(401).json({ error: "User not authenticated" });
       return;
     }
+
+    const {
+      departmentId,
+      startDate,
+      endDate,
+    } = req.query as {
+      departmentId?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+
     const [totalAmount, totalExpenses, totalDepartments, pendingExpenses] =
       await Promise.all([
         Expense.sum("amount", {
           where: {
             [Op.and]: [
               { currentStatus: ExpenseStatusEnum.APPROVED },
-              buildDataAnalysisQuery(authenticatedUser)
+              await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      })
             ]
           }
         }),
-        Expense.count({ where: buildDataAnalysisQuery(authenticatedUser) }),
-        Expense.aggregate("departmentId", "COUNT", { distinct: true, where: buildDataAnalysisQuery(authenticatedUser) }),
+        Expense.count({ where: await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      }) }),
+        Expense.aggregate("departmentId", "COUNT", { distinct: true, where: await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      }) }),
         Expense.count({
           where: {
             [Op.and]: [
@@ -227,7 +294,11 @@ export const getGlobalMetrics = async (
                   { currentStatus: ExpenseStatusEnum.PENDING_ADDITIONAL_INFO },
                 ]
               },
-              buildDataAnalysisQuery(authenticatedUser)
+              await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      })
             ]
           },
         }),
@@ -264,6 +335,17 @@ export const getCountExpensesByCategoryAndStatus = async (
       res.status(401).json({ error: "User not authenticated" });
       return;
     }
+
+    const {
+      departmentId,
+      startDate,
+      endDate,
+    } = req.query as {
+      departmentId?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+
     const expensesGrouped = await Expense.findAll({
       attributes: [
         [sequelize.col('category.name'), 'category_name'],
@@ -280,7 +362,11 @@ export const getCountExpensesByCategoryAndStatus = async (
             { currentStatus: ExpenseStatusEnum.REJECTED },
           ]
         },
-        buildDataAnalysisQuery(authenticatedUser),
+        await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      }),
         ],
       },
       group: [
@@ -353,6 +439,17 @@ export const getAmountExpensesByCategoryAndStatus = async (
       res.status(401).json({ error: "User not authenticated" });
       return;
     }
+
+    const {
+      departmentId,
+      startDate,
+      endDate,
+    } = req.query as {
+      departmentId?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+
     const expensesGrouped = await Expense.findAll({
       attributes: [
         [sequelize.col('category.name'), 'category_name'],
@@ -370,7 +467,11 @@ export const getAmountExpensesByCategoryAndStatus = async (
               { currentStatus: ExpenseStatusEnum.REJECTED },
             ]
           },
-          buildDataAnalysisQuery(authenticatedUser),
+          await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      }),
         ]
       },
       group: [
@@ -443,6 +544,17 @@ export const getTotalExpensesByCategory = async (
       res.status(401).json({ error: "User not authenticated" });
       return;
     }
+
+    const {
+      departmentId,
+      startDate,
+      endDate,
+    } = req.query as {
+      departmentId?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+
     // Se quiser a contagem de registros
     const expensesGrouped = await Expense.findAll({
       attributes: [
@@ -459,7 +571,11 @@ export const getTotalExpensesByCategory = async (
               { currentStatus: ExpenseStatusEnum.REJECTED },
             ]
           },
-          buildDataAnalysisQuery(authenticatedUser),
+          await buildDataAnalysisQuery(authenticatedUser, {
+        startDate,
+        endDate,
+        departmentId
+      }),
         ]
       },
       include: [

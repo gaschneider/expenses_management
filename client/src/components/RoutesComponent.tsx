@@ -90,6 +90,7 @@ export const RoutesComponent = () => {
           </ProtectedRoute>
         }
       />
+      
       <Route
         path="/categories"
         element={

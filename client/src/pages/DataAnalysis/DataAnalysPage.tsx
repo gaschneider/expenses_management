@@ -16,195 +16,64 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 import dayjs from "dayjs";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import { DataAnalysisDatePicker } from "./components/DataAnalysisDatePicker";
+import { useDataAnalysis } from "./hooks/useDataAnalysis";
 import { BarChart, LineChart } from "@mui/x-charts";
 import api from "../../api/axios.config";
-import { useUserHasPagePermission } from "../../hooks/useUserHasPagePermission";
-import { SystemPermission } from "../../types/api";
+import { useUserHasDepartmentPagePermission } from "../../hooks/useUserHasPagePermission";
+import { DepartmentPermission } from "../../types/api";
 import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
 
-// Checks if the user has the VIEW_DATA_ANALYSIS permission
+// Checks if the user has the VIEW_DEPARTMENT_DATA_ANALYSIS permission
 const Dataviz: React.FC = () => {
-  useUserHasPagePermission([SystemPermission.VIEW_DATA_ANALYSIS]);
+  useUserHasDepartmentPagePermission([DepartmentPermission.VIEW_DEPARTMENT_DATA_ANALYSIS]);
 
   // Manages loading state, data arrays, and drill-down toggle
-  const [isLoading, setIsLoading] = useState(true);
   const [percentageCountPerStatus, setPercentageCountPerStatus] = useState([]);
   const [totalAmountPerStatus, setTotalAmountPerStatus] = useState([]);
   const [totalAmountPerMonth, setTotalAmountPerMonth] = useState([]);
   const [totalPerCategoryStatus, setTotalPerCategoryStatus] = useState([]);
   const [amountPerCategoryStatus, setAmountPerCategoryStatus] = useState([]);
   const [totalPerCategory, setTotalPerCategory] = useState([]);
-  const [summary, setSummary] = useState([]);
   const [isDrillDown, setIsDrillDown] = useState(false);
   const { expensesDepartments } = useExpenseDepartments();
   // Filter states
   const [filters, setFilters] = useState({
     departmentId: "",
-    status: "",
-    page: 1,
-    pageSize: 10,
     startDate: "",
     endDate: ""
-  });
-
-  // Stores various chart data
-  const [charts, setCharts] = useState({
-    percentageCountPerStatus: [],
-    totalAmountPerStatus: [],
-    totalPerCategoryStatus: [],
-    amountPerCategoryStatus: [],
-    totalAmountPerMonth: [],
-    totalPerCategory: [],
   });
 
   const handleFilterChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
       ...prev,
-      [name as string]: value,
-      page: 1 // Reset to first page when filter changes
+      [name as string]: value
     }));
   };
 
   const handleDateChange = (type: "startDate" | "endDate", date: Date | null) => {
     setFilters((prev) => ({
       ...prev,
-      [type]: date ? dayjs(date).toISOString() : "",
+      [type]: date ? dayjs(date).toISOString() : ""
     }));
   };
-
-  // Fetches summary data
-  const fetchSummary = async () => {
-    try {
-      const response = await api.get("/dataAnalysis/summary");
-      setSummary(response.data);
-    } catch (error) {
-      console.error("Error fetching summary:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetches the count of expenses per status
-  const fetchPercentageCountPerStatus = async () => {
-    try {
-      const response = await api.get("/dataAnalysis/statuses_count");
-      setCharts((prev) => ({
-        ...prev,
-        percentageCountPerStatus: response.data,
-      }));
-      setPercentageCountPerStatus(response.data);
-    } catch (error) {
-      console.error("Error fetching status counts:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetches the total amount per status
-  const fetchTotalAmountPerStatus = async () => {
-    try {
-      const response = await api.get("/dataAnalysis/statuses_amount");
-      setCharts((prev) => ({
-        ...prev,
-        totalAmountPerStatus: response.data,
-      }));
-      setTotalAmountPerStatus(response.data);
-    } catch (error) {
-      console.error("Error fetching status amounts:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetches the total amount per month
-  const fetchAmountPerCategoryStatus = async () => {
-    try {
-      const response = await api.get("/dataAnalysis/amount_expenses_category_status");
-      setCharts((prev) => ({
-        ...prev,
-        amountPerCategoryStatus: response.data,
-      }));
-      setAmountPerCategoryStatus(response.data);
-    } catch (error) {
-      console.error("Error fetching amount per caategory and status:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetches the total amount per month
-  const fetchTotalPerCategoryStatus = async () => {
-    try {
-      const response = await api.get("/dataAnalysis/total_expenses_category_status");
-      setCharts((prev) => ({
-        ...prev,
-        totalPerCategoryStatus: response.data,
-      }));
-      setTotalPerCategoryStatus(response.data);
-    } catch (error) {
-      console.error("Error fetching total per category:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetches the total amount per month
-  const fetchTotalPerCategory = async () => {
-    try {
-      const response = await api.get("/dataAnalysis/amount_expenses_category");
-      setCharts((prev) => ({
-        ...prev,
-        totalPerCategory: response.data,
-      }));
-      setTotalPerCategory(response.data);
-    } catch (error) {
-      console.error("Error fetching total per category:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetches the total amount per month
-  const fetchTotalAmountPerMonth = async () => {
-    try {
-      const response = await api.get("/dataAnalysis/amount_month");
-      setCharts((prev) => ({
-        ...prev,
-        totalAmountPerMonth: response.data,
-      }));
-      setTotalAmountPerMonth(response.data);
-    } catch (error) {
-      console.error("Error fetching amount per month:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  const { isLoading, summary, charts, fetchSummary, fetchPercentageCountPerStatus, fetchTotalAmountPerStatus, fetchAmountPerCategoryStatus, fetchTotalPerCategoryStatus, fetchTotalPerCategory, fetchTotalAmountPerMonth } = useDataAnalysis();
   // Triggers all data fetches on component mount
   useEffect(() => {
-    fetchSummary();
-    fetchPercentageCountPerStatus();
-    fetchTotalAmountPerStatus();
-    fetchAmountPerCategoryStatus();
-    fetchTotalPerCategoryStatus();
-    fetchTotalPerCategory();
-    fetchTotalAmountPerMonth();
-  }, []);
+    fetchSummary(filters);
+    fetchPercentageCountPerStatus(filters);
+    fetchTotalAmountPerStatus(filters);
+    fetchAmountPerCategoryStatus(filters);
+    fetchTotalPerCategoryStatus(filters);
+    fetchTotalPerCategory(filters);
+    fetchTotalAmountPerMonth(filters);
+  }, [ fetchSummary, fetchPercentageCountPerStatus, fetchTotalAmountPerStatus, fetchAmountPerCategoryStatus, fetchTotalPerCategoryStatus, fetchTotalPerCategory, fetchTotalAmountPerMonth, filters ]);
 
   // Renders a loading state while data is being fetched
   if (isLoading) {
-    return (
-      <Container maxWidth="lg">
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h6">Expense Management - Data Visualization</Typography>
-          </Toolbar>
-        </AppBar>
-        <Typography>Loading data...</Typography>
-      </Container>
-    );
+    return <LoadingSpinner />;
   }
 
   // Renders final layout
@@ -284,24 +153,24 @@ const Dataviz: React.FC = () => {
                 xAxis={[
                   {
                     scaleType: "band",
-                    data: totalPerCategoryStatus.map((item) => item.category),
+                    data: charts.totalPerCategoryStatus.map((item) => item.category),
                   },
                 ]}
                 yAxis={[{ min: 0 }]}
                 series={[
                   {
                     label: "REJECTED",
-                    data: totalPerCategoryStatus.map((item) => item.REJECTED),
+                    data: charts.totalPerCategoryStatus.map((item) => item.REJECTED),
                     color: "#FF5050",
                   },
                   {
                     label: "PENDING",
-                    data: totalPerCategoryStatus.map((item) => item.PENDING),
+                    data: charts.totalPerCategoryStatus.map((item) => item.PENDING),
                     color: "#ffc658",
                   },
                   {
                     label: "APPROVED",
-                    data: totalPerCategoryStatus.map((item) => item.APPROVED),
+                    data: charts.totalPerCategoryStatus.map((item) => item.APPROVED),
                     color: "#82ca9d",
                   },
                 ]}
@@ -360,23 +229,23 @@ const Dataviz: React.FC = () => {
                 xAxis={[
                   {
                     scaleType: "band",
-                    data: amountPerCategoryStatus.map((item) => item.category),
+                    data: charts.amountPerCategoryStatus.map((item) => item.category),
                   },
                 ]}
                 series={[
                   {
                     label: "REJECTED",
-                    data: amountPerCategoryStatus.map((item) => item.REJECTED),
+                    data: charts.amountPerCategoryStatus.map((item) => item.REJECTED),
                     color: "#FF5050",
                   },
                   {
                     label: "PENDING",
-                    data: amountPerCategoryStatus.map((item) => item.PENDING),
+                    data: charts.amountPerCategoryStatus.map((item) => item.PENDING),
                     color: "#ffc658",
                   },
                   {
                     label: "APPROVED",
-                    data: amountPerCategoryStatus.map((item) => item.APPROVED),
+                    data: charts.amountPerCategoryStatus.map((item) => item.APPROVED),
                     color: "#82ca9d",
                   },
                 ]}
