@@ -69,7 +69,7 @@ const Dataviz: React.FC = () => {
     fetchTotalPerCategoryStatus(filters);
     fetchTotalPerCategory(filters);
     fetchTotalAmountPerMonth(filters);
-  }, [ fetchSummary, fetchPercentageCountPerStatus, fetchTotalAmountPerStatus, fetchAmountPerCategoryStatus, fetchTotalPerCategoryStatus, fetchTotalPerCategory, fetchTotalAmountPerMonth, filters ]);
+  }, [fetchSummary, fetchPercentageCountPerStatus, fetchTotalAmountPerStatus, fetchAmountPerCategoryStatus, fetchTotalPerCategoryStatus, fetchTotalPerCategory, fetchTotalAmountPerMonth, filters]);
 
   // Renders a loading state while data is being fetched
   if (isLoading) {
@@ -133,16 +133,38 @@ const Dataviz: React.FC = () => {
 
       <Grid container spacing={3} marginTop={2}>
         {/* Summary cards */}
-        {Object.entries(summary).map(([key, value]) => (
-          <Grid item xs={3} key={key}>
-            <Card>
-              <CardContent>
-                <Typography variant="h5">{value}</Typography>
-                <Typography>{key.replace(/([A-Z])/g, " $1")}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+        <Grid item xs={3} key="approvedAmount">
+          <Card>
+            <CardContent>
+              <Typography variant="h5">{summary.totalAmount}</Typography>
+              <Typography>Approved Amount ($ CAD)</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={3} key="totalExpenses">
+          <Card>
+            <CardContent>
+              <Typography variant="h5">{summary.expenses}</Typography>
+              <Typography># Expenses</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={3} key="pendingExpenses">
+          <Card>
+            <CardContent>
+              <Typography variant="h5">{summary.pending}</Typography>
+              <Typography># Pending Expenses</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={3} key="totalDepartments">
+          <Card>
+            <CardContent>
+              <Typography variant="h5">{summary.departments}</Typography>
+              <Typography># Departments</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
         {/* Charts */}
         <Grid item xs={6}>
@@ -254,7 +276,7 @@ const Dataviz: React.FC = () => {
             </>
           ) : (
             <>
-              <Typography variant="h6">Amount per Status</Typography>
+              <Typography variant="h6">Amount per Status ($ CAD)</Typography>
               <BarChart
                 xAxis={[
                   {

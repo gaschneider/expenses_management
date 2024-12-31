@@ -25,9 +25,6 @@ export const useDataAnalysis = () => {
 
   const showSnackbar = useSnackbar();
 
-  /**
-   * Busca o resumo geral
-   */
   const fetchSummary = useCallback(async (params: any = {}) => {
     try {
       setIsLoading(true);
@@ -46,10 +43,7 @@ export const useDataAnalysis = () => {
       setIsLoading(false);
     }
   }, [showSnackbar]);
-
-  /**
-   * Busca a contagem de despesas por status (em formato de porcentagem)
-   */
+  
   const fetchPercentageCountPerStatus = useCallback(async (params: any = {}) => {
     try {
       setIsLoading(true);
@@ -72,9 +66,6 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  /**
-   * Busca o valor total por status
-   */
   const fetchTotalAmountPerStatus = useCallback(async (params: any = {}) => {
     try {
       setIsLoading(true);
@@ -97,9 +88,6 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  /**
-   * Busca o valor total por categoria e status
-   */
   const fetchAmountPerCategoryStatus = useCallback(async (params: any = {}) => {
     try {
       setIsLoading(true);
@@ -122,9 +110,6 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  /**
-   * Busca o total de despesas por categoria e status
-   */
   const fetchTotalPerCategoryStatus = useCallback(async (params: any = {}) => {
     try {
       setIsLoading(true);
@@ -147,9 +132,6 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  /**
-   * Busca o total de despesas por categoria
-   */
   const fetchTotalPerCategory = useCallback(async (params: any = {}) => {
     try {
       setIsLoading(true);
@@ -172,9 +154,6 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  /**
-   * Busca o valor total de despesas por mês
-   */
   const fetchTotalAmountPerMonth = useCallback(async (params: any = {}) => {
     try {
       setIsLoading(true);
