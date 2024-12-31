@@ -33,8 +33,18 @@ export const buildExpenseQuery = async (
       const dept = authenticatedUser.departments[index];
       accessibleDepartmentIdsPromises.set(
         dept.id?.toString() ?? "",
-        userHasPermission(authenticatedUser, DepartmentPermission.APPROVE_EXPENSES, dept.id) ||
-          userHasPermission(authenticatedUser, DepartmentPermission.VIEW_EXPENSES, dept.id)
+        Promise.resolve(
+          (await userHasPermission(
+            authenticatedUser,
+            DepartmentPermission.APPROVE_EXPENSES,
+            dept.id
+          )) ||
+            (await userHasPermission(
+              authenticatedUser,
+              DepartmentPermission.VIEW_EXPENSES,
+              dept.id
+            ))
+        )
       );
     }
   }
@@ -47,25 +57,17 @@ export const buildExpenseQuery = async (
     })
   );
 
-  let departmentIdCondition = null;
-
   // Add specific department filter if provided
   if (departmentId && accessibleDepartmentIds.includes(departmentId)) {
-    departmentIdCondition = departmentId;
-  } else {
-    departmentIdCondition = { [Op.in]: accessibleDepartmentIds };
+    whereConditions.departmentId = departmentId;
+    return whereConditions;
   }
-
-  const orConditions = [];
-
-  if (departmentIdCondition !== null) {
-    orConditions.push({ departmentId: departmentIdCondition });
-  }
-
-  orConditions.push({ requesterId: authenticatedUser.id });
 
   // Add the OR conditions to the where clause
-  whereConditions[Op.or as any] = orConditions;
+  whereConditions[Op.or as any] = [
+    { departmentId: { [Op.in]: accessibleDepartmentIds } },
+    { requesterId: authenticatedUser.id }
+  ];
 
   return whereConditions;
 };

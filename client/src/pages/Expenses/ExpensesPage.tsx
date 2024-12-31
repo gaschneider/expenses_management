@@ -34,6 +34,10 @@ export const ExpensesPage: React.FC = () => {
     DepartmentPermission.VIEW_EXPENSES,
     DepartmentPermission.APPROVE_EXPENSES
   ]);
+  const canCreate = useUserHasDepartmentPagePermission(
+    [DepartmentPermission.CREATE_EXPENSES],
+    false
+  );
   const { expenses, isLoading, createExpense, fetchExpenses, pagination } = useExpenses();
   const { expensesDepartments } = useExpenseDepartments();
 
@@ -173,14 +177,16 @@ export const ExpensesPage: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} md={2}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setIsModalOpen(true)}
-              fullWidth
-            >
-              Create Expense
-            </Button>
+            {canCreate && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setIsModalOpen(true)}
+                fullWidth
+              >
+                Create Expense
+              </Button>
+            )}
           </Grid>
         </Grid>
       </Grid>

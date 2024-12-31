@@ -234,12 +234,32 @@ export const getCreateExpenseDepartmentsByUser = async (
       return;
     }
 
-    const departments = await Department.findAll();
+    // Get accessible department IDs with proper null checks
+    const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
 
-    const departmentsAllowedToCreate =
-      departments?.filter((d) =>
-        userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, d.id)
-      ) ?? [];
+    if (user.departments) {
+      for (let index = 0; index < user.departments?.length; index++) {
+        const dept = user.departments[index];
+        accessibleDepartmentIdsPromises.set(
+          dept.id?.toString() ?? "",
+          Promise.resolve(
+            await userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, dept.id)
+          )
+        );
+      }
+    }
+
+    const accessibleDepartmentIds: string[] = [];
+
+    await Promise.all(
+      Array.from(accessibleDepartmentIdsPromises).map(async ([deptId, promise]) => {
+        if (await promise) accessibleDepartmentIds.push(deptId);
+      })
+    );
+
+    const departmentsAllowedToCreate = await Department.findAll({
+      where: { id: { [Op.in]: accessibleDepartmentIds } }
+    });
 
     res.status(200).json(departmentsAllowedToCreate.map(departmentToDTO));
   } catch (error) {
@@ -267,15 +287,34 @@ export const getExpenseDepartmentsByUser = async (
       return;
     }
 
-    const departments = await Department.findAll();
+    // Get accessible department IDs with proper null checks
+    const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
 
-    const departmentsAllowedToCreate =
-      departments?.filter(
-        (d) =>
-          userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, d.id) ||
-          userHasPermission(user, DepartmentPermission.VIEW_EXPENSES, d.id) ||
-          userHasPermission(user, DepartmentPermission.APPROVE_EXPENSES, d.id)
-      ) ?? [];
+    if (user.departments) {
+      for (let index = 0; index < user.departments?.length; index++) {
+        const dept = user.departments[index];
+        accessibleDepartmentIdsPromises.set(
+          dept.id?.toString() ?? "",
+          Promise.resolve(
+            (await userHasPermission(user, DepartmentPermission.APPROVE_EXPENSES, dept.id)) ||
+              (await userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, dept.id)) ||
+              (await userHasPermission(user, DepartmentPermission.VIEW_EXPENSES, dept.id))
+          )
+        );
+      }
+    }
+
+    const accessibleDepartmentIds: string[] = [];
+
+    await Promise.all(
+      Array.from(accessibleDepartmentIdsPromises).map(async ([deptId, promise]) => {
+        if (await promise) accessibleDepartmentIds.push(deptId);
+      })
+    );
+
+    const departmentsAllowedToCreate = await Department.findAll({
+      where: { id: { [Op.in]: accessibleDepartmentIds } }
+    });
 
     res.status(200).json(departmentsAllowedToCreate.map(departmentToDTO));
   } catch (error) {
