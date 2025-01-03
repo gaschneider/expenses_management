@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Department from "../models/Department";
 import { Op } from "sequelize";
-import { DepartmentPermission } from "../types/auth";
+import { DepartmentPermission, SystemPermission } from "../types/auth";
 import { Category } from "../models/Category";
 import { categoryToDTO } from "./categoryController";
 import User from "../models/User";
@@ -230,23 +230,32 @@ export const getCreateExpenseDepartmentsByUser = async (
     });
 
     if (!user) {
-      res.status(200).json([]);
+      res.status(401).json({ error: "Authenticated user not found" });
+      return;
+    }
+
+    if (await user.hasPermissionString(SystemPermission.ADMIN)) {
+      const departments = await Department.findAll();
+      res.status(200).json(departments.map(departmentToDTO));
+      return;
+    }
+
+    if (!user.departments) {
+      res.status(400).json({ error: "User has no departments" });
       return;
     }
 
     // Get accessible department IDs with proper null checks
     const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
 
-    if (user.departments) {
-      for (let index = 0; index < user.departments?.length; index++) {
-        const dept = user.departments[index];
-        accessibleDepartmentIdsPromises.set(
-          dept.id?.toString() ?? "",
-          Promise.resolve(
-            await userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, dept.id)
-          )
-        );
-      }
+    for (let index = 0; index < user.departments?.length; index++) {
+      const dept = user.departments[index];
+      accessibleDepartmentIdsPromises.set(
+        dept.id?.toString() ?? "",
+        Promise.resolve(
+          await userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, dept.id)
+        )
+      );
     }
 
     const accessibleDepartmentIds: string[] = [];
@@ -283,28 +292,35 @@ export const getExpenseDepartmentsByUser = async (
     });
 
     if (!user) {
-      res.status(200).json([]);
+      res.status(401).json({ error: "Authenticated user not found" });
       return;
     }
 
-    // Get accessible department IDs with proper null checks
-    const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
-
-    if (user.departments) {
-      for (let index = 0; index < user.departments?.length; index++) {
-        const dept = user.departments[index];
-        accessibleDepartmentIdsPromises.set(
-          dept.id?.toString() ?? "",
-          Promise.resolve(
-            (await userHasPermission(user, DepartmentPermission.APPROVE_EXPENSES, dept.id)) ||
-              (await userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, dept.id)) ||
-              (await userHasPermission(user, DepartmentPermission.VIEW_EXPENSES, dept.id))
-          )
-        );
-      }
+    if (await user.hasPermissionString(SystemPermission.ADMIN)) {
+      const departments = await Department.findAll();
+      res.status(200).json(departments.map(departmentToDTO));
+      return;
     }
 
+    if (!user.departments) {
+      res.status(400).json({ error: "User has no departments" });
+      return;
+    }
     const accessibleDepartmentIds: string[] = [];
+
+    // Get accessible department IDs with proper null checks
+    const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
+    for (let index = 0; index < user.departments?.length; index++) {
+      const dept = user.departments[index];
+      accessibleDepartmentIdsPromises.set(
+        dept.id?.toString() ?? "",
+        Promise.resolve(
+          (await userHasPermission(user, DepartmentPermission.APPROVE_EXPENSES, dept.id)) ||
+            (await userHasPermission(user, DepartmentPermission.CREATE_EXPENSES, dept.id)) ||
+            (await userHasPermission(user, DepartmentPermission.VIEW_EXPENSES, dept.id))
+        )
+      );
+    }
 
     await Promise.all(
       Array.from(accessibleDepartmentIdsPromises).map(async ([deptId, promise]) => {
@@ -312,11 +328,11 @@ export const getExpenseDepartmentsByUser = async (
       })
     );
 
-    const departmentsAllowedToCreate = await Department.findAll({
+    const departmentsAllowed = await Department.findAll({
       where: { id: { [Op.in]: accessibleDepartmentIds } }
     });
 
-    res.status(200).json(departmentsAllowedToCreate.map(departmentToDTO));
+    res.status(200).json(departmentsAllowed.map(departmentToDTO));
   } catch (error) {
     next(error);
   }
