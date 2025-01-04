@@ -6,12 +6,14 @@ import departmentRoutes from "./routes/department";
 import userRoutes from "./routes/user";
 import ruleRoutes from "./routes/rule";
 import categoryRoutes from "./routes/category";
+import expenseRoutes from "./routes/expense";
 import passport from "passport";
 import "./config/passport";
 import sequelize from "./config/database";
 import { seedUserPermission } from "./seeders/seedUserPermission";
 import { defineAssociations } from "./models/associations";
 import { setupSessionMiddleware } from "./middlewares/sessionStoreMiddleware";
+import { WorkflowConfig } from "./config/workflow";
 const app = express();
 
 const initDatabase = async () => {
@@ -62,6 +64,10 @@ export const startServer = async () => {
   app.use("/api/users", userRoutes);
   app.use("/api/rules", ruleRoutes);
   app.use("/api/categories", categoryRoutes);
+  app.use("/api/expenses", expenseRoutes);
+
+  // Initialize workflow configuration
+  WorkflowConfig.getInstance();
 
   const server = app.listen(8081, () => {
     console.log("Server listening on port 8081");

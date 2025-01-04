@@ -14,7 +14,7 @@ interface DepartmentDTO {
   description: string;
 }
 
-interface CategoryDTO {
+export interface CategoryDTO {
   id: number;
   departmentId?: number | null;
   name: string;
@@ -31,7 +31,7 @@ const departmentToDTO = (department?: Department) => {
     : undefined;
 };
 
-const categoryToDTO = (category: Category): CategoryDTO => {
+export const categoryToDTO = (category: Category): CategoryDTO => {
   return {
     id: category.id,
     departmentId: category.departmentId,

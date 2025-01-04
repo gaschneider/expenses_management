@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
-import ExpensesPage from "../pages/ExpensesPage";
 import ProtectedRoute from "./ProtectedRoute";
 import HomePage from "../pages/HomePage";
 import DepartmentsPage from "../pages/DepartmentsPage";
@@ -9,6 +8,7 @@ import DepartmentForm from "./DepartmentForm";
 import UserManagementPage from "../pages/UserManagementPage";
 import RuleManagementPage from "../pages/RulesManagementPage/RulesManagementPage";
 import CategoriesPage from "../pages/CategoriesPage";
+import ExpensesPage from "../pages/Expenses/ExpensesPage";
 
 export const RoutesComponent = () => {
   return (

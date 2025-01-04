@@ -1,29 +1,44 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../config/database";
-import { CurrencyEnum, ExpenseAttributes, ExpenseStatusEnum } from "../types/expense";
+import {
+  CurrencyEnum,
+  ExpenseAttributes,
+  ExpenseStatusEnum,
+  NextApproverType
+} from "../types/expense";
 import User from "./User";
 import Department from "./Department";
 import ExpenseStatus from "./ExpenseStatus";
+import { Category } from "./Category";
+import { Rule } from "./Rule";
 
 class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare id: number;
-  declare category: string;
+  declare categoryId: number;
   declare amount: number;
   declare date: Date;
   declare departmentId: number;
+  declare title: string;
   declare justification: string;
   declare requesterId: number;
   declare projectId: number | null;
-  declare costCenter: string;
+  declare costCenter: string | null;
   declare currency: CurrencyEnum;
   declare paymentDate: Date | null;
   declare currentStatus: ExpenseStatusEnum;
+  declare ruleId: number | null;
+  declare currentRuleStep: number | null;
+  declare nextApproverType: NextApproverType | null;
+  declare nextApproverId: number | null;
+
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 
   // Declare relationship properties
   declare requester?: User;
+  declare category?: Category;
   declare department?: Department;
+  declare rule?: Rule;
   declare expenseStatuses?: ExpenseStatus[];
 
   // Declare association methods
@@ -31,6 +46,10 @@ class Expense extends Model<ExpenseAttributes, ExpenseAttributes> {
   declare setRequester: (user: User) => Promise<void>;
   declare getDepartment: () => Promise<Department>;
   declare setDepartment: (department: Department) => Promise<void>;
+  declare getCategory: () => Promise<Category>;
+  declare setCategory: (category: Category) => Promise<void>;
+  declare getRule: () => Promise<Rule>;
+  declare setRule: (rule: Rule) => Promise<void>;
 
   declare getExpenseStatuses: () => Promise<ExpenseStatus[]>;
   declare setExpenseStatuses: (users: ExpenseStatus[]) => Promise<void>;
@@ -45,8 +64,12 @@ Expense.init(
       autoIncrement: true,
       primaryKey: true
     },
-    category: {
-      type: DataTypes.STRING,
+    categoryId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: "Categories",
+        key: "id"
+      },
       allowNull: false,
       comment: "Expense category (e.g., travel, food)"
     },
@@ -68,6 +91,11 @@ Expense.init(
         key: "id"
       },
       comment: "Requesting department"
+    },
+    title: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      comment: "Expense title"
     },
     justification: {
       type: DataTypes.TEXT,
@@ -94,13 +122,13 @@ Expense.init(
     },
     costCenter: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       comment: "Cost center (e.g., marketing, technology)"
     },
     currency: {
       type: DataTypes.ENUM(...Object.values(CurrencyEnum)),
       allowNull: false,
-      defaultValue: CurrencyEnum.BRL,
+      defaultValue: CurrencyEnum.CAD,
       comment: "Expense currency"
     },
     paymentDate: {
@@ -113,6 +141,26 @@ Expense.init(
       allowNull: false,
       defaultValue: ExpenseStatusEnum.DRAFT,
       comment: "Current status of the expense"
+    },
+    currentRuleStep: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    nextApproverType: {
+      type: DataTypes.ENUM(...Object.values(NextApproverType)),
+      allowNull: true
+    },
+    nextApproverId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    ruleId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "Rules",
+        key: "id"
+      }
     }
   },
   {

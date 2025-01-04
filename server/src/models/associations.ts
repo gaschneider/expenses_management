@@ -60,6 +60,11 @@ export const defineAssociations = () => {
     as: "expenseStatuses"
   });
 
+  Expense.belongsTo(Category, {
+    foreignKey: "categoryId",
+    as: "category"
+  });
+
   Expense.belongsTo(Department, {
     foreignKey: "departmentId",
     as: "department"
@@ -70,6 +75,11 @@ export const defineAssociations = () => {
     as: "requester"
   });
 
+  Expense.belongsTo(Rule, {
+    foreignKey: "ruleId",
+    as: "rule"
+  });
+
   ExpenseStatus.belongsTo(Expense, {
     foreignKey: "expenseId",
     as: "expense"
@@ -78,11 +88,6 @@ export const defineAssociations = () => {
   ExpenseStatus.belongsTo(User, {
     foreignKey: "userId",
     as: "user"
-  });
-
-  ExpenseStatus.belongsTo(User, {
-    foreignKey: "nextApproverId",
-    as: "nextApprover"
   });
 
   // PermissionAuditLog - User Association
