@@ -2,13 +2,53 @@ import { useState, useCallback } from "react";
 import api from "../../../api/axios.config";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 
+interface Summary {
+  departments: number;
+  expenses: number;
+  pending: number;
+  totalAmount: number;
+}
+
+interface StatusCount {
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  count: number;
+}
+
+interface StatusAmount {
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  amount: number;
+}
+
+interface CategoryStatus {
+  category: string;
+  APPROVED: number;
+  PENDING: number;
+  REJECTED: number;
+}
+
+interface CategoryCount {
+  category: string;
+  count: number;
+}
+
+interface MonthlyAmount {
+  month: string;
+  amount: number;
+}
+
+interface ParamsFilters {
+  departmentId: string;
+  startDate: number;
+  endDate: number;
+}
+
 interface ChartsData {
-  percentageCountPerStatus: [];
-  totalAmountPerStatus: [];
-  amountPerCategoryStatus: [];
-  totalPerCategoryStatus: [];
-  totalPerCategory: [];
-  totalAmountPerMonth: [];
+  percentageCountPerStatus: StatusCount[];
+  totalAmountPerStatus: StatusAmount[];
+  amountPerCategoryStatus: CategoryStatus[];
+  totalPerCategoryStatus: CategoryStatus[];
+  totalPerCategory: CategoryCount[];
+  totalAmountPerMonth: MonthlyAmount[];
 }
 
 export const useDataAnalysis = () => {
@@ -25,7 +65,7 @@ export const useDataAnalysis = () => {
 
   const showSnackbar = useSnackbar();
 
-  const fetchSummary = useCallback(async (params: any = {}) => {
+  const fetchSummary = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
       const response = await api.get("/dataAnalysis/summary", {
@@ -44,7 +84,7 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
   
-  const fetchPercentageCountPerStatus = useCallback(async (params: any = {}) => {
+  const fetchPercentageCountPerStatus = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
       const response = await api.get("/dataAnalysis/statuses_count", {
@@ -66,7 +106,7 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  const fetchTotalAmountPerStatus = useCallback(async (params: any = {}) => {
+  const fetchTotalAmountPerStatus = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
       const response = await api.get("/dataAnalysis/statuses_amount", {
@@ -88,7 +128,7 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  const fetchAmountPerCategoryStatus = useCallback(async (params: any = {}) => {
+  const fetchAmountPerCategoryStatus = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
       const response = await api.get("/dataAnalysis/amount_expenses_category_status", {
@@ -110,7 +150,7 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  const fetchTotalPerCategoryStatus = useCallback(async (params: any = {}) => {
+  const fetchTotalPerCategoryStatus = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
       const response = await api.get("/dataAnalysis/total_expenses_category_status", {
@@ -132,7 +172,7 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  const fetchTotalPerCategory = useCallback(async (params: any = {}) => {
+  const fetchTotalPerCategory = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
       const response = await api.get("/dataAnalysis/amount_expenses_category", {
@@ -154,7 +194,7 @@ export const useDataAnalysis = () => {
     }
   }, [showSnackbar]);
 
-  const fetchTotalAmountPerMonth = useCallback(async (params: any = {}) => {
+  const fetchTotalAmountPerMonth = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
       const response = await api.get("/dataAnalysis/amount_month", {
