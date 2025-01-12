@@ -87,7 +87,7 @@ export const useDataAnalysis = () => {
   const fetchPercentageCountPerStatus = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
-      const response = await api.get("/dataAnalysis/statuses_count", {
+      const response = await api.get("/dataAnalysis/statuses-count", {
         params: {
           departmentId: params.departmentId,
           startDate: params.startDate,
@@ -109,7 +109,7 @@ export const useDataAnalysis = () => {
   const fetchTotalAmountPerStatus = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
-      const response = await api.get("/dataAnalysis/statuses_amount", {
+      const response = await api.get("/dataAnalysis/statuses-amount", {
         params: {
           departmentId: params.departmentId,
           startDate: params.startDate,
@@ -131,7 +131,7 @@ export const useDataAnalysis = () => {
   const fetchAmountPerCategoryStatus = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
-      const response = await api.get("/dataAnalysis/amount_expenses_category_status", {
+      const response = await api.get("/dataAnalysis/amount-expenses-category-status", {
         params: {
           departmentId: params.departmentId,
           startDate: params.startDate,
@@ -153,7 +153,7 @@ export const useDataAnalysis = () => {
   const fetchTotalPerCategoryStatus = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
-      const response = await api.get("/dataAnalysis/total_expenses_category_status", {
+      const response = await api.get("/dataAnalysis/total-expenses-category-status", {
         params: {
           departmentId: params.departmentId,
           startDate: params.startDate,
@@ -175,7 +175,7 @@ export const useDataAnalysis = () => {
   const fetchTotalPerCategory = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
-      const response = await api.get("/dataAnalysis/amount_expenses_category", {
+      const response = await api.get("/dataAnalysis/amount-expenses-category", {
         params: {
           departmentId: params.departmentId,
           startDate: params.startDate,
@@ -197,7 +197,7 @@ export const useDataAnalysis = () => {
   const fetchTotalAmountPerMonth = useCallback(async (params: ParamsFilters = {}) => {
     try {
       setIsLoading(true);
-      const response = await api.get("/dataAnalysis/amount_month", {
+      const response = await api.get("/dataAnalysis/amount-month", {
         params: {
           departmentId: params.departmentId,
           startDate: params.startDate,

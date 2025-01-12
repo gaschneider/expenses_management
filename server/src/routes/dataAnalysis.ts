@@ -12,17 +12,17 @@ import {
 const router = express.Router();
 
 router.get(
-  "/statuses_count",
+  "/statuses-count",
   getExpensesStatusCount
 );
 
 router.get(
-  "/statuses_amount",
+  "/statuses-amount",
   getExpensesAmountByStatus
 );
 
 router.get(
-  "/amount_month",
+  "/amount-month",
   getExpensesByMonth
 );
 
@@ -32,17 +32,17 @@ router.get(
 );
 
 router.get(
-  "/total_expenses_category_status",
+  "/total-expenses-category-status",
   getCountExpensesByCategoryAndStatus
 );
 
 router.get(
-  "/amount_expenses_category_status",
+  "/amount-expenses-category-status",
   getAmountExpensesByCategoryAndStatus
 );
 
 router.get(
-  "/amount_expenses_category",
+  "/amount-expenses-category",
   getTotalExpensesByCategory
 );
 
