@@ -1,6 +1,4 @@
 import express from "express";
-import { checkPermissionDepartment } from "../middlewares/checkPermission";
-import { DepartmentPermission } from "../types/auth";
 import {
     getExpensesStatusCount,
     getExpensesAmountByStatus,

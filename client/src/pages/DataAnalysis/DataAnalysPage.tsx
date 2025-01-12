@@ -20,7 +20,6 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import { CustomizedDatePicker } from "../../components/DatePicker";
 import { useDataAnalysis } from "./hooks/useDataAnalysis";
 import { BarChart, LineChart } from "@mui/x-charts";
-import api from "../../api/axios.config";
 import { useUserHasDepartmentPagePermission } from "../../hooks/useUserHasPagePermission";
 import { DepartmentPermission } from "../../types/api";
 import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
