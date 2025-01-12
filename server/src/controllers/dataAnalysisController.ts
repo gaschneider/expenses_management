@@ -195,31 +195,31 @@ export const getExpensesByMonth = async (
       endDate?: string;
     };
 
-    const expensesByMonth = await Expense.findAll({
+    const expensesByMonth = (await Expense.findAll({
       attributes: [
         [sequelize.fn("MONTHNAME", sequelize.col("date")), "month"],
-        [sequelize.fn("SUM", sequelize.col("amount")), "amount"],
+        [sequelize.fn("SUM", sequelize.col("amount")), "amount"]
       ],
       where: {
         [Op.and]: [
           { currentStatus: ExpenseStatusEnum.APPROVED },
           await buildDataAnalysisQuery(authenticatedUser, {
-        startDate,
-        endDate,
-        departmentId
-      }),
+            startDate,
+            endDate,
+            departmentId
+          })
         ]
       },
       group: [
         sequelize.fn("MONTH", sequelize.col("date")),
-        sequelize.fn("MONTHNAME", sequelize.col("date")),
+        sequelize.fn("MONTHNAME", sequelize.col("date"))
       ],
-      order: [[sequelize.fn("MONTH", sequelize.col("date")), "ASC"]],
-    });
+      order: [[sequelize.fn("MONTH", sequelize.col("date")), "ASC"]]
+    })) as unknown as { dataValues: { month: string; amount: number } }[];
 
     const responseData = expensesByMonth.map((expense) => ({
-      month: expense.getDataValue("month"),
-      amount: Number(expense.getDataValue("amount")),
+      month: expense.dataValues.month,
+      amount: Number(expense.dataValues.amount)
     }));
 
     res.status(200).json(responseData);
