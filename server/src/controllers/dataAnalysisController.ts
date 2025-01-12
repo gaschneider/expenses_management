@@ -137,7 +137,7 @@ export const getExpensesAmountByStatus = async (
     };
 
     expensesGrouped.forEach((expense) => {
-      const status = expense.getDataValue("currentStatus") as ExpenseStatusEnum;
+      const status = expense.currentStatus as ExpenseStatusEnum;
       const amount = Number(expense.getDataValue("amount"));
 
       switch (status) {
@@ -345,7 +345,6 @@ export const getCountExpensesByCategoryAndStatus = async (
 
     const expensesGrouped = await Expense.findAll({
       attributes: [
-        [sequelize.col('category.name'), 'category_name'],
         'currentStatus',
         [sequelize.fn('COUNT', sequelize.col('Expense.id')), 'count'],
       ],
@@ -374,8 +373,8 @@ export const getCountExpensesByCategoryAndStatus = async (
     });
     const groupedData: Record<string, Record<string, number>> = {};
     expensesGrouped.forEach((expense) => {
-      const category = expense.get("category_name") || "Uncategorized"; // Nome da categoria
-      const status = expense.get("currentStatus") as string;
+      const category = expense.category?.name || "Uncategorized";
+      const status = expense.currentStatus as string;
       const count = Number(expense.get("count"));
 
       if (!groupedData[category]) {
@@ -449,7 +448,6 @@ export const getAmountExpensesByCategoryAndStatus = async (
 
     const expensesGrouped = await Expense.findAll({
       attributes: [
-        [sequelize.col('category.name'), 'category_name'],
         'currentStatus',
         [sequelize.fn('SUM', sequelize.col('Expense.amount')), 'sum'],
       ],
@@ -479,8 +477,8 @@ export const getAmountExpensesByCategoryAndStatus = async (
     });
     const groupedData: Record<string, Record<string, number>> = {};
     expensesGrouped.forEach((expense) => {
-      const category = expense.get("category_name") || "Uncategorized"; // Nome da categoria
-      const status = expense.get("currentStatus") as string;
+      const category = expense.category?.name || "Uncategorized";
+      const status = expense.currentStatus as string;
       const sum = Number(expense.get("sum"));
 
       if (!groupedData[category]) {
@@ -552,12 +550,11 @@ export const getTotalExpensesByCategory = async (
       endDate?: string;
     };
 
-    // Se quiser a contagem de registros
     const expensesGrouped = await Expense.findAll({
       attributes: [
-        [sequelize.col("category.name"), "category_name"],
         [sequelize.fn("COUNT", sequelize.col("Expense.id")), "count"],
       ],
+      include: [ { model: Category, as: "category" }, ],
       where: {
         [Op.and]: [
           {
@@ -575,19 +572,12 @@ export const getTotalExpensesByCategory = async (
       }),
         ]
       },
-      include: [
-        {
-          model: Category,
-          as: "category",
-          attributes: [], // Não retorna atributos extras, só precisa do JOIN
-        },
-      ],
-      group: ["category.id", "category.name"], // Removemos a parte do currentStatus
+      group: ["category.id", "category.name"],
     });
 
     // Mapeia o resultado do Sequelize (que é um array de Expenses)
     const responseData = expensesGrouped.map((expense) => ({
-      category: expense.get("category_name"),
+      category: expense.category?.name,
       count: Number(expense.get("count")),
     }));
 
