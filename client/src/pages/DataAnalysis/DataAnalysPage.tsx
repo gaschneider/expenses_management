@@ -30,12 +30,6 @@ const Dataviz: React.FC = () => {
   useUserHasDepartmentPagePermission([DepartmentPermission.VIEW_DEPARTMENT_DATA_ANALYSIS]);
 
   // Manages loading state, data arrays, and drill-down toggle
-  const [percentageCountPerStatus, setPercentageCountPerStatus] = useState([]);
-  const [totalAmountPerStatus, setTotalAmountPerStatus] = useState([]);
-  const [totalAmountPerMonth, setTotalAmountPerMonth] = useState([]);
-  const [totalPerCategoryStatus, setTotalPerCategoryStatus] = useState([]);
-  const [amountPerCategoryStatus, setAmountPerCategoryStatus] = useState([]);
-  const [totalPerCategory, setTotalPerCategory] = useState([]);
   const [isDrillDown, setIsDrillDown] = useState(false);
   const { expensesDepartments } = useExpenseDepartments();
   // Filter states
