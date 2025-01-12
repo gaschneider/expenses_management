@@ -124,7 +124,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     departmentPagePermission,
     expensePagePermission,
     ruleManagementPagePermission,
-    userManagementPagePermission
+    userManagementPagePermission,
+    dataAnalysisPagePermission
   ]);
 
   return (
