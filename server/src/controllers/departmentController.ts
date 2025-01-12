@@ -354,7 +354,7 @@ export const getDataAnalysisDepartmentsByUser = async (
     });
 
     if (!user) {
-      res.status(200).json([]);
+      res.status(401).json([]);
       return;
     }
 
