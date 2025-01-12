@@ -22,7 +22,7 @@ import { useDataAnalysis } from "./hooks/useDataAnalysis";
 import { BarChart, LineChart } from "@mui/x-charts";
 import { useUserHasDepartmentPagePermission } from "../../hooks/useUserHasPagePermission";
 import { DepartmentPermission } from "../../types/api";
-import { useExpenseDepartments } from "./hooks/useExpenseDepartments";
+import { useDataAnalysisDepartments } from "./hooks/useExpenseDepartments";
 
 // Checks if the user has the VIEW_DEPARTMENT_DATA_ANALYSIS permission
 const Dataviz: React.FC = () => {
@@ -30,7 +30,7 @@ const Dataviz: React.FC = () => {
 
   // Manages loading state, data arrays, and drill-down toggle
   const [isDrillDown, setIsDrillDown] = useState(false);
-  const { expensesDepartments } = useExpenseDepartments();
+  const { dataAnalysisDepartments } = useDataAnalysisDepartments();
   // Filter states
   const [filters, setFilters] = useState({
     departmentId: "",
@@ -98,7 +98,7 @@ const Dataviz: React.FC = () => {
                   label="Department"
                 >
                   <MenuItem value="">All Departments</MenuItem>
-                  {expensesDepartments.map((dept) => (
+                  { dataAnalysisDepartments.map((dept) => (
                     <MenuItem key={dept.id} value={dept.id}>
                       {dept.name}
                     </MenuItem>
