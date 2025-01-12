@@ -6,7 +6,6 @@ import departmentRoutes from "./routes/department";
 import userRoutes from "./routes/user";
 import ruleRoutes from "./routes/rule";
 import dataAnalysis from "./routes/dataAnalysis";
-import session from "express-session";
 import categoryRoutes from "./routes/category";
 import expenseRoutes from "./routes/expense";
 import passport from "passport";
