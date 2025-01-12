@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import LoadingSpinner from "../../components/LoadingSpinner";
-import { DataAnalysisDatePicker } from "./components/DataAnalysisDatePicker";
+import { CustomizedDatePicker } from "../../components/DatePicker";
 import { useDataAnalysis } from "./hooks/useDataAnalysis";
 import { BarChart, LineChart } from "@mui/x-charts";
 import api from "../../api/axios.config";
@@ -114,14 +114,14 @@ const Dataviz: React.FC = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={2}>
-              <DataAnalysisDatePicker
+              <CustomizedDatePicker
                 label="Start Date"
                 value={filters.startDate ? new Date(filters.startDate) : undefined}
                 onChange={(date) => handleDateChange("startDate", date)}
               />
             </Grid>
             <Grid item xs={12} md={2}>
-              <DataAnalysisDatePicker
+              <CustomizedDatePicker
                 label="End Date"
                 value={filters.endDate ? new Date(filters.endDate) : undefined}
                 onChange={(date) => handleDateChange("endDate", date)}

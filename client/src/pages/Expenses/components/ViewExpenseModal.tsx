@@ -20,7 +20,7 @@ import {
   Paper,
   Typography
 } from "@mui/material";
-import { ExpenseDatePicker } from "./ExpenseDatePicker";
+import { CustomizedDatePicker } from "../../../components/DatePicker";
 import { useExpense } from "../hooks/useExpense";
 import LoadingSpinner from "../../../components/LoadingSpinner";
 import { CurrencyEnum, ExpenseStatusEnum, ExpenseUpdateDTO } from "../../../types/api";
@@ -123,7 +123,7 @@ export const ViewExpenseModal: React.FC<ViewExpenseModalProps> = ({ open, onClos
             </FormControl>
           </Grid>
           <Grid item xs={12} md={6}>
-            <ExpenseDatePicker
+            <CustomizedDatePicker
               label="Expense Date"
               value={updateForm.date}
               onChange={(date) => {
