@@ -23,6 +23,7 @@ import {
   Logout as LogoutIcon,
   PermIdentity as UserManagementIcon,
   Gavel as RuleManagementIcon,
+  Leaderboard as DataVizIcon,
   Label as CategoryIcon
 } from "@mui/icons-material";
 import { useCurrentUser } from "../hooks/useCurrentUser";
@@ -76,6 +77,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     SystemPermission.MANAGE_RULES,
     false
   );
+  const dataAnalysisPagePermission = useUserHasDepartmentPagePermission(
+    DepartmentPermission.VIEW_DEPARTMENT_DATA_ANALYSIS,
+    false
+  );
   const categoryPagePermission = useUserHasPagePermission(
     SystemPermission.MANAGE_CATEGORIES,
     false
@@ -106,13 +111,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         icon: <RuleManagementIcon />
       });
     }
+    if (dataAnalysisPagePermission) {
+      navItems.push({
+        text: "Data Visualization",
+        path: "/data-viz",
+        icon: <DataVizIcon />
+      });
+    }
     return navItems;
   }, [
     categoryPagePermission,
     departmentPagePermission,
     expensePagePermission,
     ruleManagementPagePermission,
-    userManagementPagePermission
+    userManagementPagePermission,
+    dataAnalysisPagePermission
   ]);
 
   return (

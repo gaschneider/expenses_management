@@ -7,6 +7,7 @@ import DepartmentsPage from "../pages/DepartmentsPage";
 import DepartmentForm from "./DepartmentForm";
 import UserManagementPage from "../pages/UserManagementPage";
 import RuleManagementPage from "../pages/RulesManagementPage/RulesManagementPage";
+import DataVizPage from "../pages/DataAnalysis/DataAnalysPage";
 import CategoriesPage from "../pages/CategoriesPage";
 import ExpensesPage from "../pages/Expenses/ExpensesPage";
 
@@ -81,6 +82,15 @@ export const RoutesComponent = () => {
         }
       />
 
+      <Route
+        path="/data-viz"
+        element={
+          <ProtectedRoute>
+            <DataVizPage />
+          </ProtectedRoute>
+        }
+      />
+      
       <Route
         path="/categories"
         element={

@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth";
 import departmentRoutes from "./routes/department";
 import userRoutes from "./routes/user";
 import ruleRoutes from "./routes/rule";
+import dataAnalysis from "./routes/dataAnalysis";
 import categoryRoutes from "./routes/category";
 import expenseRoutes from "./routes/expense";
 import passport from "passport";
@@ -27,7 +28,7 @@ const initDatabase = async () => {
     // Note: force: true will drop tables if they exist
     // Use force: false in production!
     if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
-      await sequelize.sync({ alter: true }); // Be careful with this in production!
+      //await sequelize.sync({ alter: true }); // Be careful with this in production!
     }
     console.log("Database synchronized successfully.");
     if (process.env.NODE_ENV !== "test") {
@@ -63,6 +64,7 @@ export const startServer = async () => {
   app.use("/api/departments", departmentRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/rules", ruleRoutes);
+  app.use("/api/dataAnalysis", dataAnalysis);
   app.use("/api/categories", categoryRoutes);
   app.use("/api/expenses", expenseRoutes);
 

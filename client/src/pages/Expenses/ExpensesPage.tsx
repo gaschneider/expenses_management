@@ -18,7 +18,7 @@ import {
   TablePagination
 } from "@mui/material";
 import dayjs from "dayjs";
-import { ExpenseDatePicker } from "./components/ExpenseDatePicker"; // Adjust import path as needed
+import { CustomizedDatePicker } from "../../components/DatePicker"; // Adjust import path as needed
 import { useExpenses, ExpensePaginationParams } from "./hooks/useExpenses";
 import { CreateExpenseModal } from "./components/CreateExpenseModal";
 import { DepartmentPermission, ExpenseDTO, ExpenseStatusEnum } from "../../types/api";
@@ -163,14 +163,14 @@ export const ExpensesPage: React.FC = () => {
             </FormControl>
           </Grid>
           <Grid item xs={12} md={2}>
-            <ExpenseDatePicker
+            <CustomizedDatePicker
               label="Start Date"
               value={filters.startDate ? new Date(filters.startDate) : undefined}
               onChange={(date) => handleDateChange("startDate", date)}
             />
           </Grid>
           <Grid item xs={12} md={2}>
-            <ExpenseDatePicker
+            <CustomizedDatePicker
               label="End Date"
               value={filters.endDate ? new Date(filters.endDate) : undefined}
               onChange={(date) => handleDateChange("endDate", date)}
