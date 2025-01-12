@@ -38,28 +38,25 @@ export const getExpensesStatusCount = async (
       endDate?: string;
     };
 
-    const expensesGrouped = await Expense.findAll({
+    const expensesGrouped = await Expense.findAndCountAll({
       where: await buildDataAnalysisQuery(authenticatedUser, {
         startDate,
         endDate,
         departmentId
       }),
-      attributes: [
-        "currentStatus",
-        [sequelize.fn("COUNT", sequelize.col("id")), "count"],
-      ],
-      group: ["currentStatus"],
+      attributes: ["currentStatus"],
+      group: ["currentStatus"]
     });
 
     const groupedData = {
       PENDING: 0,
       APPROVED: 0,
-      REJECTED: 0,
+      REJECTED: 0
     };
 
-    expensesGrouped.forEach((expense) => {
-      const status = expense.getDataValue("currentStatus") as string;
-      const count = Number(expense.getDataValue("count"));
+    expensesGrouped.count.forEach((c) => {
+      const status = c.currentStatus as string;
+      const count = c.count;
 
       switch (status) {
         case ExpenseStatusEnum.PENDING_APPROVAL:
