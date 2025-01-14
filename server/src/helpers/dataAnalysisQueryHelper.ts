@@ -46,24 +46,16 @@ export const buildDataAnalysisQuery = async (
     })
   );
 
-  let departmentIdCondition = null;
-  // Add specific department filter if provided
-  if (departmentId && accessibleDepartmentIds.includes(departmentId)) {
-    departmentIdCondition = departmentId;
-  } else if (!departmentId) {
-    departmentIdCondition = { [Op.in]: accessibleDepartmentIds };
-  }else{
-    departmentIdCondition = -1;
-  }
-
-  const orConditions = [];
-
-  if (departmentIdCondition !== null) {
-    orConditions.push({ departmentId: departmentIdCondition });
+   // Add specific department filter if provided
+   if (departmentId && accessibleDepartmentIds.includes(departmentId)) {
+    whereConditions.departmentId = departmentId;
+    return whereConditions;
   }
 
   // Add the OR conditions to the where clause
-  whereConditions[Op.or as any] = orConditions;
+  whereConditions[Op.or as any] = [
+    { departmentId: { [Op.in]: accessibleDepartmentIds } }
+  ];
 
   return whereConditions;
 };
