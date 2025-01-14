@@ -1,7 +1,8 @@
 import { Op, WhereOptions } from "sequelize";
 import User from "../models/User";
 import { userHasPermission } from "../middlewares/checkPermission";
-import { DepartmentPermission } from "../types/auth";
+import { DepartmentPermission, SystemPermission } from "../types/auth";
+import Department from "../models/Department";
 
 export const buildExpenseQuery = async (
   authenticatedUser: User,
@@ -26,9 +27,20 @@ export const buildExpenseQuery = async (
   }
 
   // Get accessible department IDs with proper null checks
-  const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
+  const accessibleDepartmentIds: string[] = [];
 
-  if (authenticatedUser.departments) {
+  if (await authenticatedUser.hasPermissionString(SystemPermission.ADMIN)) {
+    const departments = await Department.findAll();
+
+    departments.forEach((d) => {
+      if (d.id) {
+        accessibleDepartmentIds.push(d.id.toString());
+      }
+    });
+  }
+  // Get accessible department IDs with proper null checks
+  else if (authenticatedUser.departments) {
+    const accessibleDepartmentIdsPromises = new Map<string, Promise<boolean>>();
     for (let index = 0; index < authenticatedUser.departments?.length; index++) {
       const dept = authenticatedUser.departments[index];
       accessibleDepartmentIdsPromises.set(
@@ -47,15 +59,13 @@ export const buildExpenseQuery = async (
         )
       );
     }
-  }
 
-  const accessibleDepartmentIds: string[] = [];
-
-  await Promise.all(
-    Array.from(accessibleDepartmentIdsPromises).map(async ([deptId, promise]) => {
-      if (await promise) accessibleDepartmentIds.push(deptId);
-    })
-  );
+    await Promise.all(
+      Array.from(accessibleDepartmentIdsPromises).map(async ([deptId, promise]) => {
+        if (await promise) accessibleDepartmentIds.push(deptId);
+      })
+    );
+  }
 
   // Add specific department filter if provided
   if (departmentId && accessibleDepartmentIds.includes(departmentId)) {
