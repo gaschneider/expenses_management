@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { useCategories } from "../hooks/useCategories";
 import { CreateExpenseDTO, CurrencyEnum } from "../../../types/api";
-import { ExpenseDatePicker } from "./ExpenseDatePicker";
+import { CustomizedDatePicker } from "../../../components/DatePicker";
 import { useExpenseDepartments } from "../hooks/useExpenseDepartments";
 
 interface CreateExpenseModalProps {
@@ -152,7 +152,7 @@ export const CreateExpenseModal: React.FC<CreateExpenseModalProps> = ({
             </FormControl>
           </Grid>
           <Grid item xs={12} md={6}>
-            <ExpenseDatePicker
+            <CustomizedDatePicker
               label="Expense Date"
               value={formData.date}
               onChange={(newValue) =>

@@ -5,7 +5,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TextField } from "@mui/material";
 import dayjs from "dayjs";
 
-export const ExpenseDatePicker: React.FC<{
+export const CustomizedDatePicker: React.FC<{
   value?: Date;
   onChange: (date: Date | null) => void;
   label?: string;

@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth";
 import departmentRoutes from "./routes/department";
 import userRoutes from "./routes/user";
 import ruleRoutes from "./routes/rule";
+import dataAnalysis from "./routes/dataAnalysis";
 import categoryRoutes from "./routes/category";
 import expenseRoutes from "./routes/expense";
 import passport from "passport";
@@ -63,6 +64,7 @@ export const startServer = async () => {
   app.use("/api/departments", departmentRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/rules", ruleRoutes);
+  app.use("/api/dataAnalysis", dataAnalysis);
   app.use("/api/categories", categoryRoutes);
   app.use("/api/expenses", expenseRoutes);
 
