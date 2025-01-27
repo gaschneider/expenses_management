@@ -3,7 +3,6 @@ import Department from "../models/Department";
 import Expense from "../models/Expense";
 import { Rule, RuleStep } from "../models/Rule";
 import User from "../models/User";
-import UserPermission from "../models/UserPermission";
 import { DepartmentPermission, SystemPermission } from "../types/auth";
 
 const usersToCreate: {
