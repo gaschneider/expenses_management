@@ -8,14 +8,15 @@ Check if you have node installed by using the command `node -v`, this project wa
 
 - Go to [here](https://nodejs.org/en/download/package-manager) and install the proper version
 - Go to [here](https://github.com/coreybutler/nvm-windows/releases) and install the latest nvm, this is a way to have multiple nodes version on your machine
-  -- run `nvm` in the powershell, it should accept the the command
-  -- run `nvm install 22.11.0`
-  -- run `nvm use 22.11.0`
+  - run `nvm` in the powershell, it should accept the command
+  - run `nvm install 22.11.0`
+  - run `nvm use 22.11.0`
 
 Check if you have MySQL installed, this project uses the Community Server 9.1.0, you can download the latest from [here](https://dev.mysql.com/downloads/mysql/)
 
 - During the installation it will request a password, remember it because you will need to put that password in the files `.env` under folder `server` in the variable `DB_PASSWORD`
 - For those `.env` files, create a `.env.development` following the `.env.example` add your password to the `DB_PASSWORD`, if you wanna run the tests, create a `.env.test` and to run for production `.env.production`
+- Also you gonna need to change the NODE_ENV variable in the .env file you created to match either `development`, `test`, `demo` or `production`
 
 PS: If you prefer to run the app with some demo data provided, please refer to the end of this doc
 
