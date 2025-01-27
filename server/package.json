@@ -14,6 +14,8 @@
     "build": "tsc && tsc-alias",
     "start": "node dist/src/index.js",
     "dev": "tsx watch src/index.ts",
+    "demo": "cross-env NODE_ENV=demo tsx watch src/index.ts",
+    "seed-demo": "cross-env NODE_ENV=demo tsx src/seeders/seedDemoData.ts",
     "db:migrate": "npm run build && sequelize-cli db:migrate",
     "db:migrate:undo": "npm run build && sequelize-cli db:migrate:undo",
     "db:migrate:generate": "sequelize-cli migration:generate --name",

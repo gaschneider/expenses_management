@@ -22,6 +22,13 @@ const config = {
     host: process.env.DB_HOST,
     logging: process.env.DB_LOGGING ? process.env.DB_LOGGING.toLowerCase() === "true" : false
   },
+  demo: {
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    logging: process.env.DB_LOGGING ? process.env.DB_LOGGING.toLowerCase() === "true" : false
+  },
   production: {
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,

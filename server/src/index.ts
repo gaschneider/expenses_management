@@ -27,7 +27,7 @@ const initDatabase = async () => {
     // Sync all models
     // Note: force: true will drop tables if they exist
     // Use force: false in production!
-    if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+    if (process.env.NODE_ENV !== "production") {
       await sequelize.sync({ alter: true }); // Be careful with this in production!
     }
     console.log("Database synchronized successfully.");
