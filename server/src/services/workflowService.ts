@@ -109,6 +109,18 @@ export class RuleBasedWorkflowService {
           },
           { transaction }
         );
+
+        await ExpenseStatus.create(
+          {
+            id: 0,
+            expenseId: expense.id,
+            status: ExpenseStatusEnum.REJECTED,
+            userId: expense.requesterId,
+            comment: null
+          },
+          { transaction }
+        );
+
         await transaction.commit();
         return ExpenseStatusEnum.REJECTED;
       }
@@ -121,6 +133,17 @@ export class RuleBasedWorkflowService {
           ruleId: approvalRoute.ruleId,
           nextApproverType: approvalRoute.nextApprover?.type,
           nextApproverId: approvalRoute.nextApprover?.id
+        },
+        { transaction }
+      );
+
+      await ExpenseStatus.create(
+        {
+          id: 0,
+          expenseId: expense.id,
+          status: ExpenseStatusEnum.PENDING_APPROVAL,
+          userId: expense.requesterId,
+          comment: null
         },
         { transaction }
       );
@@ -182,7 +205,7 @@ export class RuleBasedWorkflowService {
             expenseId: expense.id,
             status: ExpenseStatusEnum.APPROVED,
             userId: currentUserId,
-            comment: null
+            comment
           },
           { transaction }
         );
